@@ -1,6 +1,7 @@
 // Parcours "Mon jardin aménagé" : moteur d'étapes, état, et contenu de chaque étape.
 import { PRODUCTS, ENDPOINTS } from './config.js';
-import { geocode, fetchBuildings, fetchParcel, facadesOf, visibleFacades, bearingDeg, rectFromSide, polylineLength, compassLabel, ringAreaM2 } from './geo.js';
+import { geocode, fetchBuildings, fetchParcel, facadesOf, visibleFacades, bearingDeg, rectFromSide, polylineLength, compassLabel, ringAreaM2, distanceM } from './geo.js';
+import { startSensors, sensorSnapshot, readExifView } from './capture.js';
 import { GardenMap, outwardSide, snapToFacades } from './map.js';
 
 const STORE_KEY = 'cg-jardin-amenage-v1';
@@ -198,72 +199,169 @@ const STEPS = [
     skippable: 'Je ne trouve pas ma maison',
   },
   {
-    id: 'photos', title: 'Vos photos du jardin',
-    help: 'Prenez 1 à 3 photos depuis l\'endroit où vous aimeriez voir votre projet, à hauteur d\'yeux, en reculant au maximum. Puis indiquez sur la carte d\'où vous les avez prises.',
+    id: 'photos', title: 'Votre photo du jardin',
+    help: 'Une photo de l\'endroit à aménager, prise à hauteur d\'yeux en reculant au maximum. Vous pouvez en ajouter deux autres pour nous aider à comprendre le jardin.',
     render: () => `
-      <label class="upload"><input id="files" type="file" accept="image/*" multiple>
-        <span>Ajouter des photos</span><small>JPG ou PNG, 3 maximum</small></label>
+      <div class="photo-actions">
+        <label class="upload upload-main" id="cam-label"><input id="cam" type="file" accept="image/*" capture="environment">
+          <span>Prendre une photo</span><small>Depuis votre jardin, avec votre téléphone</small></label>
+        <label class="upload"><input id="files" type="file" accept="image/*" multiple>
+          <span>Choisir une photo</span><small>Dans votre galerie ou votre ordinateur</small></label>
+      </div>
       <div id="photo-list" class="photo-list"></div>
-      <p id="cone-msg" class="msg msg-live" aria-live="polite"></p>
+      <div id="view-panel"></div>
       <div class="map-wrap" id="map-slot"></div>`,
     mount(root) {
       const map = mapIn($('#map-slot', root));
-      const list = $('#photo-list', root), msg = $('#cone-msg', root);
-      if (state.building) { map.showBuildings([{ id: state.building.id, ring: state.building.ring }], state.building.id); map.showFacades(state.facades); map.fitTo(state.parcel?.ring || state.building.ring); }
+      const list = $('#photo-list', root), panel = $('#view-panel', root);
+      const house = state.building?.ring;
+      const houseCenter = house ? house.slice(0, -1).reduce((s, p) => [s[0] + p[0], s[1] + p[1]], [0, 0]).map((v) => v / (house.length - 1)) : null;
+      const showHouse = () => {
+        if (state.building) { map.showBuildings([{ id: state.building.id, ring: state.building.ring }], state.building.id); }
+      };
+      showHouse();
+      if (state.building) map.fitTo(state.parcel?.ring || state.building.ring);
       else if (state.address) map.focus(state.address.lat, state.address.lon, 19);
 
-      let placing = -1, origin = null;
-      const draw = () => {
-        map.showCones(state.photos, placing);
-        list.innerHTML = state.photos.map((p, i) => {
-          const vis = p.view?.facades?.[0];
-          return `<div class="photo${i === placing ? ' is-active' : ''}">
-            <img src="${p.url}" alt="Photo ${i + 1}">
-            <div class="photo-body">
-              <b>Photo ${i + 1}</b>
-              <span class="small">${p.view ? (vis ? `Façade visible : ${m(vis.length)}, côté ${vis.facing}` : 'Position enregistrée') : 'Position à indiquer sur la carte'}</span>
-              <div class="row">
-                <button type="button" class="btn-sec btn-sm" data-place="${i}">${p.view ? 'Replacer' : 'Placer sur la carte'}</button>
-                <button type="button" class="btn-ghost btn-sm" data-del="${i}">Retirer</button>
-              </div>
-            </div></div>`;
-        }).join('');
-        refreshNav();
+      let active = state.photos.findIndex((p) => !p.view?.check);
+      if (active < 0) active = state.photos.length ? 0 : -1;
+
+      // Une photo se cale en deux temps : où elle a été prise (cône), puis une question de contrôle
+      // sur une longueur visible, qui donne l'échelle.
+      const analyse = (p) => {
+        const vis = state.facades.length ? visibleFacades(state.facades, p.view.origin, p.view.bearing) : [];
+        p.view.facades = vis.slice(0, 3).map(({ index, length, facing }) => ({ index, length, facing }));
+        p.view.facing = compassLabel(p.view.bearing);
+        if (p.view.check && p.view.check.type === 'facade' && !p.view.facades.some((f) => f.index === p.view.check.index)) p.view.check = null;
+        map.showFacades(state.facades, p.view.facades.slice(0, 1).map((f) => f.index));
       };
-      const finish = (target) => {
-        const p = state.photos[placing];
-        const bearing = bearingDeg(origin, target);
-        const vis = state.facades.length ? visibleFacades(state.facades, origin, bearing) : [];
-        p.view = { origin, bearing, facing: compassLabel(bearing), facades: vis.slice(0, 2).map(({ index, length, facing }) => ({ index, length, facing })) };
-        map.showFacades(state.facades, vis.slice(0, 1).map((f) => f.index));
-        placing = -1; origin = null;
-        map.onClick(null); map.onMove(null); map.clearDraft(); map.setCursor('');
-        msg.textContent = vis.length ? '' : 'Aucune façade dans le champ : ce n\'est pas grave, on vous demandera une dimension.';
-        draw();
+
+      const sourceText = (p) => ({
+        sensors: 'Position et direction relevées par votre téléphone : vérifiez simplement.',
+        exif: p.view?.headingKnown ? 'Position et direction lues dans votre photo : vérifiez simplement.' : 'Position lue dans votre photo : faites glisser la pointe orange vers ce que vous photographiez.',
+        manual: 'Faites glisser la pointe orange vers ce que vous photographiez. La photo se déplace aussi.',
+      }[p.view?.source] || '');
+
+      const drawPanel = () => {
+        const p = state.photos[active];
+        if (!p) { panel.innerHTML = ''; return; }
+        if (!p.view) {
+          panel.innerHTML = `<div class="callout"><b>Photo ${active + 1} : d'où l'avez-vous prise ?</b><span>Touchez la carte à l'endroit où vous étiez.</span></div>`;
+          return;
+        }
+        const f = p.view.facades?.[p.view.alt || 0];
+        let q;
+        if (p.view.check) {
+          const c = p.view.check;
+          q = `<div class="callout is-done"><b>Photo ${active + 1} calée</b><span>${c.type === 'facade' ? `Échelle : façade de ${m(c.length)}` : c.type === 'length' ? `Échelle : ${esc(c.label)} de ${m(c.length)}` : 'Nous estimerons les dimensions sur la photo.'}</span>
+            <button type="button" class="link-advice" data-act="redo">Modifier</button></div>`;
+        } else if (f) {
+          q = `<div class="callout"><b>Sur votre photo, on voit bien ce mur de la maison ?</b>
+            <span>Il est en orange sur la carte : ${m(f.length)} de long, côté ${f.facing}.</span>
+            <div class="row"><button type="button" class="btn-pri btn-sm" data-act="yes">Oui</button>
+            <button type="button" class="btn-sec btn-sm" data-act="no">Non</button></div></div>`;
+        } else {
+          q = lengthQuestion();
+        }
+        panel.innerHTML = `<p class="msg msg-live">${sourceText(p)}</p>${q}`;
       };
-      list.addEventListener('click', (e) => {
-        const pl = e.target.closest('[data-place]'), dl = e.target.closest('[data-del]');
-        if (pl) {
-          placing = +pl.dataset.place; origin = null; draw();
-          msg.textContent = '1. Touchez l\'endroit où vous étiez. 2. Touchez dans la direction où vous regardiez.';
+      const lengthQuestion = () => `<div class="callout"><b>Une longueur que vous connaissez sur la photo ?</b>
+        <span>Un portail, une porte de garage, un mur, une clôture… même approximative.</span>
+        <div class="row length-row">
+          <select id="len-what" aria-label="Élément mesuré"><option>Portail</option><option>Porte de garage</option><option>Mur</option><option>Clôture</option><option>Terrasse</option><option>Autre</option></select>
+          <input id="len-val" type="number" inputmode="decimal" min="0.5" max="60" step="0.1" placeholder="Longueur" aria-label="Longueur en mètres"><span class="unit">m</span>
+          <button type="button" class="btn-pri btn-sm" data-act="len">Valider</button>
+        </div>
+        <button type="button" class="link-advice" data-act="unknown">Je ne sais pas, estimez-la pour moi</button></div>`;
+
+      const drawList = () => {
+        list.innerHTML = state.photos.map((p, i) => `<button type="button" class="thumb${i === active ? ' is-active' : ''}${p.view?.check ? ' is-done' : ''}" data-pick="${i}" aria-label="Photo ${i + 1}">
+            <img src="${p.url}" alt=""><span>${p.view?.check ? 'Calée' : 'À caler'}</span></button>`).join('')
+          + (state.photos.length ? `<button type="button" class="link-advice" data-del="${active}">Retirer la photo ${active + 1}</button>` : '');
+      };
+
+      const edit = () => {
+        const p = state.photos[active];
+        map.onClick(null); map.setCursor('');
+        map.showCones(state.photos.map((x, i) => (i === active ? { ...x, view: null } : x)));
+        if (!p) { map.clearDraft(); return; }
+        if (!p.view) {
+          map.clearDraft();
           map.setCursor('crosshair');
           map.onClick((pt) => {
-            if (!origin) { origin = pt; map.previewCone(origin); map.onMove((cur) => map.previewCone(origin, cur)); }
-            else finish(pt);
+            const bearing = houseCenter ? bearingDeg(pt, houseCenter) : 0;
+            p.view = { origin: pt, bearing, source: 'manual' };
+            edit();
           });
-          $('#map-slot', root).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          map.editCone(p.view.origin, p.view.bearing, (o, b) => {
+            p.view.origin = o; p.view.bearing = b;
+            analyse(p); drawPanel(); refreshNav();
+          }, p.url);
         }
-        if (dl) { const i = +dl.dataset.del; URL.revokeObjectURL(state.photos[i].url); state.photos.splice(i, 1); draw(); }
+        drawList(); drawPanel(); refreshNav();
+      };
+
+      const addFiles = async (files, fromCamera) => {
+        const snap = fromCamera ? sensorSnapshot() : null;
+        for (const f of [...files].slice(0, 3 - state.photos.length)) {
+          const p = { name: f.name, size: f.size, type: f.type, file: f, url: URL.createObjectURL(f), view: null };
+          let pos = null;
+          if (snap?.fix) pos = { lat: snap.fix.lat, lon: snap.fix.lon, heading: snap.heading, source: 'sensors' };
+          else {
+            const ex = await readExifView(f);
+            if (ex) pos = { ...ex, source: 'exif' };
+          }
+          // Une position à plus de 80 m de la maison est fausse (photo prise ailleurs, GPS imprécis) : on l'ignore.
+          if (pos && houseCenter && distanceM([pos.lon, pos.lat], houseCenter) > 80) pos = null;
+          if (pos) {
+            const origin = [pos.lon, pos.lat];
+            const headingKnown = typeof pos.heading === 'number';
+            p.view = { origin, bearing: headingKnown ? pos.heading : (houseCenter ? bearingDeg(origin, houseCenter) : 0), source: pos.source, headingKnown };
+          }
+          state.photos.push(p);
+          active = state.photos.length - 1;
+        }
+        edit();
+        $('#map-slot', root).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
+
+      $('#cam-label', root).addEventListener('click', () => { startSensors(); });
+      $('#cam', root).addEventListener('change', (e) => { addFiles(e.target.files, true); e.target.value = ''; });
+      $('#files', root).addEventListener('change', (e) => { addFiles(e.target.files, false); e.target.value = ''; });
+      list.addEventListener('click', (e) => {
+        const pick = e.target.closest('[data-pick]'), del = e.target.closest('[data-del]');
+        if (pick) { active = +pick.dataset.pick; edit(); }
+        if (del) {
+          const i = +del.dataset.del; URL.revokeObjectURL(state.photos[i].url); state.photos.splice(i, 1);
+          active = Math.min(i, state.photos.length - 1); edit();
+        }
       });
-      $('#files', root).addEventListener('change', (e) => {
-        [...e.target.files].slice(0, 3 - state.photos.length).forEach((f) => {
-          state.photos.push({ name: f.name, size: f.size, type: f.type, file: f, url: URL.createObjectURL(f), view: null });
-        });
-        e.target.value = ''; draw();
+      panel.addEventListener('click', (e) => {
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        const p = state.photos[active];
+        if (!act || !p) return;
+        if (act === 'yes') { const f = p.view.facades[p.view.alt || 0]; p.view.check = { type: 'facade', index: f.index, length: f.length }; }
+        if (act === 'no') {
+          // On propose la façade suivante visible, sinon la question de longueur.
+          p.view.alt = (p.view.alt || 0) + 1;
+          if (!p.view.facades[p.view.alt]) { panel.innerHTML = `<p class="msg msg-live">${sourceText(p)}</p>${lengthQuestion()}`; return; }
+          map.showFacades(state.facades, [p.view.facades[p.view.alt].index]);
+        }
+        if (act === 'len') {
+          const v = parseFloat(String($('#len-val', panel).value).replace(',', '.'));
+          if (!(v > 0.3 && v < 100)) { $('#len-val', panel).focus(); return; }
+          p.view.check = { type: 'length', label: $('#len-what', panel).value.toLowerCase(), length: v };
+        }
+        if (act === 'unknown') p.view.check = { type: 'estimate' };
+        if (act === 'redo') { p.view.check = null; p.view.alt = 0; analyse(p); }
+        const next = state.photos.findIndex((x) => !x.view?.check);
+        if (p.view.check && next >= 0) active = next;
+        edit();
       });
-      draw();
+      edit();
     },
-    valid: () => state.photos.length > 0,
+    valid: () => state.photos.length > 0 && state.photos.every((p) => p.view?.check),
   },
   {
     id: 'projet', title: 'Vous savez déjà ce que vous voulez ?',
@@ -523,10 +621,10 @@ function isInParcel(ring, parcelRing) {
 function studyLines() {
   const lines = [];
   const city = state.address?.city;
-  const photoFacade = state.photos.find((p) => p.view?.facades?.length)?.view.facades[0];
+  const scale = state.photos.find((p) => p.view?.check && p.view.check.type !== 'estimate')?.view.check;
   if (state.parcel?.area) lines.push(`Lecture de votre terrain : ${state.parcel.area} m²`);
-  if (photoFacade) lines.push(`Mise à l'échelle de vos photos : façade de ${m(photoFacade.length)} côté ${photoFacade.facing}`);
-  else lines.push('Analyse de vos photos');
+  if (scale) lines.push(`Mise à l'échelle de votre photo : ${scale.type === 'facade' ? 'mur' : scale.label} de ${m(scale.length)}`);
+  else lines.push('Analyse de votre photo et estimation des dimensions');
   if (state.facades.length) {
     const sunny = state.facades.filter((f) => ['sud', 'sud-ouest', 'ouest'].includes(f.facing)).sort((a, b) => b.length - a.length)[0];
     lines.push(sunny ? `Ensoleillement : façade ${sunny.facing} très exposée l'après-midi` : 'Calcul de l\'ensoleillement');

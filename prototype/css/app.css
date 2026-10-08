@@ -120,6 +120,25 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .facts span { font-size: 13px; color: var(--ink-2); }
 
 /* Photos */
+.photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.upload-main { border-style: solid; border-color: var(--orange); background: var(--orange-pale); }
+.upload-main span { color: var(--orange-hover); }
+.photo-list:not(:empty) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.thumb { position: relative; width: 88px; height: 66px; padding: 0; border: 2px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; background: var(--light); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb span { position: absolute; left: 0; right: 0; bottom: 0; font-size: 11px; font-weight: 600; background: rgba(30,33,31,.75); color: #fff; padding: 1px 4px; }
+.thumb.is-active { border-color: var(--orange); }
+.thumb.is-done span { background: var(--green); }
+.callout { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin-top: 12px; }
+.callout > span { color: var(--ink-2); font-size: 15px; }
+.callout.is-done { border-color: var(--green); background: var(--mist); }
+.length-row { align-items: center; }
+.length-row select, .length-row input { font: inherit; height: 40px; padding: 0 10px; border: 1px solid var(--ink-2); border-radius: var(--radius); background: var(--white); color: var(--ink); }
+.length-row input { width: 110px; }
+.unit { color: var(--ink-2); }
+.eye-handle img, .eye-handle span { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--orange); object-fit: cover; display: block; background: var(--white); box-shadow: 0 1px 4px rgba(0,0,0,.35); cursor: grab; }
+.tip-handle span { width: 32px; height: 32px; border-radius: 50%; display: block; background: var(--orange); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); cursor: grab; }
+
 .upload { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 2px dashed var(--line); border-radius: var(--radius); padding: 20px; cursor: pointer; text-align: center; }
 .upload:hover { border-color: var(--green); }
 .upload input { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -177,6 +196,7 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
   .chips { grid-template-columns: 1fr 1fr; }
   .styles { grid-template-columns: 1fr 1fr; }
   .map-wrap { height: 320px; }
+  .photo-actions { grid-template-columns: 1fr; }
   .btn-pri { min-width: 0; padding: 0 18px; }
   .nav { padding: 8px 12px; }
 }

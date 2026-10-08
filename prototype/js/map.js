@@ -116,6 +116,49 @@ export class GardenMap {
     });
   }
 
+  // Cône modifiable au doigt : on déplace l'œil pour changer la position, la pointe pour
+  // changer la direction. onChange(origin, bearing) est appelé à chaque relâchement.
+  editCone(origin, bearing, onChange, thumbUrl) {
+    this.groups.draft.clearLayers();
+    const reach = 16;
+    const tipOf = (o, b) => {
+      const P = makeProjection(o[1], o[0]);
+      const t = (b * Math.PI) / 180;
+      return P.toLonLat([Math.sin(t) * reach, Math.cos(t) * reach]);
+    };
+    let o = origin, b = bearing;
+    const cone = L.polygon(conePolygon(o, b, 70, reach).map(ll), {
+      color: COLORS.orange, weight: 2, fillColor: COLORS.orange, fillOpacity: 0.25, interactive: false,
+    }).addTo(this.groups.draft);
+    const eye = L.marker(ll(o), {
+      draggable: true, autoPan: true, zIndexOffset: 1000,
+      icon: L.divIcon({
+        className: 'eye-handle', iconSize: [44, 44], iconAnchor: [22, 22],
+        html: thumbUrl ? `<img src="${thumbUrl}" alt="">` : '<span></span>',
+      }),
+      title: 'Faites glisser pour indiquer où vous étiez',
+    }).addTo(this.groups.draft);
+    const tip = L.marker(ll(tipOf(o, b)), {
+      draggable: true, autoPan: true, zIndexOffset: 1001,
+      icon: L.divIcon({ className: 'tip-handle', iconSize: [32, 32], iconAnchor: [16, 16], html: '<span></span>' }),
+      title: 'Faites glisser pour indiquer la direction',
+    }).addTo(this.groups.draft);
+    const redraw = () => cone.setLatLngs(conePolygon(o, b, 70, reach).map(ll));
+    eye.on('drag', (e) => {
+      o = [e.latlng.lng, e.latlng.lat];
+      tip.setLatLng(ll(tipOf(o, b)));
+      redraw();
+    });
+    tip.on('drag', (e) => {
+      b = bearingDeg(o, [e.latlng.lng, e.latlng.lat]);
+      redraw();
+    });
+    // La pointe revient à distance fixe une fois lâchée, pour rester facile à attraper.
+    tip.on('dragend', () => { tip.setLatLng(ll(tipOf(o, b))); onChange(o, b); });
+    eye.on('dragend', () => onChange(o, b));
+    onChange(o, b);
+  }
+
   // Cône en cours de placement : position fixée, direction suit le pointeur.
   previewCone(origin, target) {
     this.groups.draft.clearLayers();
