@@ -188,7 +188,7 @@ const STEPS = [
         const hit = (state.building && buildings.find((b) => b.id === state.building.id)) || (usable && inParcel[0]) || nearest(buildings, lon, lat);
         map.showBuildings(buildings, hit?.id, select);
         if (hit) select(hit); else renderInfo();
-        map.fitTo(parcel?.ring || hit?.ring);
+        map.fitTo(state.parcel?.ring || hit?.ring);
       } catch (e) {
         info.innerHTML = '<p class="msg is-error">Les données IGN ne répondent pas pour le moment. Vous pouvez continuer, on vous demandera une dimension sur la photo.</p>';
         state.building = null; refreshNav(true);

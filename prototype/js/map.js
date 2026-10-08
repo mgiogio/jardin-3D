@@ -1,7 +1,7 @@
 // Carte Leaflet : orthophoto IGN, parcelle, bâtiments, façades, cônes de vue, placements.
 /* global L */
 import { ENDPOINTS, COLORS } from './config.js';
-import { conePolygon, bearingDeg, rectFromSide, snapToFacades, polylineLength, pointInRing } from './geo.js';
+import { conePolygon, bearingDeg, rectFromSide, snapToFacades, polylineLength, pointInRing, makeProjection } from './geo.js';
 
 const ll = ([lon, lat]) => [lat, lon];
 const fmt = (m) => `${m.toFixed(1).replace('.', ',')} m`;
@@ -77,9 +77,13 @@ export class GardenMap {
       L.polyline([ll(f.a), ll(f.b)], { color: hot ? COLORS.orange : '#fff', weight: hot ? 6 : 3, interactive: false })
         .addTo(this.groups.facades);
       if (f.length >= 2.5) {
-        L.marker(ll(f.mid), {
+        // Étiquette posée à 2 m devant la façade, pour ne pas chevaucher celles des façades voisines.
+        const P = makeProjection(f.mid[1], f.mid[0]);
+        const t = (f.azimuth * Math.PI) / 180;
+        const labelPos = P.toLonLat([Math.sin(t) * 2, Math.cos(t) * 2]);
+        L.marker(ll(labelPos), {
           interactive: false,
-          icon: L.divIcon({ className: `facade-label${hot ? ' is-hot' : ''}`, html: fmt(f.length), iconSize: null }),
+          icon: L.divIcon({ className: `facade-label${hot ? ' is-hot' : ''}`, html: `<span>${fmt(f.length)}</span>`, iconSize: null }),
         }).addTo(this.groups.facades);
       }
     });
@@ -135,7 +139,7 @@ export class GardenMap {
       if (anchor) {
         L.marker(ll(anchor), {
           interactive: false,
-          icon: L.divIcon({ className: 'placement-label', html: labels[p.productId] || p.productId, iconSize: null }),
+          icon: L.divIcon({ className: 'placement-label', html: `<span>${labels[p.productId] || p.productId}</span>`, iconSize: null }),
         }).addTo(this.groups.placements);
       }
     });
@@ -154,7 +158,7 @@ export class GardenMap {
       L.polyline(pts.map(ll), { color: COLORS.orange, weight: 4, dashArray: '6 6', interactive: false }).addTo(this.groups.draft);
       L.marker(ll(pts[pts.length - 1]), {
         interactive: false,
-        icon: L.divIcon({ className: 'facade-label is-hot', html: fmt(polylineLength(pts)), iconSize: null }),
+        icon: L.divIcon({ className: 'facade-label is-hot', html: `<span>${fmt(polylineLength(pts))}</span>`, iconSize: null }),
       }).addTo(this.groups.draft);
     }
   }
@@ -166,7 +170,7 @@ export class GardenMap {
       .addTo(this.groups.draft);
     L.marker(ll(r.ring[1]), {
       interactive: false,
-      icon: L.divIcon({ className: 'facade-label is-hot', html: `${fmt(r.width)} × ${fmt(depth)}`, iconSize: null }),
+      icon: L.divIcon({ className: 'facade-label is-hot', html: `<span>${fmt(r.width)} × ${fmt(depth)}</span>`, iconSize: null }),
     }).addTo(this.groups.draft);
     return r;
   }
