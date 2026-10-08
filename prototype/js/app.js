@@ -209,11 +209,11 @@ const STEPS = [
           <span>Choisir une photo</span><small>Dans votre galerie ou votre ordinateur</small></label>
       </div>
       <div id="photo-list" class="photo-list"></div>
-      <div id="view-panel"></div>
-      <div class="map-wrap" id="map-slot"></div>`,
+      <div class="map-wrap has-hint" id="map-slot"><p id="map-hint" class="map-hint" aria-live="polite"></p></div>
+      <div id="view-panel"></div>`,
     mount(root) {
       const map = mapIn($('#map-slot', root));
-      const list = $('#photo-list', root), panel = $('#view-panel', root);
+      const list = $('#photo-list', root), panel = $('#view-panel', root), hint = $('#map-hint', root);
       const house = state.building?.ring;
       const houseCenter = house ? house.slice(0, -1).reduce((s, p) => [s[0] + p[0], s[1] + p[1]], [0, 0]).map((v) => v / (house.length - 1)) : null;
       const showHouse = () => {
@@ -237,18 +237,20 @@ const STEPS = [
       };
 
       const sourceText = (p) => ({
-        sensors: 'Position et direction relevées par votre téléphone : vérifiez simplement.',
-        exif: p.view?.headingKnown ? 'Position et direction lues dans votre photo : vérifiez simplement.' : 'Position lue dans votre photo : faites glisser la pointe orange vers ce que vous photographiez.',
-        manual: 'Faites glisser la pointe orange vers ce que vous photographiez. La photo se déplace aussi.',
+        sensors: 'Position relevée par votre téléphone. Ajustez si besoin : glissez la photo pour la déplacer, la pointe pour l\'orienter.',
+        exif: p.view?.headingKnown ? 'Position lue dans votre photo. Ajustez si besoin : glissez la photo pour la déplacer, la pointe pour l\'orienter.' : 'Position lue dans votre photo. Glissez la pointe orange vers ce que vous photographiez.',
+        manual: 'Glissez la pointe orange vers ce que vous photographiez, et la photo pour la déplacer.',
       }[p.view?.source] || '');
 
       const drawPanel = () => {
         const p = state.photos[active];
-        if (!p) { panel.innerHTML = ''; return; }
+        if (!p) { panel.innerHTML = ''; hint.textContent = state.photos.length ? '' : 'Ajoutez une photo pour commencer.'; return; }
         if (!p.view) {
-          panel.innerHTML = `<div class="callout"><b>Photo ${active + 1} : d'où l'avez-vous prise ?</b><span>Touchez la carte à l'endroit où vous étiez.</span></div>`;
+          hint.textContent = `Photo ${active + 1} : touchez la carte à l'endroit où vous étiez.`;
+          panel.innerHTML = '';
           return;
         }
+        hint.textContent = sourceText(p);
         const f = p.view.facades?.[p.view.alt || 0];
         let q;
         if (p.view.check) {
@@ -263,7 +265,7 @@ const STEPS = [
         } else {
           q = lengthQuestion();
         }
-        panel.innerHTML = `<p class="msg msg-live">${sourceText(p)}</p>${q}`;
+        panel.innerHTML = q;
       };
       const lengthQuestion = () => `<div class="callout"><b>Une longueur que vous connaissez sur la photo ?</b>
         <span>Un portail, une porte de garage, un mur, une clôture… même approximative.</span>
@@ -345,7 +347,7 @@ const STEPS = [
         if (act === 'no') {
           // On propose la façade suivante visible, sinon la question de longueur.
           p.view.alt = (p.view.alt || 0) + 1;
-          if (!p.view.facades[p.view.alt]) { panel.innerHTML = `<p class="msg msg-live">${sourceText(p)}</p>${lengthQuestion()}`; return; }
+          if (!p.view.facades[p.view.alt]) { panel.innerHTML = lengthQuestion(); return; }
           map.showFacades(state.facades, [p.view.facades[p.view.alt].index]);
         }
         if (act === 'len') {

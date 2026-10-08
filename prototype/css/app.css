@@ -99,6 +99,11 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .style-zen .swatch { background: linear-gradient(135deg, #E9E6DC, #A9B59A 55%, #A03B2A); }
 
 /* Carte */
+.map-wrap.has-hint { position: relative; }
+.map-hint { position: absolute; z-index: 800; top: 8px; left: 56px; right: 8px; margin: 0; padding: 8px 12px; border-radius: var(--radius);
+  background: rgba(255,255,255,.94); color: var(--ink); font-size: 14px; font-weight: 500; box-shadow: 0 1px 4px rgba(0,0,0,.25); pointer-events: none; }
+.map-hint:empty { display: none; }
+.callout .link-advice { align-self: flex-start; }
 .map-wrap { height: 380px; border-radius: var(--radius); overflow: hidden; margin: 12px 0; background: var(--light); }
 .map-wrap > div { height: 100%; width: 100%; }
 /* Leaflet positionne l'élément du marqueur par transform : le centrage se fait sur le span intérieur. */
@@ -121,7 +126,7 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 
 /* Photos */
 .photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.upload-main { border-style: solid; border-color: var(--orange); background: var(--orange-pale); }
+.upload.upload-main { border-style: solid; border-color: var(--orange); background: var(--orange-pale); }
 .upload-main span { color: var(--orange-hover); }
 .photo-list:not(:empty) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 .thumb { position: relative; width: 88px; height: 66px; padding: 0; border: 2px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; background: var(--light); }
