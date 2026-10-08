@@ -34,6 +34,7 @@ export class GardenMap {
   // La carte est dans un écran caché au départ : il faut recalculer sa taille à l'affichage.
   attach(container) {
     container.appendChild(this.map.getContainer());
+    this.map.invalidateSize();
     setTimeout(() => this.map.invalidateSize(), 50);
   }
 
@@ -41,7 +42,7 @@ export class GardenMap {
   setCursor(c) { this.map.getContainer().style.cursor = c || ''; }
   showCadastre(on) { on ? this.cadastre.addTo(this.map) : this.map.removeLayer(this.cadastre); }
 
-  focus(lat, lon, zoom = 19) { this.map.setView([lat, lon], zoom); }
+  focus(lat, lon, zoom = 19) { this.map.invalidateSize(); this.map.setView([lat, lon], zoom); }
 
   showAddress(lat, lon) {
     this.groups.address.clearLayers();
@@ -90,6 +91,9 @@ export class GardenMap {
   }
 
   fitTo(ring) {
+    this.map.invalidateSize();
+    // Un cadrage calculé sur une carte de taille nulle partirait au zoom monde : on le refait une fois la taille connue.
+    if (ring?.length) requestAnimationFrame(() => this.map.invalidateSize());
     if (ring?.length) this.map.fitBounds(L.latLngBounds(ring.map(ll)).pad(1.2), { maxZoom: 20 });
   }
 
