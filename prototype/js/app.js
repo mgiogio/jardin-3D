@@ -42,7 +42,7 @@ let gmap = null;
 function mapIn(container) {
   if (!gmap) gmap = new GardenMap(document.createElement('div'));
   gmap.attach(container);
-  gmap.onClick(null); gmap.onMove(null); gmap.setCursor(''); gmap.clearDraft();
+  gmap.reset(); gmap.onClick(null); gmap.onMove(null); gmap.setCursor('');
   return gmap;
 }
 
@@ -204,8 +204,8 @@ const STEPS = [
       <label class="upload"><input id="files" type="file" accept="image/*" multiple>
         <span>Ajouter des photos</span><small>JPG ou PNG, 3 maximum</small></label>
       <div id="photo-list" class="photo-list"></div>
-      <div class="map-wrap" id="map-slot"></div>
-      <p id="cone-msg" class="msg"></p>`,
+      <p id="cone-msg" class="msg msg-live" aria-live="polite"></p>
+      <div class="map-wrap" id="map-slot"></div>`,
     mount(root) {
       const map = mapIn($('#map-slot', root));
       const list = $('#photo-list', root), msg = $('#cone-msg', root);
@@ -282,8 +282,8 @@ const STEPS = [
     when: () => state.knows === 'oui' && state.products.length > 0,
     render: () => `
       <div class="tools" id="tools"></div>
+      <div id="draw-panel" class="draw-panel" aria-live="polite"></div>
       <div class="map-wrap" id="map-slot"></div>
-      <div id="draw-panel" class="draw-panel"></div>
       <ul id="placed" class="placed"></ul>
       <label class="field"><span>Précisions (facultatif)</span>
         <textarea id="free" rows="3" placeholder="Ex. pergola collée à la façade côté salon, ouverte vers la piscine">${esc(state.freeText)}</textarea></label>`,
@@ -463,8 +463,8 @@ const STEPS = [
       <label class="field"><span>Prénom</span><input id="fn" type="text" autocomplete="given-name" value="${esc(state.contact.firstName)}"></label>
       <label class="field"><span>Email</span><input id="em" type="email" autocomplete="email" value="${esc(state.contact.email)}"></label>
       <label class="field"><span>Téléphone (facultatif, pour être rappelé par un conseiller)</span><input id="ph" type="tel" autocomplete="tel" value="${esc(state.contact.phone)}"></label>
-      <label class="check"><input id="consent" type="checkbox" ${state.contact.consent ? 'checked' : ''}> J'accepte que Cover Green utilise mon adresse et mes photos pour réaliser mon projet. <a href="#" onclick="return false">En savoir plus</a></label>
-      <label class="check"><input id="optin" type="checkbox" ${state.contact.optin ? 'checked' : ''}> Je souhaite recevoir les conseils et offres de Cover Green par email.</label>`,
+      <label class="check"><input id="consent" type="checkbox" ${state.contact.consent ? 'checked' : ''}> <span>J'accepte que Cover Green utilise mon adresse et mes photos pour réaliser mon projet. <a href="#" onclick="return false">En savoir plus</a></span></label>
+      <label class="check"><input id="optin" type="checkbox" ${state.contact.optin ? 'checked' : ''}> <span>Je souhaite recevoir les conseils et offres de Cover Green par email.</span></label>`,
     mount(root) {
       const bind = (id, key, prop = 'value') => $(`#${id}`, root).addEventListener(prop === 'value' ? 'input' : 'change', (e) => { state.contact[key] = e.target[prop]; save(); refreshNav(); });
       bind('fn', 'firstName'); bind('em', 'email'); bind('ph', 'phone'); bind('consent', 'consent', 'checked'); bind('optin', 'optin', 'checked');
@@ -576,7 +576,9 @@ function go(delta) {
   const list = activeSteps();
   let idx = list.findIndex((s) => s.id === STEPS[state.step]?.id);
   if (idx < 0) idx = 0;
-  const target = list[Math.max(0, Math.min(list.length - 1, idx + delta))];
+  let next = Math.max(0, Math.min(list.length - 1, idx + delta));
+  while (delta < 0 && next > 0 && list[next].auto) next--;
+  const target = list[next];
   state.step = STEPS.indexOf(target);
   save(); render();
   window.scrollTo({ top: 0, behavior: 'smooth' });

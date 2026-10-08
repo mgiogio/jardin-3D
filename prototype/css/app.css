@@ -42,6 +42,7 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .label { font-weight: 600; margin: 20px 0 8px; }
 .msg { color: var(--ink-2); font-size: 15px; }
 .msg.is-error { color: #A12A00; }
+.msg-live:not(:empty) { background: var(--orange-pale); color: var(--ink); padding: 10px 12px; border-radius: var(--radius); margin: 12px 0 0; }
 .is-hidden { display: none; }
 
 .ticks { padding: 0; list-style: none; }
@@ -88,7 +89,7 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .tools .chip { min-height: 44px; padding: 8px 12px; }
 
 .styles { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-.style-card { padding: 0 0 12px; overflow: hidden; }
+.style-card { padding: 0 0 12px; overflow: hidden; justify-content: flex-start; }
 .style-card .chip-label, .style-card .chip-sub { padding: 0 12px; }
 .style-card .swatch { display: block; height: 72px; margin-bottom: 8px; }
 .style-mediterraneen .swatch { background: linear-gradient(135deg, #C9A46A, #8FA45A 55%, #7A6AA8); }

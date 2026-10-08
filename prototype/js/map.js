@@ -38,6 +38,9 @@ export class GardenMap {
     setTimeout(() => this.map.invalidateSize(), 50);
   }
 
+  // Chaque étape redessine ce dont elle a besoin : on repart d'une carte propre.
+  reset() { Object.values(this.groups).forEach((g) => g.clearLayers()); }
+
   onClick(fn) { this.clickHandler = fn; }
   setCursor(c) { this.map.getContainer().style.cursor = c || ''; }
   showCadastre(on) { on ? this.cadastre.addTo(this.map) : this.map.removeLayer(this.cadastre); }
