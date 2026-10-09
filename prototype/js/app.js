@@ -409,7 +409,7 @@ const STEPS = [
   {
     id: 'garder', title: 'Qu\'est-ce que vous voulez garder ?',
     render: () => `
-      <p class="big-instruction" id="keep-msg">Touchez sur la photo ce que vous voulez garder : un arbre, une haie, un massif…</p>
+      <p class="big-instruction" id="keep-msg">Touchez sur la photo ce que vous voulez garder : un arbre, une haie, une allée par où vous passez…</p>
       <div class="zone-stage" id="stage">
         <img id="zone-img" src="${mainPhoto()?.url || ''}" alt="Votre photo principale">
         <canvas id="zone-layer" aria-hidden="true"></canvas>

@@ -4,6 +4,7 @@
     "Clôture : toujours le modèle occultant 1 face (panneaux + occultant, sans 2e face).",
     "Clôture : la face bois est tournée vers le jardin, l'occultant vers l'extérieur.",
     "Clôture : par défaut sur une limite de terrain (parcelle du cadastre ou limite indiquée par le client). À l'intérieur du jardin seulement pour encadrer une zone précise (potager, poulailler, piscine, poubelles, coin technique), quand le client le demande ou que son besoin le justifie. Jamais en travers d'un passage : on laisse toujours un accès (idéalement un portillon). Si rien de tout ça n'est visible ni demandé, pas de clôture.",
+    "Passages : aucun produit, aucune plante ni aucun objet ne doit couper un chemin existant (accès à la maison, au garage, à la voiture, au portail). Le chemin est conservé, nettoyé si besoin, et nommé explicitement dans la consigne envoyée à l'IA.",
     "Pergolas : pieds classiques, toiture brise-soleil par défaut.",
     "Pergolas : ajouter régulièrement un côté brise-vue quand l'occasion se présente (côté voisin, rue ou vis-à-vis). Le modèle n'a qu'un côté brise-vue : on tourne la pergola pour le placer du bon côté.",
     "Les réalisations clients servent uniquement à mesurer la teinte réelle du bois, pas de référence de mise en scène ni de choix de produits (peu de réalisations sont vraiment décorées)."
