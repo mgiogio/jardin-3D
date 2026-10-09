@@ -223,3 +223,8 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 }
 
 .person-pin svg { display: block; filter: drop-shadow(0 1px 3px rgba(0,0,0,.4)); }
+
+.needs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.need { min-height: 72px; }
+.need .chip-label { font-size: 17px; }
+@media (max-width: 520px) { .needs { grid-template-columns: 1fr; } }

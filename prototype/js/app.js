@@ -8,7 +8,17 @@ const STORE_KEY = 'cg-jardin-amenage-v1';
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const m = (x) => `${x.toFixed(1).replace('.', ',')} m`;
-const productLabel = Object.fromEntries(PRODUCTS.map((p) => [p.id, p.label]));
+// Le client choisit un besoin ; les produits en découlent (règles à affiner avec le catalogue).
+const NEEDS = [
+  { id: 'ombre', label: 'Un coin à l\'ombre', sub: 'Pour manger ou se détendre dehors', products: ['pergola-adossee', 'pergola-autoportante', 'terrasse'] },
+  { id: 'intimite', label: 'Être tranquille chez soi', sub: 'À l\'abri des regards des voisins ou de la rue', products: ['cloture'] },
+  { id: 'sol', label: 'Un sol propre et agréable', sub: 'Remplacer la pelouse, la terre ou le béton', products: ['terrasse'] },
+  { id: 'mur', label: 'Embellir un mur', sub: 'Un mur ou une façade triste', products: ['bardage'] },
+  { id: 'entree', label: 'Une belle entrée', sub: 'Fermer ou marquer l\'accès depuis la rue', products: ['cloture', 'portillon'] },
+  { id: 'rangement', label: 'Ranger le jardin', sub: 'Vélos, outils, mobilier', products: ['abri'] },
+  { id: 'piece', label: 'Une pièce en plus', sub: 'Bureau, chambre d\'amis, atelier', products: ['studio'] },
+  { id: 'surprise', label: 'Je ne sais pas encore', sub: 'Proposez-moi la meilleure idée', products: [] },
+];
 
 // ---------- État ----------
 
@@ -16,7 +26,7 @@ const blank = () => ({
   step: 0,
   address: null, buildings: [], building: null, facades: [], parcel: null,
   photos: [],
-  knows: null, products: [], where: [], freeText: '', view: null,
+  need: null, freeText: '', view: null,
   ground: [], keep: [], problems: [], uses: [], style: null, upkeep: null,
   budget: null, horizon: null,
   contact: { firstName: '', email: '', phone: '', optin: false, consent: false },
@@ -377,22 +387,23 @@ const STEPS = [
     valid: () => !!state.view?.check,
   },
   {
-    id: 'projet', title: 'Vous savez déjà ce que vous voulez ?',
+    id: 'besoin', title: 'Que voulez-vous faire de cet espace ?',
+    help: 'Choisissez ce qui compte le plus pour vous. Nous choisirons les aménagements adaptés.',
     render: () => `
-      ${chips('knows', [['oui', 'Oui, j\'ai une idée'], ['non', 'Non, conseillez-moi']], { value: state.knows })}
-      <div id="prod" class="${state.knows === 'oui' ? '' : 'is-hidden'}">
-        <p class="label">Quels aménagements ?</p>
-        ${chips('products', PRODUCTS.map((p) => [p.id, p.label, p.hint]), { multi: true, value: state.products })}
-        <p class="label">Plutôt où ?</p>
-        ${chips('where', [['maison', 'Contre la maison'], ['fond', 'Au fond du jardin'], ['limite', 'Le long d\'une limite'], ['entree', 'À l\'entrée'], ['?', 'Je ne sais pas']], { multi: true, value: state.where })}
-      </div>
-      <label class="field"><span>Dites-nous en plus (facultatif)</span>
-        <textarea id="free" rows="3" placeholder="Ex. une pergola à gauche de la porte-fenêtre, pour manger à l'ombre">${esc(state.freeText)}</textarea></label>`,
+      <div class="needs">${NEEDS.map((n) => `<button type="button" class="chip need${state.need === n.id ? ' is-on' : ''}" data-need="${n.id}" aria-pressed="${state.need === n.id}">
+          <span class="chip-label">${esc(n.label)}</span><span class="chip-sub">${esc(n.sub)}</span></button>`).join('')}</div>
+      <label class="field"><span>Une précision ? (facultatif)</span>
+        <textarea id="free" rows="3" placeholder="Ex. pour manger dehors en famille, à côté de la porte-fenêtre">${esc(state.freeText)}</textarea></label>`,
     mount(root) {
-      bindChips(root, () => { $('#prod', root).classList.toggle('is-hidden', state.knows !== 'oui'); refreshNav(); });
+      root.querySelector('.needs').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-need]'); if (!b) return;
+        state.need = b.dataset.need;
+        root.querySelectorAll('[data-need]').forEach((x) => { const on = x.dataset.need === state.need; x.classList.toggle('is-on', on); x.setAttribute('aria-pressed', on); });
+        save(); refreshNav();
+      });
       $('#free', root).addEventListener('input', (e) => { state.freeText = e.target.value; save(); });
     },
-    valid: () => state.knows === 'non' || (state.knows === 'oui' && state.products.length > 0),
+    valid: () => !!state.need,
   },
   {
     id: 'terrain', title: 'Votre terrain aujourd\'hui',
@@ -406,7 +417,7 @@ const STEPS = [
   },
   {
     id: 'problemes', title: 'Qu\'est-ce qui vous gêne aujourd\'hui ?',
-    optional: () => state.knows === 'oui',
+    help: 'Facultatif, plusieurs réponses possibles.',
     render: () => chips('problems', [
       ['vis-a-vis', 'Vis-à-vis', 'Les voisins ou la rue voient chez vous'],
       ['soleil', 'Trop de soleil', 'Impossible de rester dehors l\'après-midi'],
@@ -415,18 +426,7 @@ const STEPS = [
       ['mur', 'Mur ou façade disgracieux'], ['rangement', 'Manque de rangement'],
     ], { multi: true, value: state.problems }),
     mount: (root) => bindChips(root, refreshNav),
-    valid: () => state.problems.length > 0 || state.knows === 'oui',
-  },
-  {
-    id: 'usages', title: 'Comment voulez-vous en profiter ?',
-    optional: () => state.knows === 'oui',
-    render: () => chips('uses', [
-      ['repas', 'Repas dehors'], ['detente', 'Détente, lecture'], ['enfants', 'Jeux des enfants'],
-      ['piscine', 'Autour de la piscine'], ['potager', 'Potager'], ['recevoir', 'Recevoir des amis'],
-      ['bureau', 'Télétravail ou pièce en plus'],
-    ], { multi: true, value: state.uses }),
-    mount: (root) => bindChips(root, refreshNav),
-    valid: () => state.uses.length > 0 || state.knows === 'oui',
+    valid: () => true,
   },
   {
     id: 'style', title: 'Quelle ambiance vous fait envie ?',
@@ -554,7 +554,7 @@ function studyLines() {
     lines.push(sunny ? `Ensoleillement : façade ${sunny.facing} très exposée l'après-midi` : 'Calcul de l\'ensoleillement');
   }
   lines.push(city ? `Choix des plantes adaptées au climat de ${city}` : 'Choix des plantes adaptées à votre climat');
-  lines.push(state.knows === 'oui' ? 'Vérification des tailles de nos kits pour vos emplacements' : 'Sélection des aménagements Cover Green adaptés');
+  lines.push('Sélection des aménagements Cover Green adaptés à votre projet');
   lines.push('Préparation de votre projet');
   return lines;
 }
@@ -570,10 +570,10 @@ function buildPayload() {
     photos: state.photos.map((p, i) => ({ name: p.name, size: p.size, type: p.type, main: i === 0, guess: p.guess })),
     view: state.view,
     project: {
-      knows: state.knows, products: state.products, where: state.where, freeText: state.freeText,
+      need: state.need, products: NEEDS.find((n) => n.id === state.need)?.products || [], freeText: state.freeText,
     },
     site: { ground: state.ground, keep: state.keep },
-    needs: { problems: state.problems, uses: state.uses, style: state.style, upkeep: state.upkeep },
+    needs: { problems: state.problems, style: state.style, upkeep: state.upkeep },
     budget: state.budget, horizon: state.horizon,
     contact: state.contact,
   };
