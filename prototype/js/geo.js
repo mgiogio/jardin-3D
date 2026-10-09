@@ -29,6 +29,23 @@ export async function geocode(query, { signal } = {}) {
   throw new Error('geocode_unavailable');
 }
 
+export async function reverseGeocode(lat, lon) {
+  const urls = [
+    `${ENDPOINTS.geocode.replace('/search', '/reverse')}?lat=${lat}&lon=${lon}&limit=1&index=address`,
+    `${ENDPOINTS.geocodeFallback.replace('/search/', '/reverse/')}?lat=${lat}&lon=${lon}&limit=1`,
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const data = await r.json();
+      const f = data?.features?.[0];
+      if (f) return toAddress(f);
+    } catch (e) { /* service suivant */ }
+  }
+  return null;
+}
+
 // ---------- Projection locale (mètres) ----------
 // Équirectangulaire autour d'un point de référence : largement suffisant à l'échelle d'un jardin.
 

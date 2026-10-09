@@ -15,7 +15,7 @@ function wmtsLayer(layer, style, format, opts = {}) {
 
 export class GardenMap {
   constructor(el) {
-    this.map = L.map(el, { zoomControl: true, attributionControl: true, tap: true }).setView([46.6, 2.4], 6);
+    this.map = L.map(el, { zoomControl: true, attributionControl: true, tap: true, scrollWheelZoom: false }).setView([46.6, 2.4], 6);
     wmtsLayer('ORTHOIMAGERY.ORTHOPHOTOS', 'normal', 'image/jpeg', { maxNativeZoom: 19 }).addTo(this.map);
     this.cadastre = wmtsLayer('CADASTRALPARCELS.PARCELLAIRE_EXPRESS', 'PCI vecteur', 'image/png', { maxNativeZoom: 19, opacity: 0.7 });
     this.groups = {
@@ -74,10 +74,11 @@ export class GardenMap {
     });
   }
 
-  showFacades(facades, highlight = []) {
+  showFacades(facades, highlight = [], onlyHighlight = false) {
     this.groups.facades.clearLayers();
     facades.forEach((f) => {
       const hot = highlight.includes(f.index);
+      if (onlyHighlight && !hot) return;
       L.polyline([ll(f.a), ll(f.b)], { color: hot ? COLORS.orange : '#fff', weight: hot ? 6 : 3, interactive: false })
         .addTo(this.groups.facades);
       if (f.length >= 2.5) {
@@ -93,11 +94,31 @@ export class GardenMap {
     });
   }
 
-  fitTo(ring) {
+  // Cadre la carte sur la maison (et le point de prise de vue s'il est connu). Appelé une seule fois par étape.
+  fitTo(ring, maxZoom = 20, extra = null) {
     this.map.invalidateSize();
-    // Un cadrage calculé sur une carte de taille nulle partirait au zoom monde : on le refait une fois la taille connue.
-    if (ring?.length) requestAnimationFrame(() => this.map.invalidateSize());
-    if (ring?.length) this.map.fitBounds(L.latLngBounds(ring.map(ll)).pad(1.2), { maxZoom: 20 });
+    if (!ring?.length) return;
+    const pts = ring.map(ll);
+    if (extra) pts.push(ll(extra));
+    this.map.fitBounds(L.latLngBounds(pts).pad(extra ? 0.35 : 1.2), { maxZoom, animate: false });
+    requestAnimationFrame(() => this.map.invalidateSize());
+  }
+
+  // Point de vue : la miniature de la photo à l'endroit de la prise de vue, et le cône si la direction est connue.
+  setViewpoint(origin, bearing, thumbUrl) {
+    this.groups.draft.clearLayers();
+    if (bearing != null) {
+      L.polygon(conePolygon(origin, bearing, 60, 18).map(ll), {
+        color: COLORS.orange, weight: 2, fillColor: COLORS.orange, fillOpacity: 0.3, interactive: false,
+      }).addTo(this.groups.draft);
+    }
+    L.marker(ll(origin), {
+      interactive: false, zIndexOffset: 1000,
+      icon: L.divIcon({
+        className: 'eye-handle', iconSize: [48, 48], iconAnchor: [24, 24],
+        html: thumbUrl ? `<img src="${thumbUrl}" alt="">` : '<span></span>',
+      }),
+    }).addTo(this.groups.draft);
   }
 
   showCones(photos, activeIndex = -1) {
