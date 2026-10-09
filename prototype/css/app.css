@@ -49,7 +49,7 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .ticks li { padding-left: 28px; position: relative; margin: 8px 0; }
 .ticks li::before { content: ""; position: absolute; left: 4px; top: 6px; width: 12px; height: 7px; border-left: 2px solid var(--green); border-bottom: 2px solid var(--green); transform: rotate(-45deg); }
 
-.progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+.progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 8px 0 16px; }
 .progress div { height: 100%; background: var(--green); transition: width .3s; }
 .step-count { font-size: 13px; color: var(--ink-2); margin: 6px 0 12px; }
 
@@ -125,9 +125,13 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .facts span { font-size: 13px; color: var(--ink-2); }
 
 /* Parcours pas à pas */
-.photo-hero { display: block; width: 100%; max-height: 220px; object-fit: cover; border-radius: var(--radius); margin-bottom: 12px; }
+.photo-grid:not(:empty) + .upload { margin-top: 12px; }
+.upload.upload-main.is-secondary { background: var(--white); border-style: dashed; border-color: var(--line); padding: 14px; }
+.upload.upload-main.is-secondary span { color: var(--ink); font-weight: 500; }
+.step-ou-photo .map-wrap, .step-direction .map-wrap, .step-echelle .map-wrap { height: 320px; }
+.photo-hero { display: block; width: 100%; max-height: 140px; object-fit: cover; border-radius: var(--radius); margin-bottom: 12px; }
 .big-instruction { font-size: 18px; font-weight: 600; line-height: 1.35; margin: 4px 0 8px; padding: 12px 14px; border-radius: var(--radius); background: var(--orange-pale); }
-.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 12px; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .photo-card { position: relative; margin: 0; border: 2px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .photo-card.is-main { border-color: var(--green); grid-column: 1 / -1; }
 .photo-card img { display: block; width: 100%; height: 120px; object-fit: cover; }

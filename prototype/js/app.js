@@ -107,9 +107,9 @@ const STEPS = [
     id: 'photos', title: 'Votre jardin en photo',
     help: 'Prenez la photo depuis l\'endroit d\'où vous aimeriez voir votre futur jardin, à hauteur d\'yeux, en reculant le plus possible.',
     render: () => `
+      <div id="photo-list" class="photo-grid"></div>
       <label class="upload upload-main" id="photo-label"><input id="files" type="file" accept="image/*" multiple>
         <span>Ajouter une photo</span><small>Prenez-la maintenant ou choisissez-la dans vos photos</small></label>
-      <div id="photo-list" class="photo-grid"></div>
       <p class="small" id="photo-more"></p>`,
     mount(root) {
       const list = $('#photo-list', root), more = $('#photo-more', root);
@@ -120,8 +120,11 @@ const STEPS = [
             <button type="button" class="photo-del" data-del="${i}" aria-label="Retirer la photo ${i + 1}">Retirer</button>
           </figure>`).join('');
         more.textContent = state.photos.length === 0 ? ''
-          : state.photos.length < 3 ? 'Vous pouvez ajouter jusqu\'à 2 autres photos (facultatif) : elles nous aident à comprendre le jardin.' : '';
-        $('#photo-label', root).querySelector('span').textContent = state.photos.length ? 'Ajouter une autre photo' : 'Ajouter une photo';
+          : state.photos.length < 3 ? 'D\'autres vues du jardin nous aident à mieux le comprendre.' : '';
+        const lab = $('#photo-label', root);
+        lab.querySelector('span').textContent = state.photos.length ? 'Ajouter une autre photo (facultatif)' : 'Ajouter une photo';
+        lab.querySelector('small').classList.toggle('is-hidden', state.photos.length > 0);
+        lab.classList.toggle('is-secondary', state.photos.length > 0);
         $('#photo-label', root).classList.toggle('is-hidden', state.photos.length >= 3);
         refreshNav();
       };
@@ -242,6 +245,7 @@ const STEPS = [
       }
     },
     valid: () => !!state.building,
+    next: 'Oui, c\'est elle',
     skippable: 'Je ne la trouve pas',
   },
   {
@@ -324,7 +328,7 @@ const STEPS = [
           map.showBuildings([{ id: state.building.id, ring: state.building.ring }], state.building.id);
           map.fitTo(state.building.ring, 20, v.origin);
         }
-        map.setViewpoint(v.origin, v.bearing, mainPhoto()?.url);
+        map.setViewpoint(v.origin, null, mainPhoto()?.url);
         map.showFacades(state.facades, [f.index], true);
       };
       const ask = () => {
@@ -623,7 +627,7 @@ function render() {
   const showNav = !s.auto && !s.final;
 
   app.innerHTML = `
-    ${s.id !== 'intro' && !s.final && !s.auto ? `<div class="progress"><div style="width:${(num / total) * 100}%"></div></div><p class="step-count">Étape ${num} sur ${total}</p>` : ''}
+    ${s.id !== 'intro' && !s.final && !s.auto ? `<div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round((num / total) * 100)}"><div style="width:${(num / total) * 100}%"></div></div>` : ''}
     <section class="step step-${s.id}">
       ${s.title ? `<h2>${esc(s.title)}</h2>` : ''}
       ${s.help ? `<p class="help">${esc(s.help)}</p>` : ''}
