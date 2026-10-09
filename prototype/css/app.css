@@ -228,3 +228,10 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .need { min-height: 72px; }
 .need .chip-label { font-size: 17px; }
 @media (max-width: 520px) { .needs { grid-template-columns: 1fr; } }
+
+/* Détourage sur la photo */
+.zone-stage { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--light); }
+.zone-stage img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+.zone-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; touch-action: manipulation; }
+.zone-busy { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); background: rgba(30,33,31,.85); color: #fff;
+  font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 999px; pointer-events: none; white-space: nowrap; }
