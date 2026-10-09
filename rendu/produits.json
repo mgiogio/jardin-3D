@@ -3,6 +3,7 @@
   "regles_premier_rendu": [
     "Clôture : toujours le modèle occultant 1 face (panneaux + occultant, sans 2e face).",
     "Clôture : la face bois est tournée vers le jardin, l'occultant vers l'extérieur.",
+    "Clôture : uniquement sur une limite de terrain (limite de parcelle du cadastre ou limite indiquée par le client), jamais au milieu du jardin ni en travers d'un passage. Si aucune limite n'est visible sur la photo, pas de clôture.",
     "Pergolas : pieds classiques, toiture brise-soleil par défaut.",
     "Pergolas : ajouter régulièrement un côté brise-vue quand l'occasion se présente (côté voisin, rue ou vis-à-vis). Le modèle n'a qu'un côté brise-vue : on tourne la pergola pour le placer du bon côté.",
     "Les réalisations clients servent uniquement à mesurer la teinte réelle du bois, pas de référence de mise en scène ni de choix de produits (peu de réalisations sont vraiment décorées)."
