@@ -129,6 +129,8 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .upload.upload-main.is-secondary { background: var(--white); border-style: dashed; border-color: var(--line); padding: 14px; }
 .upload.upload-main.is-secondary span { color: var(--ink); font-weight: 500; }
 .step-ou-photo .map-wrap, .step-direction .map-wrap, .step-echelle .map-wrap { height: 320px; }
+.step-echelle .map-wrap { margin-bottom: 12px; }
+@media (max-width: 640px) { .step-echelle .map-wrap { height: 220px; } .step-echelle .photo-hero { max-height: 110px; } }
 .photo-hero { display: block; width: 100%; max-height: 140px; object-fit: cover; border-radius: var(--radius); margin-bottom: 12px; }
 .big-instruction { font-size: 18px; font-weight: 600; line-height: 1.35; margin: 4px 0 8px; padding: 12px 14px; border-radius: var(--radius); background: var(--mist); border-left: 4px solid var(--green); }
 .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
