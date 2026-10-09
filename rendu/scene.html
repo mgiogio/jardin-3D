@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<style>html,body{margin:0}</style></head><body>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const P = JSON.parse(new URLSearchParams(location.search).get('p'));
+const [W, H] = P.size;
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true });
+r.setSize(W, H); r.setClearColor(0x000000, 0); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = P.exposure || 1; r.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(r.domElement);
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = P.env ?? 0.5;
+const badMat = /GRASS|SOIL|CONCRETE|WALL|GLASS/i;
+const loader = new GLTFLoader();
+for (const it of P.items) {
+  const g = (await loader.loadAsync('modeles/' + it.m)).scene;
+  const excl = new RegExp(it.excl, 'i');
+  g.traverse((o) => {
+    if (o !== g && excl.test(o.name)) o.visible = false;
+    if (o.isMesh) {
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      if (mats.some((m) => badMat.test(m.name))) o.visible = false;
+      mats.forEach((m) => { if (/WOOD/i.test(m.name) && P.woodTint) { m.color = new THREE.Color(P.woodTint); m.roughness = 0.85; } });
+      o.castShadow = true; o.receiveShadow = true;
+    }
+  });
+  // poser le modèle : coin bas, centré sur sa propre emprise
+  g.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  g.traverse((o) => { if (o.isMesh) { let v = true, p = o; while (p) { if (!p.visible) v = false; p = p.parent; } if (v) box.expandByObject(o); } });
+  const c = box.getCenter(new THREE.Vector3());
+  const pivot = new THREE.Group(); g.position.set(-c.x, -box.min.y, -c.z); pivot.add(g);
+  pivot.position.set(it.pos[0], 0, it.pos[1]); pivot.rotation.y = (it.rotY || 0) * Math.PI / 180;
+  scene.add(pivot);
+}
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.ShadowMaterial({ opacity: P.shadow ?? 0.35 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+scene.add(new THREE.HemisphereLight(0xe6eef5, 0x6f6a55, P.hemi ?? 1.2));
+const sun = new THREE.DirectionalLight(0xffffff, P.sun ?? 1.0);
+const az = (P.sunAz ?? 200) * Math.PI / 180, el = (P.sunEl ?? 55) * Math.PI / 180;
+sun.position.set(Math.sin(az) * Math.cos(el) * 30, Math.sin(el) * 30, -8 + Math.cos(az) * Math.cos(el) * 30); sun.target.position.set(0, 0, -8);
+sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); Object.assign(sun.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, near: 1, far: 80 });
+sun.shadow.radius = P.shadowBlur ?? 8; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+scene.add(sun, sun.target);
+const cam = new THREE.PerspectiveCamera(P.cam.vfov, W / H, 0.05, 500);
+cam.position.set(0, P.cam.h, 0); cam.rotation.order = 'YXZ'; cam.rotation.y = (P.cam.yaw || 0) * Math.PI / 180; cam.rotation.x = -(P.cam.pitch || 0) * Math.PI / 180; cam.rotation.z = (P.cam.roll || 0) * Math.PI / 180;
+r.render(scene, cam);
+window.__png = r.domElement.toDataURL('image/png');
+</script></body></html>

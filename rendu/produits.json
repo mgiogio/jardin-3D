@@ -7,28 +7,62 @@
   ],
   "produits": {
     "cloture-horizontale": {
-      "fichiers": { "1m20": "Cloture_Horizontale_1m20.glb", "1m80": "Cloture_Horizontale_1m80.glb", "2m40": "Cloture_Horizontale_2m40.glb" },
+      "fichiers": {
+        "1m20": "Cloture_Horizontale_1m20.glb",
+        "1m80": "Cloture_Horizontale_1m80.glb",
+        "2m40": "Cloture_Horizontale_2m40.glb"
+      },
       "variante_par_defaut": "occultant-1-face",
       "variantes": {
-        "occultant-1-face": { "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|2ème" },
-        "claire-voie-1-face": { "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|2ème|Occultant" },
-        "claire-voie-2-faces": { "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|Occultant" }
+        "occultant-1-face": {
+          "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|2ème"
+        },
+        "claire-voie-1-face": {
+          "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|2ème|Occultant"
+        },
+        "claire-voie-2-faces": {
+          "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|Occultant"
+        }
       },
       "face_jardin": "rotation de 180° par rapport à l'axe du modèle : la face bois est du côté -Z du fichier"
     },
     "pergola-autoportante": {
-      "fichiers": { "3x3": "Pergola_Autoportante_3x3.glb", "3x6": "Pergola_Autoportante_3x6.glb", "3x9": "Pergola_Autoportante_3x9.glb" },
+      "fichiers": {
+        "3x3": "Pergola_Autoportante_3x3.glb",
+        "3x6": "Pergola_Autoportante_3x6.glb",
+        "3x9": "Pergola_Autoportante_3x9.glb"
+      },
       "variante_par_defaut": "pieds-classiques",
       "variantes": {
-        "pieds-classiques": { "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Etape 7|Toile|Paillasson|Rideau|brise|Fil galv|Mousquetons|Pitons|Agrafes" }
+        "pieds-classiques": {
+          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Etape 7|Toile|Paillasson|Rideau|brise|Fil galv|Mousquetons|Pitons|Agrafes"
+        }
       }
     },
     "pergola-adossee": {
-      "fichiers": { "3x3": "Pergola_Murale_3x3.glb", "3x6": "Pergola_Murale_3x6.glb", "3x9": "Pergola_Murale_3x9.glb" },
+      "fichiers": {
+        "3x3": "Pergola_Murale_3x3.glb",
+        "3x6": "Pergola_Murale_3x6.glb",
+        "3x9": "Pergola_Murale_3x9.glb"
+      },
       "variante_par_defaut": "pieds-classiques",
       "variantes": {
-        "pieds-classiques": { "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Etape 7|Toile|Paillasson|Rideau|brise|Fil galv|Mousquetons|Pitons|Agrafes" }
+        "pieds-classiques": {
+          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Etape 7|Toile|Paillasson|Rideau|brise|Fil galv|Mousquetons|Pitons|Agrafes"
+        }
       }
+    }
+  },
+  "teintes_bois": {
+    "_note": "Mesurées sur les photos de la page Réalisations de www.cover.green (9 clôtures occultantes 1 face). La teinte est imposée au bois du rendu, le veinage et les ombres du modèle sont conservés (composer.py).",
+    "douglas_autoclave": {
+      "soleil": "#978461",
+      "couvert": "#7a6858"
+    },
+    "pin_lamelle_colle_pergola": {
+      "soleil": "#978461",
+      "couvert": "#7a6858",
+      "_a_affiner": "même teinte que la clôture en attendant une mesure dédiée"
     }
   }
 }
