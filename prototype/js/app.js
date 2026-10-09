@@ -1,5 +1,5 @@
 // Parcours "Mon jardin aménagé" : moteur d'étapes, état, et contenu de chaque étape.
-import { PRODUCTS, ENDPOINTS } from './config.js';
+import { PRODUCTS, ENDPOINTS, CAPTURE_EMAIL } from './config.js';
 import { geocode, reverseGeocode, fetchBuildings, fetchParcel, facadesOf, visibleFacades, bearingDeg, rectFromSide, polylineLength, compassLabel, ringAreaM2, distanceM } from './geo.js';
 import { startSensors, sensorSnapshot, readExifView } from './capture.js';
 import { prepare as prepareZones, maskAt as maskZone, paint as paintZones, hit as hitZone } from './zones.js';
@@ -320,7 +320,7 @@ const STEPS = [
     valid: () => state.view?.bearing != null,
   },
   {
-    id: 'echelle', title: 'Une dernière vérification sur votre photo',
+    id: 'echelle', title: 'Une petite vérification',
     render: () => `
       <img class="photo-hero" src="${mainPhoto()?.url || ''}" alt="Votre photo principale">
       <div id="check-box"></div>
@@ -518,6 +518,7 @@ const STEPS = [
   },
   {
     id: 'contact', title: 'Votre projet est prêt',
+    when: () => CAPTURE_EMAIL,
     help: 'Indiquez où vous l\'envoyer. Vous recevez votre visuel et nos conseils par email dans quelques minutes.',
     render: () => `
       <label class="field"><span>Prénom</span><input id="fn" type="text" autocomplete="given-name" value="${esc(state.contact.firstName)}"></label>
@@ -535,15 +536,18 @@ const STEPS = [
   },
   {
     id: 'merci', title: null, final: true,
-    render: () => `
+    render: () => CAPTURE_EMAIL ? `
       <div class="hero">
         <p class="eyebrow">C'est envoyé</p>
         <h1>Merci ${esc(state.contact.firstName)}, votre jardin est entre de bonnes mains</h1>
         <p class="lead">Vous allez recevoir votre visuel et nos conseils à <b>${esc(state.contact.email)}</b> dans quelques minutes. Pensez à regarder dans vos courriers indésirables.</p>
+      </div>${devBlock()}` : `
+      <div class="hero">
+        <p class="eyebrow">Version de test</p>
+        <h1>Votre projet est enregistré</h1>
+        <p class="lead">Voici ce que l'outil a compris. C'est ce qui servira à créer le visuel et le compte rendu.</p>
       </div>
-      <details class="dev"><summary>Données envoyées (prototype)</summary><pre id="payload"></pre>
-        <button type="button" class="btn-sec btn-sm" id="dl">Télécharger le JSON</button>
-        <button type="button" class="btn-ghost btn-sm" id="reset">Recommencer</button></details>`,
+      ${summaryHtml()}${devBlock()}`,
     mount(root) {
       const payload = buildPayload();
       $('#payload', root).textContent = JSON.stringify(payload, null, 2);
@@ -552,12 +556,40 @@ const STEPS = [
         a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
         a.download = 'projet-jardin.json'; a.click();
       });
-      $('#reset', root).addEventListener('click', () => { try { localStorage.removeItem(STORE_KEY); } catch (e) { /* */ } state = blank(); render(); });
+      $('#reset', root).addEventListener('click', () => { try { localStorage.removeItem(STORE_KEY); } catch (e) { /* */ } state.photos.forEach((p) => URL.revokeObjectURL(p.url)); state = blank(); render(); });
     },
   },
 ];
 
 // ---------- Contenu dérivé ----------
+
+function devBlock() {
+  return `<details class="dev"><summary>Données techniques (prototype)</summary><pre id="payload"></pre>
+    <button type="button" class="btn-sec btn-sm" id="dl">Télécharger le JSON</button></details>
+    <p><button type="button" class="btn-ghost" id="reset">Recommencer un projet</button></p>`;
+}
+
+function summaryHtml() {
+  const label = (list, id) => (list.find((x) => x[0] === id) || [])[1] || '';
+  const need = NEEDS.find((n) => n.id === state.need);
+  const c = state.view?.check;
+  const rows = [
+    ['Photos', `${state.photos.length} (dont la photo principale)`],
+    ['Adresse', state.address?.label || 'Non renseignée'],
+    ['Maison', state.building ? 'Trouvée sur la carte IGN' : 'Non trouvée'],
+    ['Point de vue', state.view?.origin ? (state.view.bearing != null ? 'Position et direction indiquées' : 'Position indiquée') : 'Inconnu'],
+    ['Échelle', !c ? 'Non vérifiée' : c.type === 'facade' ? 'Mur de la maison confirmé' : c.type === 'length' ? `Longueur donnée : ${esc(c.label)}` : 'À estimer sur la photo'],
+    ['À garder', `${(state.keepZones || []).length} élément(s) sélectionné(s)`],
+    ['Besoin', need ? need.label : '-'],
+    ['Précision', state.freeText ? esc(state.freeText) : '-'],
+    ['Ce qui gêne', state.problems.length ? state.problems.join(', ') : '-'],
+    ['Ambiance', state.style || '-'],
+    ['Entretien', state.upkeep || '-'],
+    ['Budget', state.budget || '-'],
+    ['Calendrier', state.horizon || '-'],
+  ];
+  return `<dl class="summary">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
+}
 
 function mainPhoto() { return state.photos[0]; }
 function houseCenter() {

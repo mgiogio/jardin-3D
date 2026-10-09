@@ -31,6 +31,9 @@ export const PRODUCTS = [
   { id: 'studio', label: 'Studio de jardin', hint: 'Bureau, chambre, pièce en plus', mode: 'zone', snapFacade: false, defaultDepth: 4 },
 ];
 
+// Phase de test : pas de demande d'email, le parcours se termine sur un récapitulatif.
+export const CAPTURE_EMAIL = false;
+
 export const COLORS = {
   orange: '#EB5A00',
   green: '#049E00',

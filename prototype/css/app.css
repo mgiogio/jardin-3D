@@ -236,3 +236,10 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .zone-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; touch-action: manipulation; }
 .zone-busy { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); background: rgba(30,33,31,.85); color: #fff;
   font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 999px; pointer-events: none; white-space: nowrap; }
+
+.summary { margin: 16px 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--white); }
+.summary div { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.summary div:last-child { border-bottom: 0; }
+.summary dt { font-weight: 600; color: var(--ink-2); }
+.summary dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .summary div { grid-template-columns: 1fr; gap: 2px; } }
