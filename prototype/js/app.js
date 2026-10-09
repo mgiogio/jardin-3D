@@ -326,7 +326,7 @@ const STEPS = [
         if (!map) {
           map = mapIn(slot);
           map.showBuildings([{ id: state.building.id, ring: state.building.ring }], state.building.id);
-          map.fitTo(state.building.ring, 20, v.origin);
+          map.fitTo(state.building.ring, 21, v.origin);
         }
         map.setViewpoint(v.origin, null, mainPhoto()?.url);
         map.showFacades(state.facades, [f.index], true);
