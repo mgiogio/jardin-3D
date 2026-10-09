@@ -3,7 +3,9 @@
   "regles_premier_rendu": [
     "Clôture : toujours le modèle occultant 1 face (panneaux + occultant, sans 2e face).",
     "Clôture : la face bois est tournée vers le jardin, l'occultant vers l'extérieur.",
-    "Pergolas : pieds classiques, sans option de toiture (toile, brise-soleil, canisse)."
+    "Pergolas : pieds classiques, toiture brise-soleil par défaut.",
+    "Pergolas : ajouter régulièrement un côté brise-vue quand l'occasion se présente (côté voisin, rue ou vis-à-vis). Le modèle n'a qu'un côté brise-vue : on tourne la pergola pour le placer du bon côté.",
+    "Les réalisations clients servent uniquement à mesurer la teinte réelle du bois, pas de référence de mise en scène ni de choix de produits (peu de réalisations sont vraiment décorées)."
   ],
   "produits": {
     "cloture-horizontale": {
@@ -32,10 +34,16 @@
         "3x6": "Pergola_Autoportante_3x6.glb",
         "3x9": "Pergola_Autoportante_3x9.glb"
       },
-      "variante_par_defaut": "pieds-classiques",
+      "variante_par_defaut": "brise-soleil",
       "variantes": {
-        "pieds-classiques": {
-          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Etape 7|Toile|Paillasson|Rideau|brise|Fil galv|Mousquetons|Pitons|Agrafes"
+        "brise-soleil": {
+          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Option Toile|Paillasson|Option Face|Rideau|brise vue"
+        },
+        "brise-soleil-brise-vue": {
+          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Option Toile|Paillasson"
+        },
+        "nue": {
+          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Option Toile|Paillasson|Etape 7|Toiture|brise|Rideau|Fil galv|Mousquetons|Pitons|Agrafes"
         }
       }
     },
@@ -45,10 +53,16 @@
         "3x6": "Pergola_Murale_3x6.glb",
         "3x9": "Pergola_Murale_3x9.glb"
       },
-      "variante_par_defaut": "pieds-classiques",
+      "variante_par_defaut": "brise-soleil",
       "variantes": {
-        "pieds-classiques": {
-          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Etape 7|Toile|Paillasson|Rideau|brise|Fil galv|Mousquetons|Pitons|Agrafes"
+        "brise-soleil": {
+          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Option Toile|Paillasson|Option Face|Rideau|brise vue"
+        },
+        "brise-soleil-brise-vue": {
+          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Option Toile|Paillasson"
+        },
+        "nue": {
+          "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Option Toile|Paillasson|Etape 7|Toiture|brise|Rideau|Fil galv|Mousquetons|Pitons|Agrafes"
         }
       }
     }
