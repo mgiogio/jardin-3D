@@ -28,7 +28,7 @@ const blank = () => ({
   address: null, buildings: [], building: null, facades: [], parcel: null,
   photos: [],
   need: null, freeText: '', view: null,
-  keepZones: [], problems: [], style: null, upkeep: null,
+  keepZones: [], passZones: [], problems: [], style: null, upkeep: null,
   budget: null, horizon: null,
   contact: { firstName: '', email: '', phone: '', optin: false, consent: false },
 });
@@ -43,8 +43,8 @@ function load() {
 }
 function save() {
   try {
-    const { photos, buildings, keepZones, ...rest } = state;
-    localStorage.setItem(STORE_KEY, JSON.stringify({ ...rest, photos: [], buildings: [], keepZones: [] }));
+    const { photos, buildings, keepZones, passZones, ...rest } = state;
+    localStorage.setItem(STORE_KEY, JSON.stringify({ ...rest, photos: [], buildings: [], keepZones: [], passZones: [] }));
   } catch (e) { /* ignoré */ }
 }
 
@@ -120,6 +120,63 @@ const STYLES = [
 const UPKEEP = [['zero', 'Zéro entretien'], ['peu', 'Un peu d\'entretien'], ['passion', 'Je suis jardinier dans l\'âme']];
 const BUDGETS = [['<2000', 'Moins de 2 000 €'], ['2000-5000', '2 000 à 5 000 €'], ['5000-10000', '5 000 à 10 000 €'], ['>10000', 'Plus de 10 000 €'], ['?', 'Je ne sais pas encore']];
 const HORIZONS = [['vite', 'Dès que possible'], ['printemps', 'Au printemps'], ['annee', 'Dans l\'année'], ['reflexion', 'Je réfléchis']];
+
+// Étape de sélection sur la photo (détourage au toucher), utilisée pour « à garder » et « passage ».
+function zoneStep({ id, key, title, instruction, empty, what }) {
+  return {
+    id, title,
+    render: () => `
+      <p class="big-instruction" id="zone-msg">${instruction}</p>
+      <div class="zone-stage" id="stage">
+        <img id="zone-img" src="${mainPhoto()?.url || ''}" alt="Votre photo principale">
+        <canvas id="zone-layer" aria-hidden="true"></canvas>
+        <div class="zone-busy" id="zone-busy">Préparation de votre photo…</div>
+      </div>
+      <p class="small" id="zone-count"></p>`,
+    mount(root) {
+      const img = $('#zone-img', root), layer = $('#zone-layer', root), busy = $('#zone-busy', root);
+      const msg = $('#zone-msg', root), count = $('#zone-count', root);
+      const url = mainPhoto()?.url;
+      // Les masques ne sont pas conservés d'une visite à l'autre : on garde les points touchés.
+      state[key] = (state[key] || []).filter((z) => z.url === url);
+      let ready = false, working = false, failed = false;
+      const draw = () => {
+        layer.width = img.clientWidth * devicePixelRatio; layer.height = img.clientHeight * devicePixelRatio;
+        paintZones(layer, state[key]);
+        const n = state[key].length;
+        count.textContent = n ? `${n} ${n > 1 ? what[1] : what[0]}. Touchez un élément vert pour le retirer.` : '';
+        $('#next').textContent = n ? 'Continuer' : empty;
+        save(); refreshNav();
+      };
+      const setBusy = (t) => { busy.textContent = t || ''; busy.classList.toggle('is-hidden', !t); };
+      img.addEventListener('load', draw);
+      if (img.complete) draw();
+      window.addEventListener('resize', draw, { once: true });
+      prepareZones(url).then(() => { ready = true; setBusy(''); }).catch(() => {
+        failed = true; setBusy('');
+        msg.textContent = instruction + ' Une pastille verte le signale.';
+      });
+      layer.addEventListener('click', async (e) => {
+        if (working) return;
+        const r = layer.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        const i = hitZone(state[key], x, y);
+        if (i >= 0) { state[key].splice(i, 1); draw(); return; }
+        const zone = { url, point: [x, y], mask: null, box: null };
+        if (!failed) {
+          working = true; setBusy(ready ? 'Un instant…' : 'Préparation de votre photo…');
+          try {
+            zone.mask = await maskZone(url, x, y);
+            zone.box = zone.mask.box;
+          } catch (err) { failed = true; }
+          working = false; setBusy('');
+        }
+        state[key].push(zone); draw();
+      });
+    },
+    valid: () => true,
+  };
+}
 
 const STEPS = [
   {
@@ -406,59 +463,16 @@ const STEPS = [
     },
     valid: () => !!state.view?.check,
   },
-  {
-    id: 'garder', title: 'Qu\'est-ce que vous voulez garder ?',
-    render: () => `
-      <p class="big-instruction" id="keep-msg">Touchez sur la photo ce que vous voulez garder : un arbre, une haie, une allée par où vous passez…</p>
-      <div class="zone-stage" id="stage">
-        <img id="zone-img" src="${mainPhoto()?.url || ''}" alt="Votre photo principale">
-        <canvas id="zone-layer" aria-hidden="true"></canvas>
-        <div class="zone-busy" id="zone-busy">Préparation de votre photo…</div>
-      </div>
-      <p class="small" id="keep-count"></p>`,
-    mount(root) {
-      const img = $('#zone-img', root), layer = $('#zone-layer', root), busy = $('#zone-busy', root);
-      const msg = $('#keep-msg', root), count = $('#keep-count', root);
-      const url = mainPhoto()?.url;
-      // Les masques ne sont pas conservés d'une visite à l'autre : on garde les points touchés.
-      state.keepZones = (state.keepZones || []).filter((z) => z.url === url);
-      let ready = false, working = false, failed = false;
-      const draw = () => {
-        layer.width = img.clientWidth * devicePixelRatio; layer.height = img.clientHeight * devicePixelRatio;
-        paintZones(layer, state.keepZones);
-        const n = state.keepZones.length;
-        count.textContent = n ? `${n} élément${n > 1 ? 's' : ''} gardé${n > 1 ? 's' : ''}. Touchez un élément vert pour le retirer.` : '';
-        $('#next').textContent = n ? 'Continuer' : 'Rien de particulier';
-        save(); refreshNav();
-      };
-      const setBusy = (t) => { busy.textContent = t || ''; busy.classList.toggle('is-hidden', !t); };
-      img.addEventListener('load', draw);
-      if (img.complete) draw();
-      window.addEventListener('resize', draw, { once: true });
-      prepareZones(url).then(() => { ready = true; setBusy(''); }).catch(() => {
-        failed = true; setBusy('');
-        msg.textContent = 'Touchez sur la photo ce que vous voulez garder. Une pastille verte le signale.';
-      });
-      layer.addEventListener('click', async (e) => {
-        if (working) return;
-        const r = layer.getBoundingClientRect();
-        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-        const i = hitZone(state.keepZones, x, y);
-        if (i >= 0) { state.keepZones.splice(i, 1); draw(); return; }
-        const zone = { url, point: [x, y], mask: null, box: null };
-        if (!failed) {
-          working = true; setBusy(ready ? 'Un instant…' : 'Préparation de votre photo…');
-          try {
-            zone.mask = await maskZone(url, x, y);
-            zone.box = zone.mask.box;
-          } catch (err) { failed = true; }
-          working = false; setBusy('');
-        }
-        state.keepZones.push(zone); draw();
-      });
-    },
-    valid: () => true,
-  },
+  zoneStep({
+    id: 'garder', key: 'keepZones', title: 'Qu\'est-ce que vous voulez garder ?',
+    instruction: 'Touchez sur la photo ce que vous voulez garder : un arbre, une haie, un massif…',
+    empty: 'Rien de particulier', what: ['élément gardé', 'éléments gardés'],
+  }),
+  zoneStep({
+    id: 'passage', key: 'passZones', title: 'Y a-t-il un passage à laisser libre ?',
+    instruction: 'Si vous passez par ce jardin, touchez le chemin sur la photo : allée vers la maison, le garage ou la voiture.',
+    empty: 'Pas de passage', what: ['passage', 'passages'],
+  }),
   {
     id: 'besoin', title: 'Que voulez-vous faire de cet espace ?',
     help: 'Choisissez ce qui compte le plus pour vous. Nous choisirons les aménagements adaptés.',
@@ -587,6 +601,7 @@ function summaryHtml() {
     ['Point de vue', state.view?.origin ? (state.view.bearing != null ? 'Position et direction indiquées' : 'Position indiquée') : 'Inconnu'],
     ['Échelle', !c ? 'Non vérifiée' : c.type === 'facade' ? 'Mur de la maison confirmé' : c.type === 'length' ? `Longueur donnée : ${esc(c.label)}` : 'À estimer sur la photo'],
     ['À garder', (() => { const n = (state.keepZones || []).length; return n ? `${n} élément${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''} sur la photo` : 'Rien de particulier'; })()],
+    ['Passage libre', (() => { const n = (state.passZones || []).length; return n ? `${n} passage${n > 1 ? 's' : ''} indiqué${n > 1 ? 's' : ''} sur la photo` : 'Pas de passage'; })()],
     ['Besoin', need ? need.label : '-'],
     ['Précision', state.freeText ? esc(state.freeText) : '-'],
     ['Ce qui gêne', state.problems.length ? state.problems.map((p) => label(PROBLEMS, p)).join(', ') : '-'],
@@ -656,6 +671,7 @@ function buildPayload() {
       need: state.need, products: NEEDS.find((n) => n.id === state.need)?.products || [], freeText: state.freeText,
     },
     keep: (state.keepZones || []).map((z) => ({ point: z.point, box: z.box })),
+    passages: (state.passZones || []).map((z) => ({ point: z.point, box: z.box })),
     needs: { problems: state.problems, style: state.style, upkeep: state.upkeep },
     budget: state.budget, horizon: state.horizon,
     contact: state.contact,
