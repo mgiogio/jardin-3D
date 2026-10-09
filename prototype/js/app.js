@@ -102,6 +102,25 @@ function advice(text) {
 
 // ---------- Étapes ----------
 
+// Listes de choix, partagées entre le questionnaire et le récapitulatif.
+const PROBLEMS = [
+  ['vis-a-vis', 'Vis-à-vis', 'Les voisins ou la rue voient chez vous'],
+  ['soleil', 'Trop de soleil', 'Impossible de rester dehors l\'après-midi'],
+  ['vent', 'Vent'], ['bruit', 'Bruit'],
+  ['vide', 'Jardin vide ou triste'], ['neglige', 'Jardin négligé', 'La végétation a pris le dessus'],
+  ['mur', 'Mur ou façade disgracieux'], ['rangement', 'Manque de rangement'],
+];
+const STYLES = [
+  ['mediterraneen', 'Méditerranéen', 'Oliviers, lavandes, tons chauds'],
+  ['contemporain', 'Contemporain', 'Lignes nettes, graminées, sobre'],
+  ['nature', 'Nature', 'Généreux, fleuri, un peu sauvage'],
+  ['boheme', 'Bohème', 'Coussins, lumières, plantes en pots'],
+  ['zen', 'Zen', 'Minéral, bambous, érables'],
+];
+const UPKEEP = [['zero', 'Zéro entretien'], ['peu', 'Un peu d\'entretien'], ['passion', 'Je suis jardinier dans l\'âme']];
+const BUDGETS = [['<2000', 'Moins de 2 000 €'], ['2000-5000', '2 000 à 5 000 €'], ['5000-10000', '5 000 à 10 000 €'], ['>10000', 'Plus de 10 000 €'], ['?', 'Je ne sais pas encore']];
+const HORIZONS = [['vite', 'Dès que possible'], ['printemps', 'Au printemps'], ['annee', 'Dans l\'année'], ['reflexion', 'Je réfléchis']];
+
 const STEPS = [
   {
     id: 'intro', title: null,
@@ -323,8 +342,8 @@ const STEPS = [
     id: 'echelle', title: 'Une petite vérification',
     render: () => `
       <img class="photo-hero" src="${mainPhoto()?.url || ''}" alt="Votre photo principale">
-      <div id="check-box"></div>
-      <div class="map-wrap is-hidden" id="map-slot"></div>`,
+      <div class="map-wrap is-hidden" id="map-slot"></div>
+      <div id="check-box"></div>`,
     mount(root) {
       const box = $('#check-box', root), slot = $('#map-slot', root);
       const v = state.view || (state.view = { unknown: true });
@@ -354,7 +373,7 @@ const STEPS = [
           showWall(f);
           box.innerHTML = `<div class="callout"><b>Voit-on ce mur de votre maison sur la photo ?</b>
             <span>C'est le trait jaune sur la carte.</span>
-            <div class="row"><button type="button" class="btn-pri" data-act="yes">Oui</button>
+            <div class="row"><button type="button" class="btn-sec" data-act="yes">Oui</button>
             <button type="button" class="btn-sec" data-act="no">Non</button></div></div>`;
         } else {
           slot.classList.add('is-hidden');
@@ -462,29 +481,17 @@ const STEPS = [
   {
     id: 'problemes', title: 'Qu\'est-ce qui vous gêne aujourd\'hui ?',
     help: 'Facultatif, plusieurs réponses possibles.',
-    render: () => chips('problems', [
-      ['vis-a-vis', 'Vis-à-vis', 'Les voisins ou la rue voient chez vous'],
-      ['soleil', 'Trop de soleil', 'Impossible de rester dehors l\'après-midi'],
-      ['vent', 'Vent'], ['bruit', 'Bruit'],
-      ['vide', 'Jardin vide ou triste'], ['neglige', 'Jardin négligé', 'La végétation a pris le dessus'],
-      ['mur', 'Mur ou façade disgracieux'], ['rangement', 'Manque de rangement'],
-    ], { multi: true, value: state.problems }),
+    render: () => chips('problems', PROBLEMS, { multi: true, value: state.problems }),
     mount: (root) => bindChips(root, refreshNav),
     valid: () => true,
   },
   {
     id: 'style', title: 'Quelle ambiance vous fait envie ?',
     render: () => `
-      <div class="styles chips" data-name="style" data-multi="false">${[
-        ['mediterraneen', 'Méditerranéen', 'Oliviers, lavandes, tons chauds'],
-        ['contemporain', 'Contemporain', 'Lignes nettes, graminées, sobre'],
-        ['nature', 'Nature', 'Généreux, fleuri, un peu sauvage'],
-        ['boheme', 'Bohème', 'Coussins, lumières, plantes en pots'],
-        ['zen', 'Zen', 'Minéral, bambous, érables'],
-      ].map(([id, label, sub]) => `<button type="button" class="chip style-card style-${id}${state.style === id ? ' is-on' : ''}" data-id="${id}">
+      <div class="styles chips" data-name="style" data-multi="false">${STYLES.map(([id, label, sub]) => `<button type="button" class="chip style-card style-${id}${state.style === id ? ' is-on' : ''}" data-id="${id}">
           <span class="swatch"></span><span class="chip-label">${label}</span><span class="chip-sub">${sub}</span></button>`).join('')}</div>
       <p class="label">Pour les plantes, vous préférez</p>
-      ${chips('upkeep', [['zero', 'Zéro entretien'], ['peu', 'Un peu d\'entretien'], ['passion', 'Je suis jardinier dans l\'âme']], { value: state.upkeep })}`,
+      ${chips('upkeep', UPKEEP, { value: state.upkeep })}`,
     mount: (root) => bindChips(root, refreshNav),
     valid: () => !!state.style && !!state.upkeep,
   },
@@ -493,9 +500,9 @@ const STEPS = [
     help: 'Pour vous proposer des produits réalistes. Le budget concerne le bois (kits), hors plantes.',
     render: () => `
       <p class="label">Budget pour les aménagements bois</p>
-      ${chips('budget', [['<2000', 'Moins de 2 000 €'], ['2000-5000', '2 000 à 5 000 €'], ['5000-10000', '5 000 à 10 000 €'], ['>10000', 'Plus de 10 000 €'], ['?', 'Je ne sais pas encore']], { value: state.budget })}
+      ${chips('budget', BUDGETS, { value: state.budget })}
       <p class="label">Quand voulez-vous commencer ?</p>
-      ${chips('horizon', [['vite', 'Dès que possible'], ['printemps', 'Au printemps'], ['annee', 'Dans l\'année'], ['reflexion', 'Je réfléchis']], { value: state.horizon })}`,
+      ${chips('horizon', HORIZONS, { value: state.horizon })}`,
     mount: (root) => bindChips(root, refreshNav),
     valid: () => !!state.budget && !!state.horizon,
   },
@@ -579,14 +586,14 @@ function summaryHtml() {
     ['Maison', state.building ? 'Trouvée sur la carte IGN' : 'Non trouvée'],
     ['Point de vue', state.view?.origin ? (state.view.bearing != null ? 'Position et direction indiquées' : 'Position indiquée') : 'Inconnu'],
     ['Échelle', !c ? 'Non vérifiée' : c.type === 'facade' ? 'Mur de la maison confirmé' : c.type === 'length' ? `Longueur donnée : ${esc(c.label)}` : 'À estimer sur la photo'],
-    ['À garder', `${(state.keepZones || []).length} élément(s) sélectionné(s)`],
+    ['À garder', (() => { const n = (state.keepZones || []).length; return n ? `${n} élément${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''} sur la photo` : 'Rien de particulier'; })()],
     ['Besoin', need ? need.label : '-'],
     ['Précision', state.freeText ? esc(state.freeText) : '-'],
-    ['Ce qui gêne', state.problems.length ? state.problems.join(', ') : '-'],
-    ['Ambiance', state.style || '-'],
-    ['Entretien', state.upkeep || '-'],
-    ['Budget', state.budget || '-'],
-    ['Calendrier', state.horizon || '-'],
+    ['Ce qui gêne', state.problems.length ? state.problems.map((p) => label(PROBLEMS, p)).join(', ') : '-'],
+    ['Ambiance', label(STYLES, state.style) || '-'],
+    ['Entretien', label(UPKEEP, state.upkeep) || '-'],
+    ['Budget', label(BUDGETS, state.budget) || '-'],
+    ['Calendrier', label(HORIZONS, state.horizon) || '-'],
   ];
   return `<dl class="summary">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
 }
