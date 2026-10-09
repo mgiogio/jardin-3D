@@ -62,11 +62,14 @@ export class GardenMap {
       .addTo(this.groups.parcel);
   }
 
-  showBuildings(buildings, selectedId, onSelect) {
+  // neutral : maison seulement contourée en blanc, pour laisser ressortir le mur à vérifier.
+  showBuildings(buildings, selectedId, onSelect, { neutral = false } = {}) {
     this.groups.buildings.clearLayers();
     buildings.forEach((b) => {
       const sel = b.id === selectedId;
-      const poly = L.polygon(b.ring.map(ll), {
+      const poly = L.polygon(b.ring.map(ll), neutral ? {
+        color: '#ffffff', weight: 2, fillColor: '#ffffff', fillOpacity: 0.08, interactive: false,
+      } : {
         color: sel ? COLORS.orange : '#ffffff',
         weight: sel ? 3 : 1.5,
         fillColor: sel ? COLORS.orange : '#ffffff',
@@ -81,8 +84,13 @@ export class GardenMap {
     facades.forEach((f) => {
       const hot = highlight.includes(f.index);
       if (onlyHighlight && !hot) return;
-      L.polyline([ll(f.a), ll(f.b)], { color: hot ? COLORS.orange : '#fff', weight: hot ? 6 : 3, interactive: false })
-        .addTo(this.groups.facades);
+      if (hot) {
+        // Mur à vérifier : jaune vif bordé de noir, lisible sur toutes les photos aériennes.
+        L.polyline([ll(f.a), ll(f.b)], { color: '#1E211F', weight: 14, opacity: 0.85, lineCap: 'round', interactive: false }).addTo(this.groups.facades);
+        L.polyline([ll(f.a), ll(f.b)], { color: '#FFE600', weight: 9, lineCap: 'round', interactive: false }).addTo(this.groups.facades);
+      } else {
+        L.polyline([ll(f.a), ll(f.b)], { color: '#fff', weight: 3, interactive: false }).addTo(this.groups.facades);
+      }
     });
   }
 

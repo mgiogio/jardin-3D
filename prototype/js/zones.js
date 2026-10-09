@@ -81,19 +81,17 @@ export async function maskAt(url, x, y) {
 export function paint(canvas, zones) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const masked = zones.filter((z) => z.mask);
-  if (masked.length) {
-    // Effet projecteur : on assombrit la photo, les éléments gardés restent éclairés, contour blanc.
-    const { width: W, height: H } = masked[0].mask;
-    const union = new Uint8Array(W * H);
-    masked.forEach((z) => { const d = z.mask.data; for (let i = 0; i < d.length; i++) if (d[i]) union[i] = 1; });
+  // Chaque élément gardé : voile blanc léger et contour blanc épais. Le reste de la photo ne change pas.
+  for (const z of zones.filter((x) => x.mask)) {
+    const { width: W, height: H, data } = z.mask;
     const img = ctx.createImageData(W, H);
     for (let i = 0; i < W * H; i++) {
+      if (!data[i]) continue;
       const o = i * 4;
-      if (!union[i]) { img.data[o + 3] = 120; continue; } // noir à ~47 %
-      const edge = !union[i - 1] || !union[i + 1] || !union[i - W] || !union[i + W]
-        || !union[i - 2] || !union[i + 2] || !union[i - 2 * W] || !union[i + 2 * W];
-      if (edge) { img.data[o] = 255; img.data[o + 1] = 255; img.data[o + 2] = 255; img.data[o + 3] = 255; }
+      const edge = !data[i - 1] || !data[i + 1] || !data[i - W] || !data[i + W]
+        || !data[i - 2] || !data[i + 2] || !data[i - 2 * W] || !data[i + 2 * W];
+      img.data[o] = 255; img.data[o + 1] = 255; img.data[o + 2] = 255;
+      img.data[o + 3] = edge ? 255 : 90;
     }
     const tmp = document.createElement('canvas');
     tmp.width = W; tmp.height = H;

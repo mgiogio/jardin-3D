@@ -335,7 +335,7 @@ const STEPS = [
         slot.classList.remove('is-hidden');
         if (!map) {
           map = mapIn(slot);
-          map.showBuildings([{ id: state.building.id, ring: state.building.ring }], state.building.id);
+          map.showBuildings([{ id: state.building.id, ring: state.building.ring }], state.building.id, null, { neutral: true });
           map.fitTo(state.building.ring, 21, v.origin);
         }
         map.setViewpoint(v.origin, null, mainPhoto()?.url);
@@ -353,7 +353,7 @@ const STEPS = [
         if (f) {
           showWall(f);
           box.innerHTML = `<div class="callout"><b>Voit-on ce mur de votre maison sur la photo ?</b>
-            <span>C'est le trait orange sur la carte.</span>
+            <span>C'est le trait jaune sur la carte.</span>
             <div class="row"><button type="button" class="btn-pri" data-act="yes">Oui</button>
             <button type="button" class="btn-sec" data-act="no">Non</button></div></div>`;
         } else {
