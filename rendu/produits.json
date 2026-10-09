@@ -10,7 +10,8 @@
     "Les réalisations clients servent uniquement à mesurer la teinte réelle du bois, pas de référence de mise en scène ni de choix de produits (peu de réalisations sont vraiment décorées).",
     "Appartement ou balcon (bâtiment IGN de plusieurs logements et étages) : hors cible du rendu produits, réponse dédiée.",
     "Photo trop petite (moins de 1000 px de large) : demander une meilleure photo avant le rendu.",
-    "Zone repeinte par l'IA : limitée au sol et au désordre autour des produits, jamais toute l'image (sinon l'IA recompose la scène et la perspective ne colle plus). Paramètre input_fidelity=high."
+    "Zone repeinte par l'IA : limitée au sol et au désordre autour des produits, jamais toute l'image (sinon l'IA recompose la scène et la perspective ne colle plus). Paramètre input_fidelity=high.",
+    "Pergola adossée : pas de poteau contre le mur dans le rendu final (le poteau côté mur sert seulement au montage). Option sansPoteauMur dans la scène ; photos d'entraînement montrant ce poteau exclues."
   ],
   "produits": {
     "cloture-horizontale": {

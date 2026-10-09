@@ -17,7 +17,7 @@ const scene = new THREE.Scene();
 if (P.bg) scene.background = new THREE.Color(P.bg);
 scene.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = P.env ?? 0.5;
-const badMat = /GRASS|SOIL|CONCRETE|WALL|GLASS/i;
+const badMat = P.keepWall ? /GRASS|SOIL|GLASS/i : /GRASS|SOIL|CONCRETE|WALL|GLASS/i;
 const loader = new GLTFLoader().setDRACOLoader(draco);
 if (P.grid) {  // aide au calage : quadrillage au sol de 1 m, axes, et repères verticaux de 2 m
   const g = new THREE.GridHelper(P.gridSize || 80, P.gridDiv || 40, 0xff3300, 0xffff00); g.position.set(0, 0.01, -(P.gridSize || 80) / 2); scene.add(g);
@@ -38,6 +38,30 @@ for (const it of (P.items || [])) {
       o.castShadow = true; o.receiveShadow = true;
     }
   });
+  // Pergola adossée : le poteau côté mur ne sert qu'au montage, on le retire du rendu final.
+  if (it.sansPoteauMur) {
+    g.updateMatrixWorld(true);
+    const re0 = /Poteau|Pieds|Goujon|Visserie[ _]Pieds|Pose[ _]Pieds/i; const re = { test: (t) => re0.test(t) && !/Mur|Sol/i.test(t) };
+    // côté mur : centre des maillages du mur (matériau WALL), même masqués
+    const wb = new THREE.Box3(); g.traverse((o) => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; if (ms.some((m) => /WALL/i.test(m.name))) wb.expandByObject(o); } });
+    const pb = new THREE.Box3(); g.traverse((o) => { if (o.isMesh && /Poteaux/i.test(o.name + ' ' + (o.parent?.name || '')) && o.visible !== false) pb.expandByObject(o); });
+    const wc = wb.getCenter(new THREE.Vector3()), pc = pb.getCenter(new THREE.Vector3());
+    const axis = Math.abs(wc.x - pc.x) > Math.abs(wc.z - pc.z) ? 'x' : 'z';
+    const sgn = Math.sign(wc[axis] - pc[axis]) || 1;
+    const edge = sgn > 0 ? pb.max[axis] : pb.min[axis];
+    const d = it.sansPoteauMur === true ? 0.5 : it.sansPoteauMur;
+    const nearWall = (z) => sgn > 0 ? z > edge - d : z < edge + d;
+    g.traverse((o) => { if (o.isMesh && re.test(o.name + ' ' + (o.parent?.name || ''))) {
+      let geo = o.geometry.index ? o.geometry : o.geometry.toNonIndexed();
+      const pos = geo.attributes.position, idx = geo.index ? geo.index.array : [...Array(pos.count).keys()];
+      const keep = []; const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+      for (let i = 0; i < idx.length; i += 3) {
+        a.fromBufferAttribute(pos, idx[i]).applyMatrix4(o.matrixWorld); b.fromBufferAttribute(pos, idx[i + 1]).applyMatrix4(o.matrixWorld); c.fromBufferAttribute(pos, idx[i + 2]).applyMatrix4(o.matrixWorld);
+        if (!nearWall((a[axis] + b[axis] + c[axis]) / 3)) keep.push(idx[i], idx[i + 1], idx[i + 2]);
+      }
+      geo = geo.clone(); geo.setIndex(keep); o.geometry = geo;
+    } });
+  }
   // Rotation propre au produit (ex. bardage : panneau de clôture tourné d'un quart de tour, lames verticales)
   const inner = new THREE.Group(); inner.add(g);
   if (it.rot) inner.rotation.set(...it.rot.map((d) => d * Math.PI / 180));
@@ -72,6 +96,7 @@ sun.shadow.radius = P.shadowBlur ?? 8; sun.shadow.bias = -0.0004; sun.shadow.nor
 scene.add(sun, sun.target);
 const cam = new THREE.PerspectiveCamera(P.cam.vfov, W / H, 0.05, 500);
 cam.position.set(P.cam.x || 0, P.cam.h, P.cam.z || 0); cam.rotation.order = 'YXZ'; cam.rotation.y = (P.cam.yaw || 0) * Math.PI / 180; cam.rotation.x = -(P.cam.pitch || 0) * Math.PI / 180; cam.rotation.z = (P.cam.roll || 0) * Math.PI / 180;
+if (P.cam.lookAt) cam.lookAt(...P.cam.lookAt);
 r.render(scene, cam);
 window.__png = r.domElement.toDataURL('image/png');
 </script></body></html>
