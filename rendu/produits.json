@@ -1,5 +1,5 @@
 {
-  "_note": "Règles de rendu 3D des produits Cover Green. Les modèles .glb (fichiers de la notice de montage) ne sont pas publiés dans ce dépôt public. Pour chaque modèle : on masque les objets dont le nom correspond à 'masquer' (espaces ou _ indifférents). Les matériaux de décor (GRASS, SOIL, CONCRETE, WALL, GLASS) sont toujours masqués.",
+  "_note": "Règles de rendu 3D des produits Cover Green. Les modèles .glb (fichiers de la notice de montage) ne sont pas publiés dans ce dépôt public. Pour chaque modèle : on masque les objets dont le nom correspond à 'masquer' (espaces ou _ indifférents). Les matériaux de décor (GRASS, SOIL, CONCRETE, WALL, GLASS) sont toujours masqués. Les fichiers sont des échantillons : la clôture se répète en longueur, la terrasse en surface (champs repeat et step de la scène).",
   "regles_premier_rendu": [
     "Clôture : toujours le modèle occultant 1 face (panneaux + occultant, sans 2e face).",
     "Clôture : la face bois est tournée vers le jardin, l'occultant vers l'extérieur.",
@@ -28,7 +28,8 @@
           "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|Occultant"
         }
       },
-      "face_jardin": "rotation de 180° par rapport à l'axe du modèle : la face bois est du côté -Z du fichier"
+      "face_jardin": "rotation de 180° par rapport à l'axe du modèle : la face bois est du côté -Z du fichier",
+      "echantillon": "6 m de long (3 travées de 2 m, 3 rangées de panneaux 200 x 60 cm). Répétition en longueur uniquement, pas de 6 m."
     },
     "pergola-autoportante": {
       "fichiers": {
@@ -67,6 +68,33 @@
           "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Option Toile|Paillasson|Etape 7|Toiture|brise|Rideau|Fil galv|Mousquetons|Pitons|Agrafes"
         }
       }
+    },
+    "terrasse-lisse-plots": {
+      "fichiers": {
+        "echantillon": "Terrasse_Lisse_Plots.glb"
+      },
+      "echantillon": "7,15 x 3,46 m. Répétition en surface (x et z).",
+      "variante_par_defaut": "standard",
+      "variantes": {
+        "standard": {
+          "masquer": "Decor|Geotextile"
+        }
+      },
+      "a_faire": "masquer les planches de finition sur les bords intérieurs quand on répète l'échantillon"
+    },
+    "bardage": {
+      "source": "mêmes panneaux que la clôture (Cloture_Horizontale_1m80.glb), un seul panneau 200 x 60 cm tourné d'un quart de tour : lames verticales, 60 cm de large, 2 m de haut.",
+      "variantes": {
+        "claire-voie": {
+          "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|2ème|Occultant|Poteau|Pieds|Goujons|Panneau_[2-9]|Visserie Panneaux_[2-9]",
+          "rot": [
+            0,
+            0,
+            90
+          ]
+        }
+      },
+      "repetition": "en largeur le long du mur, pas de 60 cm, posé sur la façade (pas de poteaux)"
     }
   },
   "teintes_bois": {

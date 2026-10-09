@@ -4,6 +4,8 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+const draco = new DRACOLoader().setDecoderPath('./node_modules/three/examples/jsm/libs/draco/gltf/');
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 const P = JSON.parse(new URLSearchParams(location.search).get('p'));
 const [W, H] = P.size;
@@ -12,10 +14,11 @@ r.setSize(W, H); r.setClearColor(0x000000, 0); r.shadowMap.enabled = true; r.sha
 r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = P.exposure || 1; r.outputColorSpace = THREE.SRGBColorSpace;
 document.body.appendChild(r.domElement);
 const scene = new THREE.Scene();
+if (P.bg) scene.background = new THREE.Color(P.bg);
 scene.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = P.env ?? 0.5;
 const badMat = /GRASS|SOIL|CONCRETE|WALL|GLASS/i;
-const loader = new GLTFLoader();
+const loader = new GLTFLoader().setDRACOLoader(draco);
 for (const it of P.items) {
   const g = (await loader.loadAsync('modeles/' + it.m)).scene;
   const excl = new RegExp(it.excl, 'i');
@@ -28,16 +31,30 @@ for (const it of P.items) {
       o.castShadow = true; o.receiveShadow = true;
     }
   });
-  // poser le modèle : coin bas, centré sur sa propre emprise
-  g.updateMatrixWorld(true);
+  // Rotation propre au produit (ex. bardage : panneau de clôture tourné d'un quart de tour, lames verticales)
+  const inner = new THREE.Group(); inner.add(g);
+  if (it.rot) inner.rotation.set(...it.rot.map((d) => d * Math.PI / 180));
+  inner.updateMatrixWorld(true);
   const box = new THREE.Box3();
-  g.traverse((o) => { if (o.isMesh) { let v = true, p = o; while (p) { if (!p.visible) v = false; p = p.parent; } if (v) box.expandByObject(o); } });
-  const c = box.getCenter(new THREE.Vector3());
-  const pivot = new THREE.Group(); g.position.set(-c.x, -box.min.y, -c.z); pivot.add(g);
+  inner.traverse((o) => { if (o.isMesh) { let v = true, p = o; while (p && p !== inner) { if (!p.visible) v = false; p = p.parent; } if (v) box.expandByObject(o); } });
+  const size = box.getSize(new THREE.Vector3());
+  // Les fichiers sont des échantillons : clôture répétée en longueur (x), terrasse en surface (x et z), bardage en largeur.
+  const [nx, nz] = it.repeat || [1, 1];
+  const [sx, sz] = it.step || [size.x, size.z];
+  const tiled = new THREE.Group();
+  for (let i = 0; i < nx; i++) for (let k = 0; k < nz; k++) {
+    const c = (i || k) ? inner.clone(true) : inner;
+    c.position.set(i * sx, 0, k * sz); tiled.add(c);
+  }
+  // centre de l'ensemble posé au sol
+  const full = new THREE.Vector3((nx - 1) * sx + size.x, size.y, (nz - 1) * sz + size.z);
+  tiled.position.set(-box.min.x - full.x / 2, -box.min.y + (it.lift || 0), -box.min.z - full.z / 2);
+  const pivot = new THREE.Group(); pivot.add(tiled);
   pivot.position.set(it.pos[0], 0, it.pos[1]); pivot.rotation.y = (it.rotY || 0) * Math.PI / 180;
   scene.add(pivot);
+  if (P.debug) console.log(it.m, 'taille', full.toArray().map((v) => v.toFixed(2)).join(' x '));
 }
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.ShadowMaterial({ opacity: P.shadow ?? 0.35 }));
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), P.groundColor ? new THREE.MeshStandardMaterial({ color: P.groundColor, roughness: 1 }) : new THREE.ShadowMaterial({ opacity: P.shadow ?? 0.35 }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 scene.add(new THREE.HemisphereLight(0xe6eef5, 0x6f6a55, P.hemi ?? 1.2));
 const sun = new THREE.DirectionalLight(0xffffff, P.sun ?? 1.0);
@@ -47,7 +64,7 @@ sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); Object.assign(sun.sha
 sun.shadow.radius = P.shadowBlur ?? 8; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
 scene.add(sun, sun.target);
 const cam = new THREE.PerspectiveCamera(P.cam.vfov, W / H, 0.05, 500);
-cam.position.set(0, P.cam.h, 0); cam.rotation.order = 'YXZ'; cam.rotation.y = (P.cam.yaw || 0) * Math.PI / 180; cam.rotation.x = -(P.cam.pitch || 0) * Math.PI / 180; cam.rotation.z = (P.cam.roll || 0) * Math.PI / 180;
+cam.position.set(P.cam.x || 0, P.cam.h, P.cam.z || 0); cam.rotation.order = 'YXZ'; cam.rotation.y = (P.cam.yaw || 0) * Math.PI / 180; cam.rotation.x = -(P.cam.pitch || 0) * Math.PI / 180; cam.rotation.z = (P.cam.roll || 0) * Math.PI / 180;
 r.render(scene, cam);
 window.__png = r.domElement.toDataURL('image/png');
 </script></body></html>
