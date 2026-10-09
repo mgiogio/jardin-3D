@@ -81,33 +81,35 @@ export async function maskAt(url, x, y) {
 export function paint(canvas, zones) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (const z of zones) {
-    if (z.mask) {
-      const { width: W, height: H, data } = z.mask;
-      const img = ctx.createImageData(W, H);
-      for (let i = 0; i < W * H; i++) {
-        if (!data[i]) continue;
-        // Contour plus marqué que l'intérieur
-        const edge = !data[i - 1] || !data[i + 1] || !data[i - W] || !data[i + W];
-        img.data[i * 4] = edge ? 255 : 4;
-        img.data[i * 4 + 1] = edge ? 255 : 158;
-        img.data[i * 4 + 2] = edge ? 255 : 0;
-        img.data[i * 4 + 3] = edge ? 255 : 120;
-      }
-      const tmp = document.createElement('canvas');
-      tmp.width = W; tmp.height = H;
-      tmp.getContext('2d').putImageData(img, 0, 0);
-      ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
+  const masked = zones.filter((z) => z.mask);
+  if (masked.length) {
+    // Effet projecteur : on assombrit la photo, les éléments gardés restent éclairés, contour blanc.
+    const { width: W, height: H } = masked[0].mask;
+    const union = new Uint8Array(W * H);
+    masked.forEach((z) => { const d = z.mask.data; for (let i = 0; i < d.length; i++) if (d[i]) union[i] = 1; });
+    const img = ctx.createImageData(W, H);
+    for (let i = 0; i < W * H; i++) {
+      const o = i * 4;
+      if (!union[i]) { img.data[o + 3] = 120; continue; } // noir à ~47 %
+      const edge = !union[i - 1] || !union[i + 1] || !union[i - W] || !union[i + W]
+        || !union[i - 2] || !union[i + 2] || !union[i - 2 * W] || !union[i + 2 * W];
+      if (edge) { img.data[o] = 255; img.data[o + 1] = 255; img.data[o + 2] = 255; img.data[o + 3] = 255; }
     }
-    // Pastille numérotée au point touché
+    const tmp = document.createElement('canvas');
+    tmp.width = W; tmp.height = H;
+    tmp.getContext('2d').putImageData(img, 0, 0);
+    ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
+  }
+  for (const z of zones) {
+    // Pastille verte cochée au point touché
     const cx = z.point[0] * canvas.width, cy = z.point[1] * canvas.height;
-    const r = Math.max(12, canvas.width / 45);
+    const r = Math.max(14, canvas.width / 40);
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fillStyle = '#049E00'; ctx.fill();
     ctx.lineWidth = r / 4; ctx.strokeStyle = '#fff'; ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = `700 ${Math.round(r * 1.1)}px Roboto, sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('✓', cx, cy + 1);
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.45, cy); ctx.lineTo(cx - r * 0.1, cy + r * 0.35); ctx.lineTo(cx + r * 0.5, cy - r * 0.35);
+    ctx.lineWidth = r / 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
   }
 }
 
