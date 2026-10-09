@@ -4,6 +4,8 @@ import { ENDPOINTS, COLORS } from './config.js';
 import { conePolygon, bearingDeg, rectFromSide, snapToFacades, polylineLength, pointInRing, makeProjection } from './geo.js';
 
 const ll = ([lon, lat]) => [lat, lon];
+// Petit personnage vu de face, dans une pastille orange : « vous étiez ici ».
+const PERSON_SVG = '<svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#EB5A00" stroke="#fff" stroke-width="3"/><circle cx="20" cy="13" r="4.2" fill="#fff"/><path d="M13.5 30v-6.5a6.5 6.5 0 0 1 13 0V30z" fill="#fff"/></svg>';
 const fmt = (m) => `${m.toFixed(1).replace('.', ',')} m`;
 
 function wmtsLayer(layer, style, format, opts = {}) {
@@ -81,16 +83,6 @@ export class GardenMap {
       if (onlyHighlight && !hot) return;
       L.polyline([ll(f.a), ll(f.b)], { color: hot ? COLORS.orange : '#fff', weight: hot ? 6 : 3, interactive: false })
         .addTo(this.groups.facades);
-      if (f.length >= 2.5) {
-        // Étiquette posée à 2 m devant la façade, pour ne pas chevaucher celles des façades voisines.
-        const P = makeProjection(f.mid[1], f.mid[0]);
-        const t = (f.azimuth * Math.PI) / 180;
-        const labelPos = P.toLonLat([Math.sin(t) * 2, Math.cos(t) * 2]);
-        L.marker(ll(labelPos), {
-          interactive: false,
-          icon: L.divIcon({ className: `facade-label${hot ? ' is-hot' : ''}`, html: `<span>${fmt(f.length)}</span>`, iconSize: null }),
-        }).addTo(this.groups.facades);
-      }
     });
   }
 
@@ -114,10 +106,7 @@ export class GardenMap {
     }
     L.marker(ll(origin), {
       interactive: false, zIndexOffset: 1000,
-      icon: L.divIcon({
-        className: 'eye-handle', iconSize: [48, 48], iconAnchor: [24, 24],
-        html: thumbUrl ? `<img src="${thumbUrl}" alt="">` : '<span></span>',
-      }),
+      icon: L.divIcon({ className: 'person-pin', iconSize: [40, 40], iconAnchor: [20, 20], html: PERSON_SVG }),
     }).addTo(this.groups.draft);
   }
 

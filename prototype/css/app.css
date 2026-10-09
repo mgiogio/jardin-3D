@@ -221,3 +221,5 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
   .btn-pri { min-width: 0; padding: 0 18px; }
   .nav { padding: 8px 12px; }
 }
+
+.person-pin svg { display: block; filter: drop-shadow(0 1px 3px rgba(0,0,0,.4)); }

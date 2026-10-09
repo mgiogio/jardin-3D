@@ -218,8 +218,7 @@ const STEPS = [
       };
       const renderInfo = () => {
         if (!state.building) { info.innerHTML = '<p class="msg">Touchez votre maison sur la carte.</p>'; return; }
-        const longest = [...state.facades].sort((a, b) => b.length - a.length)[0];
-        info.innerHTML = `<p class="msg">Maison d'environ ${m(longest.length)} de long${state.building.height ? `, ${m(state.building.height)} de haut` : ''}.</p>`;
+        info.innerHTML = '';
       };
 
       info.innerHTML = '<p class="msg">Nous cherchons votre maison…</p>';
@@ -335,7 +334,7 @@ const STEPS = [
         if (v.check) {
           const c = v.check;
           slot.classList.add('is-hidden');
-          box.innerHTML = `<div class="callout is-done"><b>C'est tout bon</b><span>${c.type === 'facade' ? `Nous partirons du mur de ${m(c.length)} visible sur votre photo.` : c.type === 'length' ? `Nous partirons de votre ${esc(c.label)} de ${m(c.length)}.` : 'Nous estimerons les dimensions à partir de votre photo.'}</span>
+          box.innerHTML = `<div class="callout is-done"><b>C'est tout bon</b><span>${c.type === 'estimate' ? 'Nous estimerons les dimensions à partir de votre photo.' : 'Merci, nous avons tout ce qu\'il nous faut.'}</span>
             <button type="button" class="link-advice" data-act="redo">Modifier ma réponse</button></div>`;
           refreshNav(); return;
         }
@@ -343,7 +342,7 @@ const STEPS = [
         if (f) {
           showWall(f);
           box.innerHTML = `<div class="callout"><b>Voit-on ce mur de votre maison sur la photo ?</b>
-            <span>C'est le trait orange sur la carte, il mesure ${m(f.length)}.</span>
+            <span>C'est le trait orange sur la carte.</span>
             <div class="row"><button type="button" class="btn-pri" data-act="yes">Oui</button>
             <button type="button" class="btn-sec" data-act="no">Non</button></div></div>`;
         } else {
@@ -548,7 +547,7 @@ function studyLines() {
   const city = state.address?.city;
   const scale = state.view?.check && state.view.check.type !== 'estimate' ? state.view.check : null;
   if (state.parcel?.area) lines.push(`Lecture de votre terrain : ${state.parcel.area} m²`);
-  if (scale) lines.push(`Mise à l'échelle de votre photo : ${scale.type === 'facade' ? 'mur' : scale.label} de ${m(scale.length)}`);
+  if (scale) lines.push('Mise à l\'échelle de votre photo');
   else lines.push('Analyse de votre photo et estimation des dimensions');
   if (state.facades.length) {
     const sunny = state.facades.filter((f) => ['sud', 'sud-ouest', 'ouest'].includes(f.facing)).sort((a, b) => b.length - a.length)[0];
