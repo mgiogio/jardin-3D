@@ -19,7 +19,14 @@ scene.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(),
 scene.environmentIntensity = P.env ?? 0.5;
 const badMat = /GRASS|SOIL|CONCRETE|WALL|GLASS/i;
 const loader = new GLTFLoader().setDRACOLoader(draco);
-for (const it of P.items) {
+if (P.grid) {  // aide au calage : quadrillage au sol de 1 m, axes, et repères verticaux de 2 m
+  const g = new THREE.GridHelper(P.gridSize || 80, P.gridDiv || 40, 0xff3300, 0xffff00); g.position.set(0, 0.01, -(P.gridSize || 80) / 2); scene.add(g);
+  for (const [x, z] of (P.gridPosts || [])) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2, 0.08), new THREE.MeshBasicMaterial({ color: 0x00e0ff }));
+    m.position.set(x, 1, z); scene.add(m);
+  }
+}
+for (const it of (P.items || [])) {
   const g = (await loader.loadAsync('modeles/' + it.m)).scene;
   const excl = new RegExp(it.excl, 'i');
   g.traverse((o) => {

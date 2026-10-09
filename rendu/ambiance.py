@@ -22,7 +22,7 @@ def part(name, val, fn=None, ct=None):
     if ct: h += f'Content-Type: {ct}\r\n'
     return h.encode() + b'\r\n' + (val if isinstance(val, bytes) else val.encode()) + b'\r\n'
 body = b''.join([part('model', 'gpt-image-1'), part('prompt', open(sys.argv[4]).read()), part('size', f'{size[0]}x{size[1]}'),
-                 part('quality', 'high'), part('image', img_b, 'image.png', 'image/png'), part('mask', mask_b, 'mask.png', 'image/png')]) + f'--{boundary}--\r\n'.encode()
+                 part('quality', 'high'), part('input_fidelity', 'high'), part('image', img_b, 'image.png', 'image/png'), part('mask', mask_b, 'mask.png', 'image/png')]) + f'--{boundary}--\r\n'.encode()
 req = urllib.request.Request('https://api.openai.com/v1/images/edits', data=body, headers={
     'Authorization': 'Bearer ' + os.environ['OPENAI_API_KEY'], 'Content-Type': f'multipart/form-data; boundary={boundary}'})
 res = json.load(urllib.request.urlopen(req, timeout=300))

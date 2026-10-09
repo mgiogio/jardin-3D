@@ -7,7 +7,10 @@
     "Passages : aucun produit, aucune plante ni aucun objet ne doit couper un chemin existant (accès à la maison, au garage, à la voiture, au portail). Le chemin est conservé, nettoyé si besoin, et nommé explicitement dans la consigne envoyée à l'IA.",
     "Pergolas : pieds classiques, toiture brise-soleil par défaut.",
     "Pergolas : ajouter régulièrement un côté brise-vue quand l'occasion se présente (côté voisin, rue ou vis-à-vis). Le modèle n'a qu'un côté brise-vue : on tourne la pergola pour le placer du bon côté.",
-    "Les réalisations clients servent uniquement à mesurer la teinte réelle du bois, pas de référence de mise en scène ni de choix de produits (peu de réalisations sont vraiment décorées)."
+    "Les réalisations clients servent uniquement à mesurer la teinte réelle du bois, pas de référence de mise en scène ni de choix de produits (peu de réalisations sont vraiment décorées).",
+    "Appartement ou balcon (bâtiment IGN de plusieurs logements et étages) : hors cible du rendu produits, réponse dédiée.",
+    "Photo trop petite (moins de 1000 px de large) : demander une meilleure photo avant le rendu.",
+    "Zone repeinte par l'IA : limitée au sol et au désordre autour des produits, jamais toute l'image (sinon l'IA recompose la scène et la perspective ne colle plus). Paramètre input_fidelity=high."
   ],
   "produits": {
     "cloture-horizontale": {
@@ -28,7 +31,7 @@
           "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|Occultant"
         }
       },
-      "face_jardin": "rotation de 180° par rapport à l'axe du modèle : la face bois est du côté -Z du fichier",
+      "face_jardin": "face bois du côté +Z du fichier : sans rotation, le bois regarde vers +Z",
       "echantillon": "6 m de long (3 travées de 2 m, 3 rangées de panneaux 200 x 60 cm). Répétition en longueur uniquement, pas de 6 m."
     },
     "pergola-autoportante": {
