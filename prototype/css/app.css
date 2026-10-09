@@ -125,8 +125,7 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .facts span { font-size: 13px; color: var(--ink-2); }
 
 /* Photos */
-.photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.upload.upload-main { border-style: solid; border-color: var(--orange); background: var(--orange-pale); }
+.upload.upload-main { border-style: solid; border-color: var(--orange); background: var(--orange-pale); padding: 24px 20px; }
 .upload-main span { color: var(--orange-hover); }
 .photo-list:not(:empty) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 .thumb { position: relative; width: 88px; height: 66px; padding: 0; border: 2px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; background: var(--light); }
@@ -201,7 +200,6 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
   .chips { grid-template-columns: 1fr 1fr; }
   .styles { grid-template-columns: 1fr 1fr; }
   .map-wrap { height: 320px; }
-  .photo-actions { grid-template-columns: 1fr; }
   .btn-pri { min-width: 0; padding: 0 18px; }
   .nav { padding: 8px 12px; }
 }

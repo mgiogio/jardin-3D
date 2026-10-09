@@ -202,12 +202,8 @@ const STEPS = [
     id: 'photos', title: 'Votre photo du jardin',
     help: 'Une photo de l\'endroit à aménager, prise à hauteur d\'yeux en reculant au maximum. Vous pouvez en ajouter deux autres pour nous aider à comprendre le jardin.',
     render: () => `
-      <div class="photo-actions">
-        <label class="upload upload-main" id="cam-label"><input id="cam" type="file" accept="image/*" capture="environment">
-          <span>Prendre une photo</span><small>Depuis votre jardin, avec votre téléphone</small></label>
-        <label class="upload"><input id="files" type="file" accept="image/*" multiple>
-          <span>Choisir une photo</span><small>Dans votre galerie ou votre ordinateur</small></label>
-      </div>
+      <label class="upload upload-main" id="photo-label"><input id="files" type="file" accept="image/*" multiple>
+        <span>Ajouter une photo de votre jardin</span><small>Prenez-la maintenant ou choisissez-la dans vos photos</small></label>
       <div id="photo-list" class="photo-list"></div>
       <div class="map-wrap has-hint" id="map-slot"><p id="map-hint" class="map-hint" aria-live="polite"></p></div>
       <div id="view-panel"></div>`,
@@ -304,16 +300,15 @@ const STEPS = [
         drawList(); drawPanel(); refreshNav();
       };
 
-      const addFiles = async (files, fromCamera) => {
-        const snap = fromCamera ? sensorSnapshot() : null;
+      const addFiles = async (files) => {
+        const snap = sensorSnapshot();
         for (const f of [...files].slice(0, 3 - state.photos.length)) {
+          const justTaken = Date.now() - (f.lastModified || 0) < 120000;
           const p = { name: f.name, size: f.size, type: f.type, file: f, url: URL.createObjectURL(f), view: null };
           let pos = null;
-          if (snap?.fix) pos = { lat: snap.fix.lat, lon: snap.fix.lon, heading: snap.heading, source: 'sensors' };
-          else {
-            const ex = await readExifView(f);
-            if (ex) pos = { ...ex, source: 'exif' };
-          }
+          const ex = await readExifView(f);
+          if (ex) pos = { ...ex, heading: ex.heading ?? (justTaken ? snap.heading : null), source: 'exif' };
+          else if (justTaken && snap.fix) pos = { lat: snap.fix.lat, lon: snap.fix.lon, heading: snap.heading, source: 'sensors' };
           // Une position à plus de 80 m de la maison est fausse (photo prise ailleurs, GPS imprécis) : on l'ignore.
           if (pos && houseCenter && distanceM([pos.lon, pos.lat], houseCenter) > 80) pos = null;
           if (pos) {
@@ -328,9 +323,10 @@ const STEPS = [
         $('#map-slot', root).scrollIntoView({ behavior: 'smooth', block: 'center' });
       };
 
-      $('#cam-label', root).addEventListener('click', () => { startSensors(); });
-      $('#cam', root).addEventListener('change', (e) => { addFiles(e.target.files, true); e.target.value = ''; });
-      $('#files', root).addEventListener('change', (e) => { addFiles(e.target.files, false); e.target.value = ''; });
+      // Un seul bouton : le téléphone propose lui-même « Prendre une photo » ou « Photothèque ».
+      // On allume les capteurs au clic ; une photo datée de moins de 2 minutes vient d'être prise sur place.
+      $('#photo-label', root).addEventListener('click', () => { startSensors(); });
+      $('#files', root).addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
       list.addEventListener('click', (e) => {
         const pick = e.target.closest('[data-pick]'), del = e.target.closest('[data-del]');
         if (pick) { active = +pick.dataset.pick; edit(); }
