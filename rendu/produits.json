@@ -1,0 +1,34 @@
+{
+  "_note": "Règles de rendu 3D des produits Cover Green. Les modèles .glb (fichiers de la notice de montage) ne sont pas publiés dans ce dépôt public. Pour chaque modèle : on masque les objets dont le nom correspond à 'masquer' (espaces ou _ indifférents). Les matériaux de décor (GRASS, SOIL, CONCRETE, WALL, GLASS) sont toujours masqués.",
+  "regles_premier_rendu": [
+    "Clôture : toujours le modèle occultant 1 face (panneaux + occultant, sans 2e face).",
+    "Clôture : la face bois est tournée vers le jardin, l'occultant vers l'extérieur.",
+    "Pergolas : pieds classiques, sans option de toiture (toile, brise-soleil, canisse)."
+  ],
+  "produits": {
+    "cloture-horizontale": {
+      "fichiers": { "1m20": "Cloture_Horizontale_1m20.glb", "1m80": "Cloture_Horizontale_1m80.glb", "2m40": "Cloture_Horizontale_2m40.glb" },
+      "variante_par_defaut": "occultant-1-face",
+      "variantes": {
+        "occultant-1-face": { "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|2ème" },
+        "claire-voie-1-face": { "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|2ème|Occultant" },
+        "claire-voie-2-faces": { "masquer": "Label|Scène|_Muret|Pieux|Plots|sol dur|Occultant" }
+      },
+      "face_jardin": "rotation de 180° par rapport à l'axe du modèle : la face bois est du côté -Z du fichier"
+    },
+    "pergola-autoportante": {
+      "fichiers": { "3x3": "Pergola_Autoportante_3x3.glb", "3x6": "Pergola_Autoportante_3x6.glb", "3x9": "Pergola_Autoportante_3x9.glb" },
+      "variante_par_defaut": "pieds-classiques",
+      "variantes": {
+        "pieds-classiques": { "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Etape 7|Toile|Paillasson|Rideau|brise|Fil galv|Mousquetons|Pitons|Agrafes" }
+      }
+    },
+    "pergola-adossee": {
+      "fichiers": { "3x3": "Pergola_Murale_3x3.glb", "3x6": "Pergola_Murale_3x6.glb", "3x9": "Pergola_Murale_3x9.glb" },
+      "variante_par_defaut": "pieds-classiques",
+      "variantes": {
+        "pieds-classiques": { "masquer": "Etape 0|Etape 1|Invisibles|invisibles|Pieux|Etape 7|Toile|Paillasson|Rideau|brise|Fil galv|Mousquetons|Pitons|Agrafes" }
+      }
+    }
+  }
+}
