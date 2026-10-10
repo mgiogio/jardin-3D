@@ -38,6 +38,31 @@ for (const it of (P.items || [])) {
       o.castShadow = true; o.receiveShadow = true;
     }
   });
+  // Pergolas 3x6 / 3x9 : le fichier ne contient la toiture brise-soleil que sur un module de 3 m, on la répète sur toute la longueur.
+  if (it.briseSoleilComplet !== false) {
+    g.updateMatrixWorld(true);
+    const isBS = (o) => /Toiture[ _]brise[ _]soleil|Visserie[ _]brise[ _]soleil/i.test(o.name);
+    const bsNodes = []; g.traverse((o) => { if (isBS(o) && !(o.parent && isBS(o.parent))) bsNodes.push(o); });
+    const vis = (o) => { let p = o; while (p) { if (!p.visible) return false; p = p.parent; } return true; };
+    if (bsNodes.length && bsNodes.every(vis)) {
+      const fb = new THREE.Box3(); g.traverse((o) => { if (o.isMesh && /Poutres[ _]Cadre/i.test(o.name + ' ' + (o.parent?.name || ''))) fb.expandByObject(o); });
+      const bb = new THREE.Box3(); bsNodes.forEach((n) => bb.expandByObject(n));
+      const fs = fb.getSize(new THREE.Vector3()), bs = bb.getSize(new THREE.Vector3());
+      const ax = fs.x - bs.x > fs.z - bs.z ? 'x' : 'z';
+      const n = Math.round(fs[ax] / bs[ax]);
+      if (n > 1) {
+        const step = (fs[ax] - bs[ax]) / (n - 1);
+        for (let k = 0; k < n; k++) {
+          const off = fb.min[ax] - bb.min[ax] + k * step;
+          if (Math.abs(off) < 1e-3) continue;
+          bsNodes.forEach((src) => { const c = src.clone(true); const w = new THREE.Vector3(); w[ax] = off;
+            const inv = new THREE.Matrix4().copy(src.parent.matrixWorld).invert(); const o0 = new THREE.Vector3().applyMatrix4(inv), o1 = w.clone().applyMatrix4(inv);
+            c.position.add(o1.sub(o0)); src.parent.add(c); });
+        }
+        if (P.debug) console.log('brise-soleil répété', n, 'fois sur', ax);
+      }
+    }
+  }
   // Pergola adossée : le poteau côté mur ne sert qu'au montage, on le retire du rendu final.
   if (it.sansPoteauMur) {
     g.updateMatrixWorld(true);

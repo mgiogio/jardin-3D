@@ -30,5 +30,5 @@ r = subprocess.run([py, os.path.join(d, 'run.py'), base + '_wf.json', zp, base],
 rendu = [l for l in r.stdout.split() if 'rendu' in l and l.endswith('.png')][0]
 R = Image.open(rendu).convert('RGB'); R.save(base + '_lumiere.jpg', quality=95)   # sortie en pleine définition (1408 x 1056)
 cal_c.resize(R.size, Image.LANCZOS).save(base + '_cal.png')
-subprocess.run([py, os.path.join(here, 'affine.py'), base + '_lumiere.jpg', base + '_cal.png', out, lora, pp, '0.45', '50'], check=True)
+subprocess.run([py, os.path.join(here, 'affine.py'), base + '_lumiere.jpg', base + '_cal.png', out, lora, pp, os.environ.get('FORCE_PRODUIT', '0.45'), '50'], check=True)
 print('final', out)
