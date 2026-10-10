@@ -97,6 +97,12 @@ scene.add(sun, sun.target);
 const cam = new THREE.PerspectiveCamera(P.cam.vfov, W / H, 0.05, 500);
 cam.position.set(P.cam.x || 0, P.cam.h, P.cam.z || 0); cam.rotation.order = 'YXZ'; cam.rotation.y = (P.cam.yaw || 0) * Math.PI / 180; cam.rotation.x = -(P.cam.pitch || 0) * Math.PI / 180; cam.rotation.z = (P.cam.roll || 0) * Math.PI / 180;
 if (P.cam.lookAt) cam.lookAt(...P.cam.lookAt);
+if (P.depthPass) {
+  const mat = new THREE.ShaderMaterial({ vertexShader: 'varying float vz; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vz = -mv.z; gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'varying float vz; void main(){ float d = clamp(vz/100.0,0.0,0.99999); vec3 e = fract(d*vec3(1.0,255.0,65025.0)); e -= e.yzz*vec3(1.0/255.0,1.0/255.0,0.0); gl_FragColor = vec4(e,1.0); }' });
+  scene.overrideMaterial = mat; scene.background = null; r.setClearColor(0x000000, 0); r.toneMapping = THREE.NoToneMapping; r.outputColorSpace = THREE.LinearSRGBColorSpace;
+  scene.traverse((o) => { if (o.isLight) o.visible = false; if (o === ground) o.visible = false; });
+}
 r.render(scene, cam);
 window.__png = r.domElement.toDataURL('image/png');
 </script></body></html>

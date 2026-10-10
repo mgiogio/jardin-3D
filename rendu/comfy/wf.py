@@ -3,6 +3,7 @@
 import json, sys
 prompt, denoise, seed = sys.argv[1], float(sys.argv[2]), int(sys.argv[3])
 W, H = (int(sys.argv[4]), int(sys.argv[5])) if len(sys.argv) > 5 else (1408, 1056)
+DEPTH = len(sys.argv) > 6 and sys.argv[6] == "depth"   # profondeur fournie (depth.png) au lieu de l'estimation
 wf = {
  "1": {"class_type": "UNETLoader", "inputs": {"unet_name": "flux1-dev.safetensors", "weight_dtype": "fp8_e4m3fn"}},
  "2": {"class_type": "DualCLIPLoader", "inputs": {"clip_name1": "clip_l.safetensors", "clip_name2": "t5xxl_fp16.safetensors", "type": "flux"}},
@@ -22,4 +23,7 @@ wf = {
  "15": {"class_type": "SaveImage", "inputs": {"images": ["14", 0], "filename_prefix": "rendu"}},
  "16": {"class_type": "SaveImage", "inputs": {"images": ["7", 0], "filename_prefix": "profondeur"}},
 }
+if DEPTH:
+    wf["20"] = {"class_type": "LoadImage", "inputs": {"image": "depth.png"}}
+    wf["7"] = {"class_type": "ImageScale", "inputs": {"image": ["20", 0], "upscale_method": "lanczos", "width": W, "height": H, "crop": "disabled"}}
 print(json.dumps(wf))
