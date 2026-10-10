@@ -38,6 +38,8 @@ for (const it of (P.items || [])) {
       o.castShadow = true; o.receiveShadow = true;
     }
   });
+  if (P.dump) { g.updateMatrixWorld(true); const re = new RegExp(P.dump, 'i');
+    g.traverse((o) => { if (o !== g && re.test(o.name) && !(o.parent && re.test(o.parent.name))) { const b = new THREE.Box3().expandByObject(o); console.log('NODE', o.name, 'parent=' + (o.parent?.name || ''), 'vis=' + o.visible, b.min.toArray().map((v) => v.toFixed(2)).join(','), '->', b.max.toArray().map((v) => v.toFixed(2)).join(',')); } }); }
   // Pergolas 3x6 / 3x9 : le fichier ne contient la toiture brise-soleil que sur un module de 3 m, on la répète sur toute la longueur.
   if (it.briseSoleilComplet !== false) {
     g.updateMatrixWorld(true);
@@ -55,11 +57,55 @@ for (const it of (P.items || [])) {
         for (let k = 0; k < n; k++) {
           const off = fb.min[ax] - bb.min[ax] + k * step;
           if (Math.abs(off) < 1e-3) continue;
+          if (Array.isArray(it.briseSoleil) && !it.briseSoleil.includes(k)) continue;
           bsNodes.forEach((src) => { const c = src.clone(true); const w = new THREE.Vector3(); w[ax] = off;
             const inv = new THREE.Matrix4().copy(src.parent.matrixWorld).invert(); const o0 = new THREE.Vector3().applyMatrix4(inv), o1 = w.clone().applyMatrix4(inv);
             c.position.add(o1.sub(o0)); src.parent.add(c); });
         }
+        if (Array.isArray(it.briseSoleil) && !it.briseSoleil.includes(0)) { const k0 = Math.round((bb.min[ax] - fb.min[ax]) / step); if (!it.briseSoleil.includes(k0)) bsNodes.forEach((s0) => { s0.visible = false; }); }
         if (P.debug) console.log('brise-soleil répété', n, 'fois sur', ax);
+      }
+    }
+  }
+  // Brise-vue : un pan peut aller sur n'importe quel côté et sur chaque travée de 3 m.
+  // it.briseVue = ["x-0", "x-1", "z-", "z+0"...] : côté dans le repère du modèle (x- = face avant de la murale, opposée au mur) + numéro de travée (toutes si absent).
+  if (it.briseVue && it.briseVue.length) {
+    g.updateMatrixWorld(true);
+    const isBV = (o) => /Option[ _]Face[ _]Brise[ _]vue/i.test(o.name);
+    const src = []; g.traverse((o) => { if (isBV(o) && !(o.parent && isBV(o.parent))) src.push(o); });
+    const pb = new THREE.Box3(); g.traverse((o) => { if (o.isMesh && /Poteaux/i.test(o.name + ' ' + (o.parent?.name || ''))) pb.expandByObject(o); });
+    const wb = new THREE.Box3(); g.traverse((o) => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; if (ms.some((m) => /WALL/i.test(m.name))) wb.expandByObject(o); } });
+    if (src.length && !pb.isEmpty()) {
+      const sb = new THREE.Box3(); src.forEach((n) => sb.expandByObject(n));
+      const c0 = sb.getCenter(new THREE.Vector3()), ss = sb.getSize(new THREE.Vector3());
+      // orientation du pan d'origine : normale sortante selon l'axe le plus fin
+      const nAx = ss.x < ss.z ? 'x' : 'z', w = Math.max(ss.x, ss.z);
+      const nSg = Math.abs(c0[nAx] - pb.min[nAx]) < Math.abs(c0[nAx] - pb.max[nAx]) ? -1 : 1;
+      const ang = (ax, sg) => Math.atan2(ax === 'x' ? sg : 0, ax === 'z' ? sg : 0); // angle de la normale dans le plan (x,z)
+      const a0 = ang(nAx, nSg);
+      const inset = nSg < 0 ? c0[nAx] - pb.min[nAx] : pb.max[nAx] - c0[nAx];
+      // emprise utile : pour une murale, on s'arrête au mur
+      const ext = pb.clone(); if (!wb.isEmpty()) { const wc = wb.getCenter(new THREE.Vector3()); const pc = pb.getCenter(new THREE.Vector3());
+        const wAx = Math.abs(wc.x - pc.x) > Math.abs(wc.z - pc.z) ? 'x' : 'z'; if (wc[wAx] > pc[wAx]) ext.max[wAx] = Math.min(ext.max[wAx], wb.min[wAx]); else ext.min[wAx] = Math.max(ext.min[wAx], wb.max[wAx]); }
+      for (const spec of it.briseVue) {
+        const m = /^([xz])([+-])(\d*)$/.exec(spec); if (!m) continue;
+        const ax = m[1], sg = m[2] === '+' ? 1 : -1, along = ax === 'x' ? 'z' : 'x';
+        const L = ext.max[along] - ext.min[along], n = Math.max(1, Math.round(L / w));
+        const bays = m[3] === '' ? [...Array(n).keys()] : [Math.min(+m[3], n - 1)];
+        for (const k of bays) {
+          const t = new THREE.Vector3(); t.y = c0.y;
+          t[ax] = sg < 0 ? pb.min[ax] + inset : pb.max[ax] - inset;
+          t[along] = n === 1 ? (ext.min[along] + ext.max[along]) / 2 : ext.min[along] + w / 2 + k * (L - w) / (n - 1);
+          const wrap = new THREE.Group(); wrap.position.copy(t);
+          // côté plus court qu'un pan (bout d'une murale, entre poteau et mur) : lames recoupées à la longueur
+          const sc = new THREE.Group(); if (n === 1 && L < w * 0.97) sc.scale[nAx === 'x' ? 'z' : 'x'] = L / w; wrap.add(sc);
+          wrap.rotation.y = ang(ax, sg) - a0;
+          src.forEach((s0) => { const c = s0.clone(true); c.position.sub(c0); c.visible = true;
+            c.traverse((o) => { if (o === c) return; if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; o.visible = !ms.some((mm) => badMat.test(mm.name)); } else o.visible = true; });
+            sc.add(c); });
+          g.add(wrap);
+        }
+        if (P.debug) console.log('brise-vue', spec, 'travées', bays.join(','), 'sur', n);
       }
     }
   }
@@ -107,7 +153,16 @@ for (const it of (P.items || [])) {
   tiled.position.set(-box.min.x - full.x / 2, -box.min.y + (it.lift || 0), -box.min.z - full.z / 2);
   const pivot = new THREE.Group(); pivot.add(tiled);
   pivot.position.set(it.pos[0], 0, it.pos[1]); pivot.rotation.y = (it.rotY || 0) * Math.PI / 180;
+  // Pergola murale : la face du mur du modèle est posée exactement sur la façade (it.facadeZ = position de la façade dans la scène).
+  if (it.facadeZ !== undefined) {
+    pivot.updateMatrixWorld(true); const wb = new THREE.Box3();
+    pivot.traverse((o) => { if (!o.isMesh) return; const ms = Array.isArray(o.material) ? o.material : [o.material]; if (ms.some((m) => /WALL/i.test(m.name))) wb.expandByObject(o); });
+    if (!wb.isEmpty()) { pivot.position.z += it.facadeZ - wb.max.z; if (P.debug) console.log('collé à la façade, décalage', (it.facadeZ - wb.max.z).toFixed(2)); }
+  }
   scene.add(pivot);
+  if (P.debug) { pivot.updateMatrixWorld(true); const wb=new THREE.Box3(), pb=new THREE.Box3();
+    pivot.traverse((o)=>{ if(!o.isMesh) return; const ms=Array.isArray(o.material)?o.material:[o.material]; if(ms.some((m)=>/WALL/i.test(m.name))) wb.expandByObject(o); if(/Poteaux/i.test(o.name+' '+(o.parent?.name||''))) pb.expandByObject(o); });
+    console.log('MUR', JSON.stringify(wb.min), JSON.stringify(wb.max), 'POTEAUX', JSON.stringify(pb.min), JSON.stringify(pb.max)); }
   if (P.debug) console.log(it.m, 'taille', full.toArray().map((v) => v.toFixed(2)).join(' x '));
 }
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), P.groundColor ? new THREE.MeshStandardMaterial({ color: P.groundColor, roughness: 1 }) : new THREE.ShadowMaterial({ opacity: P.shadow ?? 0.35 }));
