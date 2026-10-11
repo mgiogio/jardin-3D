@@ -33,7 +33,7 @@ tint = fill.astype(float) * (1 - 0.18 * noeud[..., None]) + np.array([95, 55, 30
 im = np.where(trous[..., None] | (noeud[..., None] > 0.05), tint, im).astype('uint8')
 print('trous corrigés :', ndi.label(trous)[1])
 # 2) olivier devant le brise-vue : le feuillage et le tronc de la passe mobilier passent devant les lames
-ia = np.array(Image.open('fin/k4_ia.jpg').convert('RGB')); bx = (904, 327)
+ia = np.array(Image.open('fin/m4x_ia.jpg').convert('RGB')); bx = (904, 327)
 reg = (slice(470, 610), slice(1060, 1140))
 sub_ia = ia[reg[0].start - bx[1]:reg[0].stop - bx[1], reg[1].start - bx[0]:reg[1].stop - bx[0]].astype(float)
 sub = im[reg].astype(float)
@@ -50,4 +50,15 @@ src = im[y0:y1, x0 + 75:x1 + 75].copy()
 mk = np.zeros((y1 - y0, x1 - x0)); mk[3:-3, 3:-3] = 1; mk = ndi.gaussian_filter(mk, 3)[..., None]
 im[y0:y1, x0:x1] = (im[y0:y1, x0:x1] * (1 - mk) + src * mk).astype('uint8')
 # 4) bande claire au pied de l'extension : adoucie (flou vertical léger)
+# 5) nœuds rouges / roses (le modèle exagère parfois la résine) : ramenés au brun foncé du Douglas
+hsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV).astype(float); h, s_, v = hsv[..., 0] * 2, hsv[..., 1] / 255, hsv[..., 2] / 255
+rouge = clo & ((h < 14) | (h > 330)) & (s_ > 0.35)
+rouge = ndi.binary_dilation(rouge, iterations=2) & clo
+if rouge.any():
+    br = cv2.cvtColor(im, cv2.COLOR_RGB2HSV).astype(float)
+    br[..., 0] = np.where(rouge, 13, br[..., 0]); br[..., 1] = np.where(rouge, np.minimum(br[..., 1], 150), br[..., 1])
+    fixe = cv2.cvtColor(br.astype('uint8'), cv2.COLOR_HSV2RGB)
+    a_ = ndi.gaussian_filter(rouge.astype(float), 1.0)[..., None]
+    im = (im * (1 - a_) + fixe * a_).astype('uint8')
+print('nœuds rouges corrigés :', int(rouge.sum()), 'px')
 Image.fromarray(im).save(sys.argv[2], quality=94)
