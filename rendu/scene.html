@@ -177,6 +177,31 @@ for (const it of (P.items || [])) {
       if (P.debug) console.log('façade : décalage', d.toFixed(2), 'alignement nin·nout', nin.dot(nout).toFixed(3));
     }
   }
+  // Bois naturel : chaque lame reçoit son propre morceau de texture (décalage, sens) et une teinte légèrement différente,
+  // pour casser la répétition des nœuds entre lames et entre échantillons répétés.
+  if (P.varBois !== false) {
+    let seed = (P.seed || 1) * 9301 + (P.items.indexOf(it) + 1) * 49297; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    pivot.traverse((o) => {
+      if (!o.isMesh) return; const ms = Array.isArray(o.material) ? o.material : [o.material];
+      if (!ms.some((m) => /WOOD/i.test(m.name)) || !o.geometry.attributes.uv) return;
+      const geo = o.geometry.clone(); const pos = geo.attributes.position, uv = geo.attributes.uv, n = pos.count;
+      const idx = geo.index ? geo.index.array : null;
+      // lames = composantes connexes (sommets fusionnés par position)
+      const key = new Map(), par = new Int32Array(n); for (let i = 0; i < n; i++) par[i] = i;
+      const find = (a) => { while (par[a] !== a) { par[a] = par[par[a]]; a = par[a]; } return a; };
+      const uni = (a, b) => { a = find(a); b = find(b); if (a !== b) par[a] = b; };
+      for (let i = 0; i < n; i++) { const k = Math.round(pos.getX(i) * 1e4) + ',' + Math.round(pos.getY(i) * 1e4) + ',' + Math.round(pos.getZ(i) * 1e4); if (key.has(k)) uni(i, key.get(k)); else key.set(k, i); }
+      const tri = idx ? idx.length : n; for (let t = 0; t < tri; t += 3) { const a = idx ? idx[t] : t, b = idx ? idx[t + 1] : t + 1, c = idx ? idx[t + 2] : t + 2; uni(a, b); uni(b, c); }
+      const comp = new Map(); const col = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const r = find(i); if (!comp.has(r)) { const l = 0.86 + rnd() * 0.24, w = (rnd() - 0.5) * 0.06; comp.set(r, { du: rnd() * 7, dv: rnd() * 7, fl: rnd() < 0.5 ? -1 : 1, c: [l * (1 + w), l, l * (1 - w)] }); }
+        const q = comp.get(r); uv.setXY(i, uv.getX(i) * q.fl + q.du, uv.getY(i) + q.dv); col.set(q.c, i * 3);
+      }
+      uv.needsUpdate = true; geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); o.geometry = geo;
+      o.material = Array.isArray(o.material) ? o.material.map((m) => { if (!/WOOD/i.test(m.name)) return m; const c = m.clone(); c.vertexColors = true; if (c.map) { c.map = c.map.clone(); c.map.wrapS = c.map.wrapT = THREE.RepeatWrapping; c.map.needsUpdate = true; } return c; })
+        : (() => { const c = o.material.clone(); c.vertexColors = true; if (c.map) { c.map = c.map.clone(); c.map.wrapS = c.map.wrapT = THREE.RepeatWrapping; c.map.needsUpdate = true; } return c; })();
+    });
+  }
   scene.add(pivot);
   if (P.debug) { pivot.updateMatrixWorld(true); const wb=new THREE.Box3(), pb=new THREE.Box3();
     pivot.traverse((o)=>{ if(!o.isMesh) return; const ms=Array.isArray(o.material)?o.material:[o.material]; if(ms.some((m)=>/WALL/i.test(m.name))) wb.expandByObject(o); if(/Poteaux/i.test(o.name+' '+(o.parent?.name||''))) pb.expandByObject(o); });

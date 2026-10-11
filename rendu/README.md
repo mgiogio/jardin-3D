@@ -31,3 +31,8 @@ Les photos de téléphone sont souvent prises au grand-angle (0,5x, environ 87°
 - Option de scène `facade: {p, n}` : la face du mur du modèle est posée sur ce plan, quelle que soit son orientation.
 - Option `ombreFacade: {p, n, w, h, opacity}` : plan invisible qui reçoit les ombres des lames et des poteaux sur le mur de la maison.
 - `relight.py` : ne garde de la passe lumière IA que la lumière (basses fréquences), appliquée à la photo fidèle. La maison et les produits ne sont pas redessinés.
+
+## Bois naturel (fin de l'effet 3D)
+
+- `scene.html` : chaque lame reçoit son propre morceau de texture (décalage, sens) et une teinte légèrement différente. Les nœuds ne se répètent plus d'une lame à l'autre ni d'un échantillon répété à l'autre. Actif par défaut (`varBois: false` pour couper).
+- `affine.py` avec `none` à la place du LoRA : passe de réalisme générique (Flux dev, force 0,3) sur une clôture ou une terrasse, zone par zone, au rapport d'image de la zone. La géométrie de la 3D reste en place.

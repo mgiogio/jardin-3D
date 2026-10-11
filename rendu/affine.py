@@ -11,9 +11,15 @@ crop = img.crop((x0, y0, x1, y1)); cw, ch = crop.size
 s = 1024 / max(cw, ch); up = crop.resize((max(64, int(cw * s) // 16 * 16), max(64, int(ch * s) // 16 * 16)), Image.LANCZOS)
 b = io.BytesIO(); up.save(b, 'PNG'); uri = 'data:image/png;base64,' + base64.b64encode(b.getvalue()).decode()
 tok = os.environ['REPLICATE_API_TOKEN']
-body = {'input': {'prompt': sys.argv[5], 'image': uri, 'prompt_strength': float(sys.argv[6]), 'lora_weights': sys.argv[4], 'lora_scale': 1.0,
-                  'num_inference_steps': 32, 'guidance': 3.0, 'output_format': 'png', 'go_fast': False, 'megapixels': '1'}}
-req = urllib.request.Request('https://api.replicate.com/v1/models/black-forest-labs/flux-dev-lora/predictions', data=json.dumps(body).encode(),
+# rapport d'image le plus proche de la zone (la zone peut être une clôture très allongée)
+ars = {'1:1': 1, '16:9': 16 / 9, '21:9': 21 / 9, '3:2': 1.5, '2:3': 2 / 3, '4:5': 0.8, '5:4': 1.25, '3:4': 0.75, '4:3': 4 / 3, '9:16': 9 / 16, '9:21': 9 / 21}
+ar = min(ars, key=lambda k: abs(ars[k] - cw / ch))
+inp = {'prompt': sys.argv[5], 'image': uri, 'prompt_strength': float(sys.argv[6]),
+       'num_inference_steps': 32, 'guidance': 3.0, 'output_format': 'png', 'go_fast': False, 'megapixels': '1', 'aspect_ratio': ar}
+modele = 'flux-dev'                       # lora = 'none' : réalisme générique (clôture, terrasse), sans modèle entraîné
+if sys.argv[4] != 'none': inp.update(lora_weights=sys.argv[4], lora_scale=1.0); modele = 'flux-dev-lora'
+body = {'input': inp}
+req = urllib.request.Request(f'https://api.replicate.com/v1/models/black-forest-labs/{modele}/predictions', data=json.dumps(body).encode(),
                              headers={'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json', 'Prefer': 'wait=60'})
 p = json.load(urllib.request.urlopen(req, timeout=120))
 while p['status'] not in ('succeeded', 'failed', 'canceled'):
