@@ -54,20 +54,64 @@ gen.save(sys.argv[5].replace('.jpg', '_ia.jpg'), quality=92)
 G, I = np.asarray(gen).astype(float), np.asarray(img).astype(float)
 diff = np.abs(G - I).mean(-1)
 garde_ia = edit & ~libre                                   # zone jardin : l'IA
-# au pied des clôtures, on ne garde que la végétation : les pixels où l'IA a redessiné des lames (texture à rayures
-# horizontales, couleur bois) reviennent à la clôture exacte.
+# au pied des clôtures, on ne garde que la végétation. Test : là où l'IA a gardé (ou redessiné) la clôture, ses rayures
+# coïncident avec celles de la clôture exacte (corrélation locale forte) ; là où elle a posé une plante, non.
 from scipy import ndimage as ndi
-gg = np.asarray(gen.convert('L')).astype(float)
-gx, gy = ndi.sobel(gg, 1), ndi.sobel(gg, 0)
+def hp(a): a = a - ndi.gaussian_filter(a, 4); return a
+ga, gb = hp(np.asarray(gen.convert('L')).astype(float)), hp(np.asarray(img.convert('L')).astype(float))
+w = 15; f = lambda a: ndi.uniform_filter(a, w)
+ncc = (f(ga * gb) - f(ga) * f(gb)) / np.sqrt(np.maximum((f(ga * ga) - f(ga) ** 2) * (f(gb * gb) - f(gb) ** 2), 1e-6))
+energie = f(ga * ga)
+clo = np.zeros((H, W), bool)
+for cp in sys.argv[7].split(','): clo |= alpha(cp)
+gx, gy = ndi.sobel(ga, 1), ndi.sobel(ga, 0)
 Sxx, Syy, Sxy = ndi.uniform_filter(gx * gx, 11), ndi.uniform_filter(gy * gy, 11), ndi.uniform_filter(gx * gy, 11)
-# lames = texture très orientée (quelle que soit la perspective) : cohérence du tenseur de structure
 coh = ((Sxx - Syy) ** 2 + 4 * Sxy ** 2) / ((Sxx + Syy) ** 2 + 1e-6)
-rayures = (coh > 0.55) & (Sxx + Syy > 600)
-r_, g_, b_ = G[..., 0], G[..., 1], G[..., 2]
-vert = (g_ > r_ * 0.98) & (g_ > b_ * 1.05)                     # feuillage
-fleur = (b_ > g_ * 1.05) | ((r_ > 170) & (g_ > 150) & (b_ < 120) & (r_ - b_ > 70) & ~rayures)  # lavandes, fleurs claires
-vegetal = vert | fleur | ~rayures
-ajout = libre & vegetal & (np.asarray(Image.fromarray((diff > 38).astype('uint8') * 255).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(7))) > 0)
+R_, G_, B_ = G[..., 0], G[..., 1], G[..., 2]
+bois = (R_ > G_ * 1.03) & (G_ > B_ * 1.02) & (R_ - B_ > 18)                  # brun / beige bois
+vegetal_c = (G_ >= R_ * 0.97) | (B_ > G_ * 1.04)                            # vert ou violet / bleu
+# même orientation que les lames de la clôture exacte à cet endroit (les graminées dorées, elles, partent dans tous les sens)
+hx, hy = ndi.sobel(gb, 1), ndi.sobel(gb, 0)
+Bxx, Byy, Bxy = ndi.uniform_filter(hx * hx, 11), ndi.uniform_filter(hy * hy, 11), ndi.uniform_filter(hx * hy, 11)
+ta, tb = 0.5 * np.arctan2(2 * Sxy, Sxx - Syy), 0.5 * np.arctan2(2 * Bxy, Bxx - Byy)
+dt = np.abs(np.angle(np.exp(2j * (ta - tb)))) / 2
+lames_ia = ndi.uniform_filter(((coh > 0.45) & bois & ~vegetal_c & (dt < np.radians(10))).astype(float), 9) > 0.5   # clôture redessinée par l'IA
+# 1) corrélation : là où l'IA n'a pas reproduit les lames exactes et n'a pas redessiné de lames -> plante
+plante = libre & clo & ((ncc < 0.35) | (energie < 20)) & ~lames_ia
+# 2) segmentation sémantique (CLIPSeg) "plantes" contre "clôture en bois", par tuiles : rattrape les graminées dorées
+def seg_plantes(im, zone):
+    try:
+        import torch
+        from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
+    except Exception: return np.zeros(zone.shape, bool)
+    P_ = CLIPSegProcessor.from_pretrained('CIDAS/clipseg-rd64-refined'); M_ = CLIPSegForImageSegmentation.from_pretrained('CIDAS/clipseg-rd64-refined')
+    out_ = np.zeros(zone.shape, bool); ys_, xs_ = np.where(zone)
+    if not len(ys_): return out_
+    X0, X1, Y0, Y1 = xs_.min(), xs_.max(), ys_.min(), ys_.max(); T = 520
+    for ty in range(Y0, Y1 + 1, T - 80):
+        for tx in range(X0, X1 + 1, T - 80):
+            b_ = (tx, ty, min(W, tx + T), min(H, ty + T)); c_ = im.crop(b_)
+            inp = P_(text=['plants, shrubs, flowers and ornamental grasses', 'wooden fence'], images=[c_] * 2, return_tensors='pt', padding=True)
+            with torch.no_grad(): lg = torch.sigmoid(M_(**inp).logits).numpy()
+            pm = Image.fromarray(((lg[0] > lg[1]) & (lg[0] > 0.25)).astype('uint8') * 255).resize(c_.size, Image.BILINEAR)
+            out_[b_[1]:b_[3], b_[0]:b_[2]] |= np.asarray(pm) > 127
+    return ndi.binary_erosion(out_, iterations=5) & zone
+plante |= seg_plantes(gen, libre & clo) & (diff > 25)
+# paillage / terre : l'IA place parfois le massif plus loin que le vrai pied de clôture ; ce sol-là est caché par la
+# clôture exacte (brun orangé, texture sans direction), seules les plantes passent devant.
+import colorsys
+hsv = np.asarray(gen.convert('HSV')).astype(float); hue, sat = hsv[..., 0] * 360 / 255, hsv[..., 1] / 255
+paillage = (hue > 12) & (hue < 42) & (sat > 0.3) & (coh < 0.4)
+paillage = ndi.uniform_filter(paillage.astype(float), 7) > 0.6
+plante &= ~paillage
+plante = ndi.binary_opening(plante, iterations=2)
+lab, n = ndi.label(plante); tailles = ndi.sum(plante, lab, range(1, n + 1))
+plante = np.isin(lab, 1 + np.where(tailles > 400)[0])          # pas de miettes
+plante = ndi.binary_closing(plante, iterations=3)
+trous = ndi.binary_fill_holes(plante) & ~plante; lt, nt = ndi.label(trous)
+if nt: plante |= np.isin(lt, 1 + np.where(ndi.sum(trous, lt, range(1, nt + 1)) < 3000)[0])   # trous de taille fleur seulement
+plante &= libre
+ajout = plante | (libre & ~clo & (diff > 38))
 garde_ia |= ajout | (deck_sol if os.environ.get('SOL_IA') else False)                                    # pied des clôtures : seulement ce qu'elle a ajouté ; plancher : l'IA (mobilier posé dessus)
 Mk = Image.fromarray((garde_ia * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.5))
 res_img = Image.composite(gen, img, Mk)
@@ -80,6 +124,26 @@ for cp in sys.argv[7].split(','):
         t = np.linspace(0, 1, z); ao[y1 - z + 1:y1 + 1, x] = np.minimum(ao[y1 - z + 1:y1 + 1, x], 1 - 0.35 * t ** 1.5)
 ao = ndi.gaussian_filter(ao, 1.5); keep_ao = ~garde_ia
 R[keep_ao] *= ao[keep_ao][:, None]
+# sous la clôture (côté jardin) : l'IA a parfois prolongé les lames plus bas que le vrai pied -> on bouche ces restes
+# avec le sol voisin, puis ombre de contact au sol le long du pied pour bien poser la clôture.
+import cv2
+dessous = np.zeros((H, W), bool); contact = np.ones((H, W))
+for cp in sys.argv[7].split(','):
+    m = alpha(cp)
+    for x in np.where(m.any(0))[0]:
+        ys = np.where(m[:, x])[0]; y0, y1 = ys.min(), ys.max(); hgt = y1 - y0
+        dessous[y1 + 1:min(H, y1 + 1 + int(hgt * 0.3)), x] = True
+        z = int(hgt * 0.05) + 2; t = np.linspace(0, 1, z)
+        contact[y1 + 1:min(H, y1 + 1 + z), x] = np.minimum(contact[y1 + 1:min(H, y1 + 1 + z), x], (0.62 + 0.38 * t ** 0.8)[:min(H, y1 + 1 + z) - y1 - 1])
+Rg = cv2.cvtColor(np.clip(R, 0, 255).astype('uint8'), cv2.COLOR_RGB2GRAY).astype(float)
+qx, qy = ndi.sobel(Rg, 1), ndi.sobel(Rg, 0)
+Qxx, Qyy, Qxy = ndi.uniform_filter(qx * qx, 11), ndi.uniform_filter(qy * qy, 11), ndi.uniform_filter(qx * qy, 11)
+qc = ((Qxx - Qyy) ** 2 + 4 * Qxy ** 2) / ((Qxx + Qyy) ** 2 + 1e-6)
+Rr, Rgg, Rb = R[..., 0], R[..., 1], R[..., 2]
+restes = dessous & (qc > 0.5) & (Rr > Rgg * 1.03) & (Rgg > Rb * 1.02) & (Qxx + Qyy > 600) & ~((Rgg >= Rr * 0.97))
+restes = ndi.binary_opening(restes, iterations=2); restes = ndi.binary_dilation(restes, iterations=3) & dessous
+contact = ndi.gaussian_filter(contact, 2.0)
+R *= contact[..., None]
 Image.fromarray(np.clip(R, 0, 255).astype('uint8')).save(sys.argv[5], quality=93)
 Image.fromarray((np.stack([edit, libre, ajout], -1) * 255).astype('uint8')).save(sys.argv[5].replace('.jpg', '_masques.png'))
 print('ok', res.get('usage'))
