@@ -54,9 +54,32 @@ gen.save(sys.argv[5].replace('.jpg', '_ia.jpg'), quality=92)
 G, I = np.asarray(gen).astype(float), np.asarray(img).astype(float)
 diff = np.abs(G - I).mean(-1)
 garde_ia = edit & ~libre                                   # zone jardin : l'IA
-ajout = libre & (np.asarray(Image.fromarray((diff > 38).astype('uint8') * 255).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(7))) > 0)
+# au pied des clôtures, on ne garde que la végétation : les pixels où l'IA a redessiné des lames (texture à rayures
+# horizontales, couleur bois) reviennent à la clôture exacte.
+from scipy import ndimage as ndi
+gg = np.asarray(gen.convert('L')).astype(float)
+gx, gy = ndi.sobel(gg, 1), ndi.sobel(gg, 0)
+Sxx, Syy, Sxy = ndi.uniform_filter(gx * gx, 11), ndi.uniform_filter(gy * gy, 11), ndi.uniform_filter(gx * gy, 11)
+# lames = texture très orientée (quelle que soit la perspective) : cohérence du tenseur de structure
+coh = ((Sxx - Syy) ** 2 + 4 * Sxy ** 2) / ((Sxx + Syy) ** 2 + 1e-6)
+rayures = (coh > 0.55) & (Sxx + Syy > 600)
+r_, g_, b_ = G[..., 0], G[..., 1], G[..., 2]
+vert = (g_ > r_ * 0.98) & (g_ > b_ * 1.05)                     # feuillage
+fleur = (b_ > g_ * 1.05) | ((r_ > 170) & (g_ > 150) & (b_ < 120) & (r_ - b_ > 70) & ~rayures)  # lavandes, fleurs claires
+vegetal = vert | fleur | ~rayures
+ajout = libre & vegetal & (np.asarray(Image.fromarray((diff > 38).astype('uint8') * 255).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(7))) > 0)
 garde_ia |= ajout | (deck_sol if os.environ.get('SOL_IA') else False)                                    # pied des clôtures : seulement ce qu'elle a ajouté ; plancher : l'IA (mobilier posé dessus)
 Mk = Image.fromarray((garde_ia * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.5))
-Image.composite(gen, img, Mk).save(sys.argv[5], quality=93)
+res_img = Image.composite(gen, img, Mk)
+# ombre de contact au pied des clôtures (le bois fonce en approchant du sol, comme sur les photos réelles)
+R = np.asarray(res_img).astype(float); ao = np.ones((H, W))
+for cp in sys.argv[7].split(','):
+    m = alpha(cp)
+    for x in np.where(m.any(0))[0]:
+        ys = np.where(m[:, x])[0]; y0, y1 = ys.min(), ys.max(); hgt = y1 - y0; z = int(hgt * 0.12) + 1
+        t = np.linspace(0, 1, z); ao[y1 - z + 1:y1 + 1, x] = np.minimum(ao[y1 - z + 1:y1 + 1, x], 1 - 0.35 * t ** 1.5)
+ao = ndi.gaussian_filter(ao, 1.5); keep_ao = ~garde_ia
+R[keep_ao] *= ao[keep_ao][:, None]
+Image.fromarray(np.clip(R, 0, 255).astype('uint8')).save(sys.argv[5], quality=93)
 Image.fromarray((np.stack([edit, libre, ajout], -1) * 255).astype('uint8')).save(sys.argv[5].replace('.jpg', '_masques.png'))
 print('ok', res.get('usage'))
