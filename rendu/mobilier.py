@@ -10,7 +10,7 @@ band = deck.copy()
 for x in np.where(deck.any(0))[0]:
     y0 = np.where(deck[:, x])[0].min(); band[max(0, y0 - haut):y0, x] = True
 # meubles seulement sous la pergola : colonnes comprises entre ses poteaux extrêmes (pas de panneau inventé à côté)
-per = prod & ~deck; cols = np.where(per.sum(0) > 90)[0]   # colonnes de poteaux (hautes), pas les bords du plancher
+per = prod & ~deck; cols = np.where(per.sum(0) > 0.6 * per.sum(0).max() * 0 + 60)[0]   # colonnes des poteaux et du brise-vue
 if len(cols): band[:, :cols.min() + 8] &= deck[:, :cols.min() + 8]; band[:, cols.max() - 8:] &= deck[:, cols.max() - 8:]
 edit = band & ~(prod & ~deck)                       # plancher + volume au-dessus, sans les poteaux et le brise-vue
 x0, y0, x1, y1 = Image.fromarray((band * 255).astype('uint8')).getbbox()
@@ -37,5 +37,7 @@ ajout = (np.asarray(Image.fromarray(((d > float(os.environ.get('SEUIL', '30'))) 
 # objets entiers : on comble les trous à l'intérieur des meubles
 Mk = Image.fromarray((ajout * 255).astype('uint8')).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(9)).filter(ImageFilter.GaussianBlur(1.2))
 Mk = Image.fromarray(np.minimum(np.asarray(Mk), np.asarray(em)).astype('uint8'))
+if os.environ.get('PLEIN'):   # toute la zone autorisée vient de l'IA (évite les meubles à moitié transparents sur les objets d'origine)
+    Mk = em.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(1.5))
 out = img.copy(); out.paste(Image.composite(gen, crop, Mk), box[:2]); out.save(sys.argv[5], quality=93)
 print('ok', box)
