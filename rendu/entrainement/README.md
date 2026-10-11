@@ -10,3 +10,5 @@
 - `build_ds.py` : sélection des photos (indices dans la liste des réalisations) et légendes. Les photos clients ne sont jamais mises dans ce dépôt public.
 - Sélection : produit net et bien visible, lames horizontales Cover Green ; exclus les photos de nuit, de chantier, d'intérieur, les poteaux alu gris et les claire-voie.
 - Coût : environ 1,20 à 2 $ par entraînement. Pour progresser : plus de photos de terrasses posées (5 seulement aujourd'hui).
+
+Règle d'usage du modèle clôture : seulement sur une clôture vue de près (lames larges dans l'image). Sur une clôture lointaine, il sème des nœuds en taches brun-orangé qui font « bois abîmé » : on y garde la retouche générique douce (force 0,22).

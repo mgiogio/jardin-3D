@@ -4,7 +4,9 @@
 set -e
 W=$(cat lora/weights_url_cloture); F=${FORCE_CLOTURE:-0.35}
 P="a photo of a CVGCLO horizontal slatted douglas fir wooden privacy fence along a garden, real garden photo, warm late afternoon sunlight"
-PROTEGE=cas/mureaux_v4_calque.png python3 affine.py fin/k_a.jpg fin/clo_g.png fin/m_b.jpg "$W" "$P" $F 30 >/dev/null
+# clôture vue de loin : retouche générique douce (le modèle y sème des nœuds en taches) ; clôture proche : modèle entraîné
+FP="photo of a new horizontal slatted douglas fir wooden privacy fence along a garden lawn, clean new boards, fine wood grain, few small tight knots, slight color variation between boards, thin even gaps, no holes, no cracks, warm late afternoon sunlight, realistic smartphone photo"
+PROTEGE=cas/mureaux_v4_calque.png python3 affine.py fin/k_a.jpg fin/clo_g.png fin/m_b.jpg none "$FP" 0.22 30 >/dev/null
 PROTEGE=cas/mureaux_v4_calque.png python3 affine.py fin/m_b.jpg fin/clo_d.png fin/m_c.jpg "$W" "$P" $F 30 >/dev/null
 python3 teinte.py fin/m_c.jpg fin/m9x.jpg teinte_ref.json soleil cas/mureaux_v4_calque.png,fin/clo_g.png,fin/clo_d.png 0.5 >/dev/null 2>&1
 cp fin/a1_ia.jpg fin/m1x_ia.jpg
