@@ -15,11 +15,16 @@ for ang in range(0, 180, 15):
     cv2.line(k, (int(15 - 15 * np.cos(t)), int(15 - 15 * np.sin(t))), (int(15 + 15 * np.cos(t)), int(15 + 15 * np.sin(t))), 1, 1)
     fer.append(cv2.morphologyEx(L, cv2.MORPH_CLOSE, k))
 fond = np.min(fer, 0).astype(float)
-proche = A('fin/clo_d.png')                      # clôture vue de près : lames larges, les nœuds s'y voient
+proche = A('fin/clo_d.png'); proche[:840] = False  # partie proche de la clôture : lames larges (plus haut, les jours fins seraient hachés)
 proche[575:610, 40:75] = True                     # point noir isolé sur la clôture gauche
-trous = proche & (fond - L.astype(float) > 45)
+trous = proche & (fond - L.astype(float) > 35)
 lab, n = ndi.label(trous)
-if n: trous = np.isin(lab, 1 + np.where(ndi.sum(trous, lab, range(1, n + 1)) <= 500)[0])
+if n:
+    ok = []
+    for i, sl in enumerate(ndi.find_objects(lab), 1):
+        hh, ww = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start; a_ = (lab[sl] == i).sum()
+        if 8 <= a_ <= 500 and a_ > 0.3 * hh * ww and max(hh, ww) < 5 * min(hh, ww): ok.append(i)   # taches rondes seulement
+    trous = np.isin(lab, ok)
 trous = ndi.binary_dilation(trous, iterations=2) & clo
 fill = cv2.inpaint(im, (trous * 255).astype('uint8'), 4, cv2.INPAINT_TELEA)
 # nœud discret : légère teinte brun-roux au centre plutôt qu'un trou
