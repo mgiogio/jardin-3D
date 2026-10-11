@@ -1,0 +1,47 @@
+{
+ "soleil": {
+  "moy": [
+   43.63,
+   9.2,
+   22.88
+  ],
+  "ecart": [
+   21.83,
+   5.39,
+   11.81
+  ],
+  "photos": [
+   "45809_2",
+   "46498_0",
+   "45809_0",
+   "46511_1"
+  ]
+ },
+ "couvert": {
+  "moy": [
+   38.89,
+   3.47,
+   7.22
+  ],
+  "ecart": [
+   20.72,
+   3.32,
+   5.93
+  ],
+  "photos": [
+   "46497_1",
+   "46467_2"
+  ]
+ },
+ "source": "clôtures Cover Green posées (réalisations www.cover.green), cadrages sur le bois, espace Lab",
+ "moy": [
+  43.63,
+  9.2,
+  22.88
+ ],
+ "ecart": [
+  21.83,
+  5.39,
+  11.81
+ ]
+}

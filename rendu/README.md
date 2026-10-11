@@ -36,3 +36,10 @@ Les photos de téléphone sont souvent prises au grand-angle (0,5x, environ 87°
 
 - `scene.html` : chaque lame reçoit son propre morceau de texture (décalage, sens) et une teinte légèrement différente. Les nœuds ne se répètent plus d'une lame à l'autre ni d'un échantillon répété à l'autre. Actif par défaut (`varBois: false` pour couper).
 - `affine.py` avec `none` à la place du LoRA : passe de réalisme générique (Flux dev, force 0,3) sur une clôture ou une terrasse, zone par zone, au rapport d'image de la zone. La géométrie de la 3D reste en place.
+
+## Teinte fidèle aux réalisations
+
+- `teinte_ref.json` : couleur du bois mesurée (espace Lab, moyenne et écart entre lames) sur des clôtures Cover Green posées, en deux lumières (soleil, couvert).
+- `teinte.py` : ramène le bois de chaque produit à ces mesures. Les connecteurs et le métal ne sont pas touchés, et chaque produit garde la lumière de la photo.
+
+    python3 teinte.py image.jpg sortie.jpg teinte_ref.json soleil pergola.png,cloture_g.png,cloture_d.png 0.5
