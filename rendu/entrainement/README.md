@@ -4,7 +4,7 @@
 |---|---|---|---|
 | pergola-adossee-lora | CVGPRGL | réalisations + rendus 3D | retouche des pergolas murales |
 | pergola-autoportante-lora | CVGPRGA | réalisations + rendus 3D | retouche des pergolas autoportantes |
-| cloture-terrasse-lora | CVGCLO, CVGTER | 44 photos de clôtures/bardages posés + 5 terrasses (réalisations www.cover.green) | retouche des clôtures, bardages et terrasses |
+| cloture-terrasse-lora (entraîné le 11/10, 20 min, 1600 pas) | CVGCLO, CVGTER | 44 photos de clôtures/bardages posés + 5 terrasses (réalisations www.cover.green) | retouche des clôtures, bardages et terrasses |
 
 - Entraîneur : ostris/flux-dev-lora-trainer, rang 16, taux 4e-4, 1200 à 1600 pas, légendes écrites à la main.
 - `build_ds.py` : sélection des photos (indices dans la liste des réalisations) et légendes. Les photos clients ne sont jamais mises dans ce dépôt public.

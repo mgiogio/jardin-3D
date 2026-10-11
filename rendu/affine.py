@@ -30,5 +30,9 @@ out = Image.open(io.BytesIO(urllib.request.urlopen(url).read())).convert('RGB').
 out.save(sys.argv[3].replace('.jpg', '_zone.jpg'))
 # On ne remplace que le produit et son voisinage immédiat (ombres de contact), en fondu.
 mk = lay.crop((x0, y0, x1, y1)).filter(ImageFilter.MaxFilter(13)).filter(ImageFilter.GaussianBlur(6))
+if os.environ.get('PROTEGE'):   # autres produits à ne pas toucher (ex. la pergola à côté d'une clôture)
+    from PIL import ImageChops
+    pr = Image.open(os.environ['PROTEGE']).convert('RGBA').resize((W, H)).getchannel('A').point(lambda a: 255 if a > 100 else 0).crop((x0, y0, x1, y1))
+    mk = ImageChops.subtract(mk, pr.filter(ImageFilter.MaxFilter(3)))
 res = img.copy(); res.paste(Image.composite(out, crop, mk), (x0, y0)); res.save(sys.argv[3], quality=92)
 print('ok', p.get('metrics'))
