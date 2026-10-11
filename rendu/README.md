@@ -20,3 +20,14 @@ Les deux pans se posent partout et se multiplient (règle dans `produits.json`).
 - `briseSoleil` : toutes les travées par défaut, ou une sélection, par exemple `[0, 2]`.
 - `facadeZ` (murale) : position de la façade dans la scène. La face du mur du modèle y est collée, jamais dans le vide.
 - `PORT=8777 node scene.mjs ...` permet de lancer plusieurs rendus en parallèle.
+
+## Calage de la perspective (photos au grand-angle)
+
+Les photos de téléphone sont souvent prises au grand-angle (0,5x, environ 87° de champ vertical) et la façade est rarement de face. `calage.py` mesure les lignes de fuite de la façade (toiture, fenêtres, portes) et en déduit le champ, l'inclinaison, le roulis et l'orientation de la façade :
+
+    python3 calage.py photo.jpg x0,y0,x1,y1 1.5 coin_bas_x,coin_bas_y
+
+- `cam` va tel quel dans la scène, `rotY_murale` sur la pergola murale, `coin_bas` donne la position au sol du coin de façade.
+- Option de scène `facade: {p, n}` : la face du mur du modèle est posée sur ce plan, quelle que soit son orientation.
+- Option `ombreFacade: {p, n, w, h, opacity}` : plan invisible qui reçoit les ombres des lames et des poteaux sur le mur de la maison.
+- `relight.py` : ne garde de la passe lumière IA que la lumière (basses fréquences), appliquée à la photo fidèle. La maison et les produits ne sont pas redessinés.

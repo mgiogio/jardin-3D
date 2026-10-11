@@ -159,6 +159,24 @@ for (const it of (P.items || [])) {
     pivot.traverse((o) => { if (!o.isMesh) return; const ms = Array.isArray(o.material) ? o.material : [o.material]; if (ms.some((m) => /WALL/i.test(m.name))) wb.expandByObject(o); });
     if (!wb.isEmpty()) { pivot.position.z += it.facadeZ - wb.max.z; if (P.debug) console.log('collé à la façade, décalage', (it.facadeZ - wb.max.z).toFixed(2)); }
   }
+  // Façade quelconque (calée sur les lignes de fuite de la photo) : it.facade = {p:[x,z], n:[nx,nz]} (n = normale vers le jardin).
+  // La face du mur du modèle est posée exactement sur ce plan.
+  if (it.facade) {
+    const ry = pivot.rotation.y; pivot.rotation.y = 0; pivot.position.set(0, 0, 0); pivot.updateMatrixWorld(true);
+    const wl = new THREE.Box3(); pivot.traverse((o) => { if (!o.isMesh) return; const ms = Array.isArray(o.material) ? o.material : [o.material]; if (ms.some((m) => /WALL/i.test(m.name))) wl.expandByObject(o); });
+    pivot.rotation.y = ry; pivot.position.set(it.pos[0], 0, it.pos[1]);
+    if (!wl.isEmpty()) {
+      const wc = wl.getCenter(new THREE.Vector3()); const ax = Math.abs(wc.x) > Math.abs(wc.z) ? 'x' : 'z'; const sg = Math.sign(wc[ax]) || 1;
+      const face = sg > 0 ? wl.min[ax] : wl.max[ax];            // face du mur côté jardin, en repère local
+      const nin = new THREE.Vector3(); nin[ax] = sg; nin.applyAxisAngle(new THREE.Vector3(0, 1, 0), ry); // vers la maison, en repère monde
+      const nout = new THREE.Vector3(it.facade.n[0], 0, it.facade.n[1]).normalize();
+      const pp = new THREE.Vector3(it.facade.p[0], 0, it.facade.p[1]);
+      // point de la face = pivot + nin*|face| ; on veut (point - pp)·nout = 0
+      const d = pivot.position.clone().addScaledVector(nin, Math.abs(face)).sub(pp).dot(nout);
+      pivot.position.addScaledVector(nout, -d);
+      if (P.debug) console.log('façade : décalage', d.toFixed(2), 'alignement nin·nout', nin.dot(nout).toFixed(3));
+    }
+  }
   scene.add(pivot);
   if (P.debug) { pivot.updateMatrixWorld(true); const wb=new THREE.Box3(), pb=new THREE.Box3();
     pivot.traverse((o)=>{ if(!o.isMesh) return; const ms=Array.isArray(o.material)?o.material:[o.material]; if(ms.some((m)=>/WALL/i.test(m.name))) wb.expandByObject(o); if(/Poteaux/i.test(o.name+' '+(o.parent?.name||''))) pb.expandByObject(o); });
@@ -167,6 +185,10 @@ for (const it of (P.items || [])) {
 }
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), P.groundColor ? new THREE.MeshStandardMaterial({ color: P.groundColor, roughness: 1 }) : new THREE.ShadowMaterial({ opacity: P.shadow ?? 0.35 }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+// Façade de la photo : plan invisible qui reçoit les ombres (lames du brise-soleil, poteaux) pour les poser sur le mur.
+if (P.ombreFacade) { const F = P.ombreFacade, n = new THREE.Vector3(F.n[0], 0, F.n[1]).normalize();
+  const fw = new THREE.Mesh(new THREE.PlaneGeometry(F.w || 12, F.h || 6), new THREE.ShadowMaterial({ opacity: F.opacity ?? P.shadow ?? 0.35 }));
+  fw.position.set(F.p[0], (F.h || 6) / 2, F.p[1]); fw.lookAt(fw.position.clone().add(n)); fw.receiveShadow = true; scene.add(fw); }
 scene.add(new THREE.HemisphereLight(0xe6eef5, 0x6f6a55, P.hemi ?? 1.2));
 const sun = new THREE.DirectionalLight(0xffffff, P.sun ?? 1.0);
 const az = (P.sunAz ?? 200) * Math.PI / 180, el = (P.sunEl ?? 55) * Math.PI / 180;
