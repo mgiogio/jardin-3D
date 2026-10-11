@@ -43,3 +43,13 @@ Les photos de téléphone sont souvent prises au grand-angle (0,5x, environ 87°
 - `teinte.py` : ramène le bois de chaque produit à ces mesures. Les connecteurs et le métal ne sont pas touchés, et chaque produit garde la lumière de la photo.
 
     python3 teinte.py image.jpg sortie.jpg teinte_ref.json soleil pergola.png,cloture_g.png,cloture_d.png 0.5
+
+## Aménagement paysager (effet waouh)
+
+Deux passes gpt-image-1 masquées, produits toujours exacts :
+
+1. `amenage.py` : massifs plantés au pied des clôtures, pelouse, allée en pas japonais. L'IA peut passer devant le bas des clôtures (bande `part_pied`), mais on n'y garde que ce qu'elle a ajouté. Avec `MOBILIER_SEPARE=1`, la terrasse et le volume au-dessus sont protégés.
+2. `mobilier.py` : table, chaises et pots sur la terrasse, sur un cadrage serré. Limité à l'espace entre les poteaux de la pergola, pour qu'aucun panneau ou poteau inventé n'apparaisse à côté.
+
+    MOBILIER_SEPARE=1 python3 amenage.py image.jpg zone.json echelle consigne.txt sortie.jpg produits.png cloture_g.png,cloture_d.png terrasse.png 0.3
+    python3 mobilier.py sortie.jpg terrasse.png pergola_terrasse.png consigne_mobilier.txt final.jpg 120
