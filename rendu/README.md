@@ -53,3 +53,16 @@ Deux passes gpt-image-1 masquées, produits toujours exacts :
 
     MOBILIER_SEPARE=1 python3 amenage.py image.jpg zone.json echelle consigne.txt sortie.jpg produits.png cloture_g.png,cloture_d.png terrasse.png 0.3
     python3 mobilier.py sortie.jpg terrasse.png pergola_terrasse.png consigne_mobilier.txt final.jpg 120
+
+## Plantes devant les clôtures : incrustation (méthode retenue)
+
+Les tentatives de tri « plante ou bois » pixel par pixel donnaient des plantes qui rentraient dans la clôture. Méthode actuelle, en deux passes :
+
+1. `amenage.py` avec `part_pied = 0` : massifs, pelouse et allée dessinés autour des clôtures, qui restent intactes. L'IA voit la vraie clôture et place le massif à son pied.
+2. `chroma_cloture.py` : la clôture est remplacée par un aplat cyan (aucune plante n'a cette couleur), l'IA fait pousser les plantes devant le bas de l'aplat, puis tout ce qui est resté cyan redevient la clôture exacte. Le démélange garde les bords fins (épis, feuilles) sans liseré, et le paillis n'est jamais devant la clôture.
+
+    MOBILIER_SEPARE=1 python3 amenage.py image.jpg zone.json echelle consigne.txt a1.jpg produits.png cloture_g.png,cloture_d.png terrasse.png 0
+    python3 chroma_cloture.py a1.jpg cloture_g.png,cloture_d.png consigne_cyan.txt a2.jpg 0.4 0.25
+    python3 mobilier.py a2.jpg terrasse.png pergola_terrasse.png consigne_mobilier.txt final.jpg 120
+
+Les calques de clôture doivent contenir la clôture seule (un rendu par produit).
