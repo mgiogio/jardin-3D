@@ -37,6 +37,28 @@ ajout = (np.asarray(Image.fromarray(((d > float(os.environ.get('SEUIL', '30'))) 
 # objets entiers : on comble les trous à l'intérieur des meubles
 Mk = Image.fromarray((ajout * 255).astype('uint8')).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(9)).filter(ImageFilter.GaussianBlur(1.2))
 Mk = Image.fromarray(np.minimum(np.asarray(Mk), np.asarray(em)).astype('uint8'))
+if os.environ.get('MEUBLES_SEG'):   # on ne garde de l'IA que les meubles et pots reconnus (le plancher reste celui du produit)
+    import torch
+    from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
+    from scipy import ndimage as ndi
+    P_ = CLIPSegProcessor.from_pretrained('CIDAS/clipseg-rd64-refined'); M_ = CLIPSegForImageSegmentation.from_pretrained('CIDAS/clipseg-rd64-refined')
+    txt = ['garden table and chairs', 'flower pot with plant', 'wooden deck floor', 'wooden pergola posts']
+    inp = P_(text=txt, images=[gen] * len(txt), return_tensors='pt', padding=True)
+    with torch.no_grad(): lg = torch.sigmoid(M_(**inp).logits).numpy()
+    lg = np.stack([np.asarray(Image.fromarray(l.astype('float32')).resize(gen.size, Image.BILINEAR)) for l in lg])
+    meuble = (np.maximum(lg[0], lg[1]) > np.maximum(lg[2], lg[3])) & (np.maximum(lg[0], lg[1]) > 0.3) & (d > 18)
+    meuble = ndi.binary_opening(meuble, iterations=2); meuble = ndi.binary_closing(meuble, iterations=3)
+    meuble = ndi.binary_fill_holes(meuble) & (np.asarray(em) > 0)
+    # pieds de chaises, tronc et feuillage fins : dans le cadre de chaque meuble (prolongé jusqu'au plancher), tout ce que l'IA a changé
+    lab_, n_ = ndi.label(meuble); boite = np.zeros_like(meuble)
+    for sl in ndi.find_objects(lab_):
+        if sl is None: continue
+        y0_, y1_ = sl[0].start, sl[0].stop; x0_, x1_ = sl[1].start, sl[1].stop; h_ = y1_ - y0_
+        boite[max(0, y0_ - h_ // 3):min(meuble.shape[0], y1_ + h_ // 3), x0_:x1_] = True
+    plancher = (lg[2] > np.maximum(lg[0], lg[1]) * 0.8) & (lg[2] > 0.2)
+    meuble |= boite & (d > 22) & (np.asarray(em) > 0) & ~plancher
+    meuble = ndi.binary_closing(meuble, iterations=2)
+    Mk = Image.fromarray((meuble * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))
 if os.environ.get('PLEIN'):   # toute la zone autorisée vient de l'IA (évite les meubles à moitié transparents sur les objets d'origine)
     Mk = em.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(1.5))
 out = img.copy(); out.paste(Image.composite(gen, crop, Mk), box[:2]); out.save(sys.argv[5], quality=93)

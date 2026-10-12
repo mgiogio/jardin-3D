@@ -31,6 +31,10 @@ libre = pied | (False if sep else deck)
 zone = Image.new('L', (W, H), 0); d = ImageDraw.Draw(zone)
 for poly in json.load(open(sys.argv[2])): d.polygon([(x * k, y * k) for x, y in poly], fill=255)
 edit = (np.asarray(zone) > 0) | libre
+if os.environ.get('GARDER'):   # éléments du client à ne jamais repeindre (polygones, mêmes coordonnées que la zone)
+    g_ = Image.new('L', (W, H), 0); dg = ImageDraw.Draw(g_)
+    for poly in json.load(open(os.environ['GARDER'])): dg.polygon([(x * k, y * k) for x, y in poly], fill=255)
+    edit &= ~(np.asarray(g_) > 0)
 edit &= ~(prod & ~libre)
 if sep: edit &= ~deck
 E = Image.fromarray((edit * 255).astype('uint8'))
