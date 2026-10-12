@@ -113,7 +113,12 @@ if nt: plante |= np.isin(lt, 1 + np.where(ndi.sum(trous, lt, range(1, nt + 1)) <
 plante &= libre
 ajout = plante | (libre & ~clo & (diff > 38))
 garde_ia |= ajout | (deck_sol if os.environ.get('SOL_IA') else False)                                    # pied des clôtures : seulement ce qu'elle a ajouté ; plancher : l'IA (mobilier posé dessus)
-Mk = Image.fromarray((garde_ia * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.5))
+# fondu large sur le bord de la zone jardin (pas de couture), net sur les produits
+zone_seule = garde_ia & ~libre
+fz = float(os.environ.get('FONDU_ZONE', '1.5'))
+Mz = np.asarray(Image.fromarray((zone_seule * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(fz))).astype(float) / 255
+Mz = np.where(prod & ~libre, 0, Mz)
+Mk = Image.fromarray((np.maximum(Mz, garde_ia & libre) * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))
 res_img = Image.composite(gen, img, Mk)
 # ombre de contact au pied des clôtures (le bois fonce en approchant du sol, comme sur les photos réelles)
 R = np.asarray(res_img).astype(float); ao = np.ones((H, W))
