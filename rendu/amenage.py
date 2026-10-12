@@ -37,6 +37,11 @@ if os.environ.get('GARDER'):   # éléments du client à ne jamais repeindre (po
     edit &= ~(np.asarray(g_) > 0)
 edit &= ~(prod & ~libre)
 if sep: edit &= ~deck
+lp = np.zeros((H, W), bool)
+if os.environ.get('LIBRE_POLY'):   # zones où la végétation peut passer devant les produits (ex. arbre en pot devant l'angle de la terrasse)
+    l_ = Image.new('L', (W, H), 0); dl = ImageDraw.Draw(l_)
+    for poly in json.load(open(os.environ['LIBRE_POLY'])): dl.polygon([(x * k, y * k) for x, y in poly], fill=255)
+    lp = np.asarray(l_) > 0; edit |= lp
 E = Image.fromarray((edit * 255).astype('uint8'))
 mask = img.convert('RGBA'); mask.putalpha(E.point(lambda v: 0 if v else 255))
 def png(im):
@@ -46,8 +51,8 @@ bd = 'cgb'
 def part(n, v, fn=None, ct=None):
     h = f'--{bd}\r\nContent-Disposition: form-data; name="{n}"' + (f'; filename="{fn}"' if fn else '') + '\r\n' + (f'Content-Type: {ct}\r\n' if ct else '')
     return h.encode() + b'\r\n' + (v if isinstance(v, bytes) else v.encode()) + b'\r\n'
-body = b''.join([part('model', 'gpt-image-1'), part('prompt', open(sys.argv[4]).read()), part('size', f'{size[0]}x{size[1]}'), part('quality', 'high'),
-                 part('input_fidelity', 'high'), part('image', png(img.resize(size)), 'i.png', 'image/png'), part('mask', png(mask.resize(size)), 'm.png', 'image/png')]) + f'--{bd}--\r\n'.encode()
+body = b''.join([part('model', os.environ.get('IMG_MODEL', 'gpt-image-1')), part('prompt', open(sys.argv[4]).read()), part('size', f'{size[0]}x{size[1]}'), part('quality', 'high'),
+                 *([part('input_fidelity', 'high')] if os.environ.get('IMG_MODEL', 'gpt-image-1').startswith('gpt-image-1') else []), part('image', png(img.resize(size)), 'i.png', 'image/png'), part('mask', png(mask.resize(size)), 'm.png', 'image/png')]) + f'--{bd}--\r\n'.encode()
 req = urllib.request.Request('https://api.openai.com/v1/images/edits', data=body, headers={'Authorization': 'Bearer ' + os.environ.get('OPENAI_API_KEY', ''), 'Content-Type': f'multipart/form-data; boundary={bd}'})
 ia_p = sys.argv[5].replace('.jpg', '_ia.jpg')
 if os.environ.get('REPRENDRE') and os.path.exists(ia_p): gen = Image.open(ia_p).convert('RGB'); res = {}
@@ -121,7 +126,7 @@ garde_ia |= ajout | (deck_sol if os.environ.get('SOL_IA') else False)           
 zone_seule = garde_ia & ~libre
 fz = float(os.environ.get('FONDU_ZONE', '1.5'))
 Mz = np.asarray(Image.fromarray((zone_seule * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(fz))).astype(float) / 255
-Mz = np.where(prod & ~libre, 0, Mz)
+Mz = np.where(prod & ~libre & ~lp, 0, Mz)
 Mk = Image.fromarray((np.maximum(Mz, garde_ia & libre) * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))
 res_img = Image.composite(gen, img, Mk)
 # ombre de contact au pied des clôtures (le bois fonce en approchant du sol, comme sur les photos réelles)
