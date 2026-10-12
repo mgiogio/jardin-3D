@@ -1,63 +1,79 @@
 {
- "_doc": "Palettes de mobilier par ambiance. Coordonnées locales en mètres par rapport au centre de la pergola (x = largeur, z = profondeur, +z vers l'appareil), rotY en degrés relatifs à la pergola. min_pergola = plus petite pergola où la palette tient (largeur x profondeur). Modèles Poly Haven CC0.",
- "bistrot": {
-  "nom": "Bistrot méditerranéen",
+ "_doc": "Palettes de mobilier par ambiance. Coordonnées locales en mètres par rapport au centre de la pergola (x = largeur, z = profondeur, +z vers l'appareil), r = rotation en degrés relative à la pergola (0 = face à l'appareil). Modèles B_* : banque Cover Green générée (gpt-image-1 puis Trellis), sans droits tiers.",
+ "bistrot_colore": {
+  "nom": "Bistrot coloré",
   "min_pergola": [
    3,
    3
   ],
   "items": [
    {
-    "m": "M_outdoor_table_chair_set_01.glb",
+    "m": "B_table_ronde_metal.glb",
     "p": [
      0,
-     0.35
+     0.15
     ],
-    "r": 6
+    "r": 0
+   },
+   {
+    "m": "B_chaise_pliante_corail.glb",
+    "p": [
+     -0.62,
+     0.2
+    ],
+    "r": 90
+   },
+   {
+    "m": "B_chaise_pliante_bleu.glb",
+    "p": [
+     0.62,
+     0.2
+    ],
+    "r": -90
+   },
+   {
+    "m": "B_chaise_pliante_jaune.glb",
+    "p": [
+     0.32,
+     -0.5
+    ],
+    "r": -25
    },
    {
     "m": "M_potted_plant_01.glb",
     "p": [
-     -1.0,
-     -0.85
+     -1.12,
+     -1.12
     ],
     "r": 0
    },
    {
     "m": "M_potted_plant_01.glb",
     "p": [
-     0.75,
-     -0.75
+     1.12,
+     -1.1
     ],
     "r": 70
-   },
-   {
-    "m": "M_planter_pot_clay.glb",
-    "p": [
-     1.05,
-     0.95
-    ],
-    "r": 0
-   },
-   {
-    "m": "M_Lantern_01.glb",
-    "p": [
-     -0.95,
-     0.9
-    ],
-    "r": 20
    }
   ]
  },
- "campagne": {
-  "nom": "Campagne chic",
+ "lounge": {
+  "nom": "Lounge teck et corde",
   "min_pergola": [
    3,
    3
   ],
   "items": [
    {
-    "m": "M_painted_wooden_table.glb",
+    "m": "B_canape_lounge.glb",
+    "p": [
+     0,
+     -0.95
+    ],
+    "r": 0
+   },
+   {
+    "m": "B_table_basse_teck.glb",
     "p": [
      0,
      0.05
@@ -65,102 +81,109 @@
     "r": 0
    },
    {
-    "m": "M_painted_wooden_chair_02.glb",
-    "p": [
-     -0.6,
-     -0.65
-    ],
-    "r": 0
-   },
-   {
-    "m": "M_painted_wooden_chair_02.glb",
-    "p": [
-     0.6,
-     -0.65
-    ],
-    "r": 0
-   },
-   {
-    "m": "M_painted_wooden_chair_02.glb",
-    "p": [
-     -0.6,
-     0.75
-    ],
-    "r": 180
-   },
-   {
-    "m": "M_painted_wooden_chair_02.glb",
-    "p": [
-     0.6,
-     0.75
-    ],
-    "r": 180
-   },
-   {
-    "m": "M_potted_plant_02.glb",
+    "m": "B_fauteuil_corde.glb",
     "p": [
      -1.05,
-     -1.05
+     0.3
+    ],
+    "r": 70
+   },
+   {
+    "m": "B_fauteuil_corde.glb",
+    "p": [
+     1.05,
+     0.3
+    ],
+    "r": -70
+   },
+   {
+    "m": "B_pouf_corde.glb",
+    "p": [
+     0.5,
+     0.95
     ],
     "r": 0
    },
    {
-    "m": "M_wicker_basket_02.glb",
+    "m": "M_potted_plant_01.glb",
     "p": [
-     1.1,
-     -1.1
+     -1.2,
+     -1.15
     ],
-    "r": 30
+    "r": 0
    },
    {
-    "m": "M_wooden_lantern_01.glb",
+    "m": "M_potted_plant_01.glb",
     "p": [
-     1.1,
-     1.05
+     1.2,
+     -1.15
     ],
-    "r": 15
+    "r": 70
    }
   ]
  },
- "nature": {
-  "nom": "Nature brute",
+ "repas": {
+  "nom": "Repas entre amis",
   "min_pergola": [
    3,
    3
   ],
   "items": [
    {
-    "m": "M_wooden_picnic_table.glb",
+    "m": "B_table_repas_teck.glb",
     "p": [
      0,
-     0.1
-    ],
-    "r": 90,
-    "s": 0.85
-   },
-   {
-    "m": "M_planter_box_01.glb",
-    "p": [
-     0,
-     -1.15
+     -0.1
     ],
     "r": 0
    },
    {
-    "m": "M_wooden_lantern_01.glb",
+    "m": "B_chaise_repas_corde.glb",
     "p": [
-     1.1,
-     1.05
+     -0.45,
+     -0.85
     ],
-    "r": 15
+    "r": 0
    },
    {
-    "m": "M_potted_plant_02.glb",
+    "m": "B_chaise_repas_corde.glb",
     "p": [
-     -1.05,
-     1.0
+     0.45,
+     -0.85
     ],
-    "r": 40
+    "r": 0
+   },
+   {
+    "m": "B_chaise_repas_corde.glb",
+    "p": [
+     -1.2,
+     -0.1
+    ],
+    "r": 90
+   },
+   {
+    "m": "B_chaise_repas_corde.glb",
+    "p": [
+     1.2,
+     -0.1
+    ],
+    "r": -90
+   },
+   {
+    "m": "M_potted_plant_01.glb",
+    "p": [
+     -1.18,
+     -1.18
+    ],
+    "r": 0
+   },
+   {
+    "m": "M_potted_plant_01.glb",
+    "p": [
+     1.18,
+     -1.18
+    ],
+    "r": 70
    }
   ]
  }

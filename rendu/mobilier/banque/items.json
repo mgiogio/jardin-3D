@@ -1,0 +1,58 @@
+{
+ "chaise_pliante_corail": {
+  "h": 0.82,
+  "prompt": "Folding garden chair in powder-coated steel, vivid coral orange lacquer, thin curved backrest slats and slatted seat, slim tubular legs, simple and cheerful French café style."
+ },
+ "chaise_pliante_sauge": {
+  "h": 0.82,
+  "prompt": "Folding garden chair in powder-coated steel, soft sage green lacquer, thin curved backrest slats and slatted seat, slim tubular legs, simple and cheerful French café style."
+ },
+ "table_ronde_metal": {
+  "h": 0.74,
+  "prompt": "Small round garden bistro table, diameter 77 cm, powder-coated steel, warm off-white cream lacquer top, single elegant tubular base with three feet."
+ },
+ "fauteuil_corde": {
+  "h": 0.75,
+  "prompt": "Low lounge armchair, solid teak wood frame with honey tone, backrest and armrests woven with thick beige outdoor rope, thick off-white seat cushion, one terracotta throw pillow."
+ },
+ "canape_lounge": {
+  "h": 0.75,
+  "prompt": "Low three-seater outdoor lounge sofa, solid teak wood frame honey tone, deep thick off-white cushions, three throw pillows in terracotta, ochre and sage green, modern and inviting.",
+  "w": 2.0
+ },
+ "table_basse_teck": {
+  "h": 0.38,
+  "prompt": "Low rectangular outdoor coffee table in solid teak wood, honey tone, thick slatted top, chunky square legs, with a small ceramic vase and a candle on it.",
+  "w": 1.1
+ },
+ "table_repas_teck": {
+  "h": 0.75,
+  "prompt": "Rectangular outdoor dining table for six, 180 x 90 cm, solid teak wood honey tone, slatted top, slim straight legs, empty table.",
+  "w": 1.8
+ },
+ "chaise_repas_corde": {
+  "h": 0.82,
+  "prompt": "Outdoor dining armchair, slim solid teak frame honey tone, backrest woven with natural beige rope in a criss-cross pattern, light grey seat cushion."
+ },
+ "olivier_pot": {
+  "h": 1.6,
+  "prompt": "Small potted olive tree about 1.6 m tall in a large round terracotta pot, silvery green foliage, natural looking."
+ },
+ "graminees_pot": {
+  "h": 0.9,
+  "prompt": "Tall cylindrical anthracite grey fiberstone planter with lush ornamental grasses and lavender, natural looking."
+ },
+ "lanterne": {
+  "h": 0.42,
+  "prompt": "Large outdoor lantern, black metal frame and glass, with a thick white candle inside, modern Scandinavian style."
+ },
+ "pouf_corde": {
+  "h": 0.4,
+  "prompt": "Round outdoor pouf ottoman woven with thick natural beige rope, soft and chunky."
+ },
+ "transat_teck": {
+  "prompt": "Outdoor sun lounger in solid teak wood honey tone, adjustable backrest slightly raised, thick off-white cushion, small wheels.",
+  "d": 1.95,
+  "w": 0.7
+ }
+}
