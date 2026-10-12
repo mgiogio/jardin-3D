@@ -12,7 +12,10 @@ sol = deck & ~per
 band = deck.copy()
 for x in np.where(deck.any(0))[0]:
     y0 = np.where(deck[:, x])[0].min(); band[max(0, y0 - haut):y0, x] = True
-edit = band & ~per
+cols = np.where(per.sum(0) > 60)[0]
+if len(cols):   # meubles seulement entre les poteaux extrêmes de la pergola (jamais sur la façade à côté)
+    band[:, :cols.min() + 10] &= False; band[:, cols.max() - 10:] &= False
+edit = band & ~ndi.binary_dilation(per, iterations=6)   # marge autour des poteaux : aucun meuble ne les chevauche
 CY = np.array([0, 230, 230], float)
 I = np.asarray(img).astype(float); src = I.copy(); src[sol] = CY
 x0, y0, x1, y1 = Image.fromarray((band * 255).astype('uint8')).getbbox()
@@ -44,11 +47,21 @@ pur = (cyan > 120) & (np.abs(g - b) < 40)
 ref = ndi.maximum_filter(np.where(pur, lum, 0), size=61); ref = np.where(ref > 0, ref, 230)
 k = np.clip((cyan - 25) / 90, 0, 1)                             # 1 = fond, 0 = meuble
 k = np.where(emA, k, 1.0)
-meuble = (k < 0.5) & emA
+dif = np.abs(G - E).mean(-1) > 20
+meuble = (k < 0.5) & emA & (dif | solc)
 meuble = ndi.binary_opening(meuble, iterations=1)
 lab, n = ndi.label(meuble)
 if n: meuble = np.isin(lab, 1 + np.where(ndi.sum(meuble, lab, range(1, n + 1)) > 120)[0])
 a = np.where(meuble, 1 - k, 0.0); a = np.maximum(a, ndi.gaussian_filter(meuble.astype(float), 0.7) * 0.0)
+# un objet coupé net par la marge des poteaux ou le bord de zone (pot à cheval sur un poteau) est retiré entier
+perc = per[box[1]:box[3], box[0]:box[2]]
+limite = ndi.binary_dilation(perc, iterations=9) & ~ndi.binary_dilation(perc, iterations=6)
+lab2, n2 = ndi.label(meuble)
+if n2:
+    coupe = [i for i in range(1, n2 + 1) if (limite & (lab2 == i)).sum() > 25] if os.environ.get('RETIRER_COUPES') else []
+    meuble &= ~np.isin(lab2, coupe); print('objets coupés retirés :', len(coupe))
+a = np.where(meuble, 1 - k, 0.0)
+a = np.where(ndi.binary_erosion(meuble, iterations=1), a, a * 0.5)   # bord rogné : pas de liseré
 a = ndi.gaussian_filter(a, 0.6)
 # décontamination : retirer le reflet cyan sur les bords
 Gd = G.copy()
@@ -59,11 +72,23 @@ feuil = (g > r * 1.1) & (b < g * 0.8)
 fix = bord & ~feuil
 Gd[..., 1] = np.where(fix, np.minimum(g, r * 0.98 + 4), g); Gd[..., 2] = np.where(fix, np.minimum(b, r * 0.85), b)
 Gd[..., 2] = np.where(bord & feuil, np.minimum(b, g * 0.7), Gd[..., 2])
+yy_ = np.arange(G.shape[0])[:, None]
+haut_sol = np.where(solc.any(0), solc.argmax(0), G.shape[0])[None, :]
+proche_sol = meuble & (yy_ > haut_sol - 60)
+hsvG = np.asarray(Image.fromarray(np.clip(G, 0, 255).astype('uint8')).convert('HSV')).astype(float)
+vert_vif = (hsvG[..., 1] > 90) & (g > r * 1.15)
+fixb = proche_sol & ~vert_vif
+Gd[..., 1] = np.where(fixb, np.minimum(Gd[..., 1], r * 0.93 + 2), Gd[..., 1]); Gd[..., 2] = np.where(fixb, np.minimum(Gd[..., 2], r * 0.78), Gd[..., 2])
 # reflet cyan du sol sur le bas des meubles (pieds, bas des pots) : sur le plancher, aucun meuble n'est vert
 bas = meuble & solc
 Gd[..., 1] = np.where(bas, np.minimum(Gd[..., 1], r * 0.93 + 2), Gd[..., 1]); Gd[..., 2] = np.where(bas, np.minimum(Gd[..., 2], r * 0.78), Gd[..., 2])
 # ombres sur le plancher : rapport de luminance du cyan ombré / cyan pur
-omb = np.clip(lum / ref, 0.45, 1.0); omb = np.where(solc & ~meuble, omb, 1.0); omb = ndi.gaussian_filter(omb, 1.2)
+omb = np.clip(lum / ref, 0.45, 1.0); proche = ndi.binary_dilation(meuble, iterations=60) if meuble.any() else meuble
+omb = np.where(solc & ~meuble & proche, omb, 1.0); omb = ndi.gaussian_filter(omb, 1.2)
+# ombre de contact : sous chaque pied et chaque pot, le plancher fonce un peu
+cont = np.zeros_like(meuble, dtype=float); pied = meuble & ~np.roll(meuble, -1, axis=0)
+cont[np.roll(pied, 2, axis=0)] = 1; cont = ndi.gaussian_filter(ndi.maximum_filter(cont, size=(3, 9)), 3) * 2.2
+omb = omb * (1 - 0.45 * np.clip(cont, 0, 1) * (solc & ~meuble))
 out = E * omb[..., None]
 out = out * (1 - a[..., None]) + np.clip(Gd, 0, 255) * a[..., None]
 res = I.copy(); res[box[1]:box[3], box[0]:box[2]] = out

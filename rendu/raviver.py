@@ -8,6 +8,8 @@ a = np.asarray(im).astype(float)
 lo, hi = np.percentile(a.mean(-1), 0.7), np.percentile(a.mean(-1), 99.5)
 b = np.clip((a - lo) / max(hi - lo, 1) * 255, 0, 255)
 b = 255 * (b / 255) ** 1.08                                  # léger contraste dans les tons moyens
-out = Image.fromarray((a * (1 - k) + b * k).astype('uint8'))
+c = a * (1 - k) + b * k
+m = c.reshape(-1, 3).mean(0); c = c * (1 + 0.5 * (m.mean() / m - 1))     # dominante bleue d'un tirage scanné : à moitié neutralisée
+out = Image.fromarray(np.clip(c, 0, 255).astype('uint8'))
 out = ImageEnhance.Color(out).enhance(1 + 0.25 * k)
 out.save(sys.argv[2], quality=95); print('niveaux', round(lo), round(hi))
