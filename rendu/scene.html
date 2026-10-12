@@ -136,6 +136,7 @@ for (const it of (P.items || [])) {
   // Rotation propre au produit (ex. bardage : panneau de clôture tourné d'un quart de tour, lames verticales)
   const inner = new THREE.Group(); inner.add(g);
   if (it.rot) inner.rotation.set(...it.rot.map((d) => d * Math.PI / 180));
+  if (it.scale) inner.scale.setScalar(it.scale);
   inner.updateMatrixWorld(true);
   const box = new THREE.Box3();
   inner.traverse((o) => { if (o.isMesh) { let v = true, p = o; while (p && p !== inner) { if (!p.visible) v = false; p = p.parent; } if (v) box.expandByObject(o); } });

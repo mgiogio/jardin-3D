@@ -1,0 +1,167 @@
+{
+ "_doc": "Palettes de mobilier par ambiance. Coordonnées locales en mètres par rapport au centre de la pergola (x = largeur, z = profondeur, +z vers l'appareil), rotY en degrés relatifs à la pergola. min_pergola = plus petite pergola où la palette tient (largeur x profondeur). Modèles Poly Haven CC0.",
+ "bistrot": {
+  "nom": "Bistrot méditerranéen",
+  "min_pergola": [
+   3,
+   3
+  ],
+  "items": [
+   {
+    "m": "M_outdoor_table_chair_set_01.glb",
+    "p": [
+     0,
+     0.35
+    ],
+    "r": 6
+   },
+   {
+    "m": "M_potted_plant_01.glb",
+    "p": [
+     -1.0,
+     -0.85
+    ],
+    "r": 0
+   },
+   {
+    "m": "M_potted_plant_01.glb",
+    "p": [
+     0.75,
+     -0.75
+    ],
+    "r": 70
+   },
+   {
+    "m": "M_planter_pot_clay.glb",
+    "p": [
+     1.05,
+     0.95
+    ],
+    "r": 0
+   },
+   {
+    "m": "M_Lantern_01.glb",
+    "p": [
+     -0.95,
+     0.9
+    ],
+    "r": 20
+   }
+  ]
+ },
+ "campagne": {
+  "nom": "Campagne chic",
+  "min_pergola": [
+   3,
+   3
+  ],
+  "items": [
+   {
+    "m": "M_painted_wooden_table.glb",
+    "p": [
+     0,
+     0.05
+    ],
+    "r": 0
+   },
+   {
+    "m": "M_painted_wooden_chair_02.glb",
+    "p": [
+     -0.6,
+     -0.65
+    ],
+    "r": 0
+   },
+   {
+    "m": "M_painted_wooden_chair_02.glb",
+    "p": [
+     0.6,
+     -0.65
+    ],
+    "r": 0
+   },
+   {
+    "m": "M_painted_wooden_chair_02.glb",
+    "p": [
+     -0.6,
+     0.75
+    ],
+    "r": 180
+   },
+   {
+    "m": "M_painted_wooden_chair_02.glb",
+    "p": [
+     0.6,
+     0.75
+    ],
+    "r": 180
+   },
+   {
+    "m": "M_potted_plant_02.glb",
+    "p": [
+     -1.05,
+     -1.05
+    ],
+    "r": 0
+   },
+   {
+    "m": "M_wicker_basket_02.glb",
+    "p": [
+     1.1,
+     -1.1
+    ],
+    "r": 30
+   },
+   {
+    "m": "M_wooden_lantern_01.glb",
+    "p": [
+     1.1,
+     1.05
+    ],
+    "r": 15
+   }
+  ]
+ },
+ "nature": {
+  "nom": "Nature brute",
+  "min_pergola": [
+   3,
+   3
+  ],
+  "items": [
+   {
+    "m": "M_wooden_picnic_table.glb",
+    "p": [
+     0,
+     0.1
+    ],
+    "r": 90,
+    "s": 0.85
+   },
+   {
+    "m": "M_planter_box_01.glb",
+    "p": [
+     0,
+     -1.15
+    ],
+    "r": 0
+   },
+   {
+    "m": "M_wooden_lantern_01.glb",
+    "p": [
+     1.1,
+     1.05
+    ],
+    "r": 15
+   },
+   {
+    "m": "M_potted_plant_02.glb",
+    "p": [
+     -1.05,
+     1.0
+    ],
+    "r": 40
+   }
+  ]
+ }
+}
