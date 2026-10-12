@@ -16,3 +16,5 @@
 Règle d'usage du modèle clôture : seulement sur une clôture vue de près (lames larges dans l'image). Sur une clôture lointaine, il sème des nœuds en taches brun-orangé qui font « bois abîmé » : on y garde la retouche générique douce (force 0,22).
 
 Contrôle des modèles : génération libre avec le seul mot déclencheur (fin/test_modeles_cloture_terrasse.jpg dans l'espace de travail) : lames horizontales à joints sur poteaux pour CVGCLO, terrasse en pin traité posée au sol pour CVGTER. Le modèle terrasse sert surtout quand la terrasse est proche et grande dans l'image ; sur une terrasse lointaine et meublée (Les Mureaux), son effet est négligeable.
+
+- Terrasse : force 0,15 maximum. La pose de la 3D (joints alignés, vis) est plus fidèle au kit que celle apprise sur les photos ; le modèle sert seulement au veinage et aux nœuds.

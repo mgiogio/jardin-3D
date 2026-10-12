@@ -7,7 +7,7 @@ P="a photo of a CVGCLO horizontal slatted douglas fir wooden privacy fence along
 # clôture vue de loin : retouche générique douce (le modèle y sème des nœuds en taches) ; clôture proche : modèle entraîné
 FP="photo of a new horizontal slatted douglas fir wooden privacy fence along a garden lawn, clean new boards, fine wood grain, few small tight knots, slight color variation between boards, thin even gaps, no holes, no cracks, warm late afternoon sunlight, realistic smartphone photo"
 WT=$(cat lora/weights_url_terrasse)
-PROTEGE=fin/cal_pergola_seule.png python3 affine.py fin/k_a.jpg fin/cal_terrasse.png fin/m_t.jpg "$WT" "a photo of a CVGTER pressure treated pine wooden deck terrace, low deck on the lawn in front of a house, under a wooden pergola, warm late afternoon sunlight" ${FORCE_TERRASSE:-0.3} 25 >/dev/null
+PROTEGE=fin/cal_pergola_seule.png python3 affine.py fin/k_a.jpg fin/cal_terrasse.png fin/m_t.jpg "$WT" "a photo of a CVGTER pressure treated pine wooden deck terrace, boards with aligned joints and visible screws, low deck on the lawn in front of a house, under a wooden pergola, warm late afternoon sunlight" ${FORCE_TERRASSE:-0.15} 25 >/dev/null
 PROTEGE=cas/mureaux_v4_calque.png python3 affine.py fin/m_t.jpg fin/clo_g.png fin/m_b.jpg none "$FP" 0.22 30 >/dev/null
 PROTEGE=cas/mureaux_v4_calque.png python3 affine.py fin/m_b.jpg fin/clo_d.png fin/m_c.jpg "$W" "$P" $F 30 >/dev/null
 python3 teinte.py fin/m_c.jpg fin/m9x.jpg teinte_ref.json soleil cas/mureaux_v4_calque.png,fin/clo_g.png,fin/clo_d.png 0.5 >/dev/null 2>&1
