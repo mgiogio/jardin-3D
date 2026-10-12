@@ -54,5 +54,37 @@
   "prompt": "Outdoor sun lounger in solid teak wood honey tone, adjustable backrest slightly raised, thick off-white cushion, small wheels.",
   "d": 1.95,
   "w": 0.7
+ },
+ "plateau_citrons": {
+  "h": 0.2,
+  "prompt": "Round woven rattan serving tray with a white ceramic bowl full of bright yellow lemons and a small terracotta ceramic jug, styled tabletop accessory."
+ },
+ "pichet_verres": {
+  "h": 0.24,
+  "prompt": "Matte white ceramic water pitcher with two matte sage green ceramic tumblers next to it, tabletop accessory set."
+ },
+ "photophores": {
+  "h": 0.2,
+  "prompt": "Set of three terracotta ceramic candle holders of different heights, each with a thick white pillar candle, grouped together."
+ },
+ "vase_fleurs": {
+  "h": 0.32,
+  "prompt": "Round matte beige ceramic vase with a generous bouquet of white and yellow garden flowers and green leaves, dense compact bouquet."
+ },
+ "panier_plaid": {
+  "h": 0.45,
+  "prompt": "Large round woven seagrass basket with a folded chunky knit terracotta throw blanket spilling out of it."
+ },
+ "coussin_sol": {
+  "h": 0.15,
+  "prompt": "Large square outdoor floor cushion, thick and soft, ochre mustard yellow fabric with a cream piping, lying flat."
+ },
+ "table_appoint": {
+  "h": 0.5,
+  "prompt": "Small round outdoor side table in terracotta orange powder-coated metal, with a small potted green succulent plant and a book on top."
+ },
+ "bougie_lanterne": {
+  "h": 0.35,
+  "prompt": "Small natural rattan lantern with a white pillar candle inside, warm and cozy."
  }
 }

@@ -29,3 +29,10 @@ Le mobilier CC0 vintage est remplacé par une banque générée pour nous (aucun
 4. `palettes.json` : bistrot coloré, lounge teck et corde, repas entre amis.
 5. `fin_tours_pal.sh` (STOP_D=1) puis `compose_v8.py` : meubles posés après les retouches produits, abords d'un visuel validé conservés, ombres portées et ombres d'appui.
 Les modèles générés et les photos clients ne sont pas versionnés.
+
+## Déco (v3)
+- Accessoires (plateau de citrons, pichet et gobelets, photophores, lanterne rotin, panier et plaid, coussin de sol, table d'appoint) : même chaîne image vers 3D, liste dans `banque/items.json`.
+- Tapis : textures vues de dessus (`banque/tapis.py`) posées sur un pavé de 12 mm (`banque/procedural.mjs`), à fleur de plancher (`y` négatif dans la palette).
+- Guirlande guinguette : procédurale (`banque/procedural.mjs`), 3 fils en chaînette sous la toiture, `y` = 1,96 m au-dessus du plancher pour une pergola de 2,5 m.
+- Composition : tapis posé d'abord, meubles ensuite ; ombre des lames sur le tapis = rendu pergola + terrasse / terrasse seule (env `TER_SEULE`, `TAPIS`, `SANS_TAPIS` de `compose_v8.py`).
+- Limite connue : si l'ombre des lames de la photo ne coïncide pas avec celle du rendu 3D (cas du bistrot à Tours), pas de tapis.

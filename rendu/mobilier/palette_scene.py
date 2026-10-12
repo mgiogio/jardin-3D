@@ -8,7 +8,7 @@ def monde(x, z):   # rotation autour de Y (sens three.js) puis translation
     return [round(cx + x * math.cos(a) + z * math.sin(a), 3), round(cz - x * math.sin(a) + z * math.cos(a), 3)]
 meubles = []
 for it in pal['items']:
-    m = {"m": it['m'], "excl": "^$", "pos": monde(*it['p']), "rotY": per.get('rotY', 0) + it.get('r', 0), "lift": lift}
+    m = {"m": it['m'], "excl": "^$", "pos": monde(*it['p']), "rotY": per.get('rotY', 0) + it.get('r', 0), "lift": round(lift + it.get("y", 0), 3)}
     if 's' in it: m['scale'] = it['s']
     meubles.append(m)
 sc['items'] = [it for it in sc['items'] if not it['m'].startswith('M_')] + meubles
