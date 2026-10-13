@@ -74,7 +74,8 @@ METHODE = """Tu es architecte paysagiste DPLG en France, 20 ans de projets de ja
 spectaculaires mais réalistes. Méthode : 1) diagnostic (ce qui tue l'effet waouh : sol, transitions, façades nues, absence de
 point focal, vides), 2) une intention en une phrase, 3) UN point focal, 4) des strates : structure persistante au fond,
 floraison au milieu, lisière basse répétée devant, 5) répétition de 2 ou 3 végétaux pour le rythme, 6) cohérence climat,
-exposition et saisons (pas de plante de soleil à l'ombre, floraisons visibles en même temps sur l'image), 7) intérêt en
+exposition et saison : l'image représente UN moment, fin juin, donc seules les plantes en fleur fin juin sont
+montrées fleuries ; les autres sont montrées en feuillage (un amélanchier ou un cerisier en feuilles, pas en fleurs) (pas de plante de soleil à l'ombre, floraisons visibles en même temps sur l'image), 7) intérêt en
 hiver (persistants), 8) entretien raisonnable, 9) traitement du sol et des transitions (bordures, paillage).
 Les produits Cover Green (pergola, terrasse, clôtures, cernés en magenta) sont intouchables : on aménage autour."""
 
@@ -136,6 +137,8 @@ def consigne_image(c, zones):
         lignes.append(f"{i}. {z['nom']} : {z['consigne']}")
     if c['sol']['action'] != 'garder':
         lignes.append(f"Sol : {c['sol']['description']}")
+    lignes.append("Saison représentée : fin juin. Seules les plantes qui fleurissent fin juin sont en fleur ; les autres sont "
+                  "montrées en feuillage d'été (par exemple un amélanchier ou un cerisier à fleurs en feuilles, sans fleurs).")
     lignes.append("Utiliser UNIQUEMENT ces végétaux, aucun autre : " + ', '.join(f"{x['latin']} ({x['nom']})" for x in c['palette']) + '.')
     if c.get('reperes'): lignes.append('Échelle : ' + c['reperes'] + '. Respecter les hauteurs indiquées.')
     lignes.append("Ne rien changer chez les voisins ni dans la rue (voitures, portails, clôtures voisines). Les produits en bois "
@@ -185,7 +188,7 @@ légendée tous les 100 px. Troisième image (même cadrage) : les produits pos�
 que rien n'a été abîmé. Concept visé : {concept}
 Vérifie en priorité, en zoomant mentalement : 1) produits intacts (clôtures complètes jusqu'au sol, sans découpe ni
 entaille, pergola, terrasse), 2) rien de changé chez les voisins ni dans la rue (voitures, portails, maisons), 3) végétaux
-uniquement de la palette du concept, 4) échelle réaliste par rapport aux repères (clôture, pergola, portes), 5) plantes
+uniquement de la palette du concept, et une seule saison (fin juin) : rien en fleur hors saison, 4) échelle réaliste par rapport aux repères (clôture, pergola, portes), 5) plantes
 plantées du bon côté de la clôture, 6) halos, flous, bandes, découpes nettes, objets absurdes.
 Réponds en JSON : {{"waouh": note sur 10, "credibilite_paysagere": note sur 10, "montage": note sur 10 (10 = aucun défaut visible),
 "livrable": true|false, "defauts": [{{"gravite": "grave|moyen|leger", "texte": "défaut précis avec position"}}],
