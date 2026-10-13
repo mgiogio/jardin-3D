@@ -193,8 +193,14 @@ def generer(base, zones, c, args, sortie, tag):
     fj = os.path.join(args.dossier, '_aucune.json'); json.dump([], open(fj, 'w'))
     if c.get('parcelle_px'):
         pj = os.path.join(args.dossier, 'parcelle.json'); json.dump([c['parcelle_px']], open(pj, 'w')); env['PARCELLE'] = pj
+    ve = os.path.join(args.dossier, '_vegetation_existante.png')
+    if not os.path.exists(ve):
+        r = subprocess.run(['python3', os.path.join(ICI, 'vegetation_existante.py'), args.image, union_calques(args), ve], capture_output=True, text=True)
+        if r.returncode: raise RuntimeError(r.stderr[-1500:])
+        print('   ', r.stdout.strip(), flush=True)
+    env['GARDER_MASQUE'] = ve
     cmd = ['python3', os.path.join(RENDU, 'amenage.py'), base, zj, '1', cj, sortie, getattr(args, 'calque_ia', args.calque),
-           args.pieds if args.pieds != '-' else vide, args.terrasse if args.terrasse != '-' else vide,
+           vide, args.terrasse if args.terrasse != '-' else vide,
            '0.0']
     r = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if r.returncode: raise RuntimeError(r.stderr[-1500:])
@@ -262,7 +268,8 @@ def relire(avant, apres_path, calque, c, produits=None):
     # carte des modifications par rapport aux produits posés (rouge = pixels changés) et gros plans autour des sujets
     import numpy as np
     A_ = np.asarray(ap).astype(np.int16); B_ = np.asarray(pr.resize(ap.size)).astype(np.int16)
-    ch = np.abs(A_ - B_).max(-1) > 25
+    from scipy import ndimage as ndi_
+    ch = ndi_.binary_opening(np.abs(A_ - B_).max(-1) > 35, iterations=2)   # vraies modifications groupées, pas le bruit de recompression
     carte = (np.asarray(ap).astype(np.float32) * 0.45).astype(np.uint8); carte[ch] = [230, 30, 30]
     carte = Image.fromarray(carte).resize(v.size)
     gros = []

@@ -42,6 +42,8 @@ if os.environ.get('PARCELLE'):   # limite de la parcelle du client : rien n'est 
     for poly in json.load(open(os.environ['PARCELLE'])): dp_.polygon([(x * k, y * k) for x, y in poly], fill=255)
     parcelle = np.asarray(p_) > 0; edit &= parcelle
 else: parcelle = np.ones((H, W), bool)
+if os.environ.get('GARDER_MASQUE'):   # masque (png) de l'existant à ne jamais repeindre (plantations du client)
+    edit &= ~(np.asarray(Image.open(os.environ['GARDER_MASQUE']).convert('L').resize((W, H))) > 127)
 lp = np.zeros((H, W), bool)
 if os.environ.get('LIBRE_POLY'):   # zones où la végétation peut passer devant les produits (ex. arbre en pot devant l'angle de la terrasse)
     l_ = Image.new('L', (W, H), 0); dl = ImageDraw.Draw(l_)
