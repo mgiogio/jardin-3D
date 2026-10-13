@@ -96,18 +96,24 @@ Réponds en JSON, en français, avec exactement ces clés :
  "diagnostic": ["4 constats concrets"],
  "titre": "titre court du concept",
  "intention": "une phrase",
- "point_focal": "plante + emplacement",
+ "point_focal": "plante + emplacement décrit en mots (sans coordonnées)",
+ "focal": {{"polygone": [[x,y],...], "consigne": "le point focal tel qu'on doit le voir, avec sa hauteur réelle"}},
  "sol": {{"action": "garder|nettoyer|remplacer|pelouse", "description": "..."}},
  "zones": [{{"nom": "...", "polygone": [[x,y],...], "consigne": "description précise de ce qu'on voit dans cette zone une fois aménagée : végétaux (noms latins), strates, paillage, bordures, hauteurs, densité"}}],
  "palette": [{{"latin": "...", "nom": "...", "role_projet": "...", "periode": "..."}}],
  "eclairage": "...",
  "entretien": "une phrase"}}
-Règles des zones : 2 à 5 zones, polygones en coordonnées de la grille, sur le sol ou les murs à aménager, jamais sur les
+Règles : aucun texte (diagnostic, intention, point focal, sol, palette, éclairage, entretien) ne cite de coordonnées.
+Le polygone "focal" couvre toute la silhouette de l'arbre ou de la potée focale à sa hauteur réelle (il peut passer devant
+une clôture ou un poteau : seul le feuillage y sera gardé), posé au sol dans un massif ou en potée sur un sol dur.
+Massifs généreux : au moins 1,2 m de profondeur réelle au pied des clôtures, plus en fond de jardin, contours en courbes
+tendues ou lignes nettes selon le style. Règles des zones : 2 à 5 zones, polygones en coordonnées de la grille, sur le sol ou les murs à aménager, jamais sur les
 produits cernés en magenta, jamais sur la maison (sauf grimpante sur un mur nu), ni sur le ciel. Assez grandes pour être
 généreuses, mais crédibles pour un jardin de particulier. Pas de construction (ni mur, ni abri, ni clôture en plus)."""
     c = gpt(consigne, [v], 'high')
-    for z in c['zones']:
+    for z in c['zones'] + ([c['focal']] if c.get('focal') else []):
         z['polygone_px'] = [[round(x / k), round(y / k)] for x, y in z['polygone']]
+    if c.get('focal'): c['focal']['nom'] = 'Point focal'
     c.update(ville=ville, departement=str(dep), climat=clim)
     json.dump(c, open(sortie, 'w'), ensure_ascii=False, indent=1)
     return c
@@ -128,17 +134,35 @@ def consigne_image(c, zones):
     return '\n'.join(lignes)
 
 
-def generer(base, zones, c, args, sortie, tag):
+def union_calques(args):
+    u = os.path.join(args.dossier, '_produits.png')
+    if not os.path.exists(u):
+        base = Image.open(args.calque).convert('RGBA'); a = base.getchannel('A')
+        if args.pieds != '-':
+            from PIL import ImageChops
+            for p in args.pieds.split(','): a = ImageChops.lighter(a, Image.open(p).convert('RGBA').resize(base.size).getchannel('A'))
+        o = Image.new('RGBA', base.size, (128, 128, 128, 0)); o.putalpha(a); o.save(u)
+    return u
+
+
+def generer(base, zones, c, args, sortie, tag, focal=None):
+    if focal: zones = zones + [focal]
     zj = os.path.join(args.dossier, f'zones_{tag}.json'); json.dump([z['polygone_px'] for z in zones], open(zj, 'w'))
     cj = os.path.join(args.dossier, f'consigne_{tag}.txt'); open(cj, 'w').write(consigne_image(c, zones))
     vide = os.path.join(args.dossier, '_vide.png')
     if not os.path.exists(vide): Image.new('RGBA', Image.open(base).size, (0, 0, 0, 0)).save(vide)
     env = dict(os.environ, IMG_MODEL=MODELE_IMAGE, FONDU_ZONE='6', MOBILIER_SEPARE='1', HAUT_MOBILIER='0')
     if args.garder: env['GARDER'] = args.garder
+    if focal:
+        fj = os.path.join(args.dossier, f'focal_{tag}.json'); json.dump([focal['polygone_px']], open(fj, 'w')); env['LIBRE_POLY'] = fj
     cmd = ['python3', os.path.join(RENDU, 'amenage.py'), base, zj, '1', cj, sortie, args.calque,
-           args.pieds if args.pieds != '-' else vide, args.terrasse if args.terrasse != '-' else vide, '0.0']
+           args.pieds if args.pieds != '-' else vide, args.terrasse if args.terrasse != '-' else vide,
+           '0.3' if args.pieds != '-' else '0.0']
     r = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if r.returncode: raise RuntimeError(r.stderr[-1500:])
+    if focal:   # devant les produits, on ne garde de l'IA que le feuillage ; le produit exact reste partout ailleurs
+        r = subprocess.run(['python3', os.path.join(ICI, 'feuillage_devant.py'), sortie, base, fj, union_calques(args), sortie], capture_output=True, text=True)
+        if r.returncode: raise RuntimeError(r.stderr[-1500:])
 
 
 RUBRIQUE = """Tu relis un visuel de démonstration commerciale : photo réelle d'un jardin, transformée par un projet paysager autour
@@ -150,7 +174,8 @@ Réponds en JSON : {{"waouh": note sur 10, "credibilite_paysagere": note sur 10,
 "corrections": [{{"nom": "...", "polygone": [[x,y],...], "consigne": "ce qu'on doit voir dans cette zone après correction"}}]}}
 Au plus 3 corrections, chacune sur une zone précise du jardin (jamais sur les produits ni la maison), uniquement pour des
 défauts réels et importants : plante inadaptée à l'exposition ou au climat, floraisons incohérentes, massif maigre, plante
-coupée net, flou ou halo, objet absurde, raccord visible. Une correction ne doit pas affadir le projet : garder les contrastes
+coupée net, flou ou halo, objet absurde, raccord visible. Vérifie que le point focal et chaque élément annoncé du concept sont bien visibles ; s'il manque le point focal, la
+correction correspondante couvre toute la hauteur de l'arbre (elle peut passer devant une clôture). Une correction ne doit pas affadir le projet : garder les contrastes
 et la générosité qui font l'effet waouh. Livrable = waouh >= 7, credibilite >= 7 et montage >= 7."""
 
 
@@ -181,14 +206,16 @@ def planche(avant, apres, c, sortie):
     def bloc(titre, lignes):
         nonlocal y
         d.text((20, y), titre, fill=G, font=f(30, True)); y += 45
+        import textwrap
         for t in lignes:
-            d.text((30, y), '- ' + t, fill=(40, 40, 40), font=f(22)); y += 34
+            for i, l in enumerate(textwrap.wrap(t, 130)):
+                d.text((30, y), ('- ' if i == 0 else '  ') + l, fill=(40, 40, 40), font=f(22)); y += 32
         y += 18
     bloc('Le concept', [c['intention'], 'Point focal : ' + c['point_focal'], 'Sol : ' + c['sol']['description']])
     d.text((20, y), f"Palette végétale (climat {c['climat'].replace('_', ' ')}, {c['exposition']})", fill=G, font=f(30, True)); y += 48
     for p in c['palette'][:10]:
         d.text((30, y), p['latin'], fill=(20, 20, 20), font=f(21, True)); d.text((560, y), p['role_projet'][:70], fill=(50, 50, 50), font=f(21))
-        d.text((1450, y), p.get('periode', '')[:30], fill=(90, 90, 90), font=f(21)); y += 33
+        d.text((1450, y), p.get('periode', '').split(',')[0][:30], fill=(90, 90, 90), font=f(21)); y += 33
     y += 15
     bloc('Éclairage et entretien', [c['eclairage'], c['entretien']])
     o.crop((0, 0, W, y + 20)).save(sortie, quality=90)
@@ -208,13 +235,15 @@ def main():
     c = json.load(open(cp)) if os.path.exists(cp) else concept(img, cal, a.ville, a.dep, a.style, cp)
     print('concept :', c['titre'], '|', c['exposition'], '|', len(c['zones']), 'zones', flush=True)
     cur = os.path.join(a.dossier, 'v0.jpg')
-    if not os.path.exists(cur): generer(a.image, c['zones'], c, a, cur, 'v0')
+    if not os.path.exists(cur): generer(a.image, c['zones'], c, a, cur, 'v0', c.get('focal'))
     r = relire(avant, cur, cal, c); journal.append({'version': 'v0', **r})
     print('v0 :', r['waouh'], r['credibilite_paysagere'], r['montage'], 'livrable' if r['livrable'] else '', flush=True)
     for t in range(1, a.tours + 1):
         if r['livrable'] or not r.get('corrections'): break
         nv = os.path.join(a.dossier, f'v{t}.jpg')
-        generer(cur, r['corrections'], c, a, nv, f'v{t}')
+        foc = next((z for z in r['corrections'] if 'focal' in z['nom'].lower()), None)
+        autres = [z for z in r['corrections'] if z is not foc]
+        generer(cur, autres or [foc], c, a, nv, f'v{t}', foc if autres else None)
         r2 = relire(avant, nv, cal, c); journal.append({'version': f'v{t}', **r2})
         print(f'v{t} :', r2['waouh'], r2['credibilite_paysagere'], r2['montage'], 'livrable' if r2['livrable'] else '', flush=True)
         if score(r2) > score(r) or (r2['livrable'] and not r['livrable']):
