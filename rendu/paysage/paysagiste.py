@@ -97,12 +97,18 @@ Réponds en JSON, en français, avec exactement ces clés :
  "titre": "titre court du concept",
  "intention": "une phrase",
  "point_focal": "plante + emplacement décrit en mots (sans coordonnées)",
+ "parcelle": [[x,y],...],
+ "reperes": "hauteurs réelles visibles qui servent d'échelle (ex. clôture 1,8 m, pergola 2,5 m, porte 2,1 m)",
  "focal": {{"polygone": [[x,y],...], "consigne": "le point focal tel qu'on doit le voir, avec sa hauteur réelle"}},
  "sol": {{"action": "garder|nettoyer|remplacer|pelouse", "description": "..."}},
  "zones": [{{"nom": "...", "polygone": [[x,y],...], "consigne": "description précise de ce qu'on voit dans cette zone une fois aménagée : végétaux (noms latins), strates, paillage, bordures, hauteurs, densité"}}],
  "palette": [{{"latin": "...", "nom": "...", "role_projet": "...", "periode": "..."}}],
  "eclairage": "...",
  "entretien": "une phrase"}}
+Le polygone "parcelle" suit la limite du terrain du client au sol : il exclut les terrains voisins, la rue, les trottoirs,
+les voitures, les portails et clôtures des voisins. Les zones doivent rester à l'intérieur.
+Chaque consigne donne les hauteurs des végétaux en mètres ET par rapport aux repères visibles (ex. « l'arbre dépasse la
+clôture de 1,8 m d'environ 1 m »), à la taille qu'ils ont trois ans après plantation, pas à maturité.
 Règles : aucun texte (diagnostic, intention, point focal, sol, palette, éclairage, entretien) ne cite de coordonnées.
 Le polygone "focal" couvre toute la silhouette de l'arbre ou de la potée focale à sa hauteur réelle (il peut passer devant
 une clôture ou un poteau : seul le feuillage y sera gardé), posé au sol dans un massif ou en potée sur un sol dur.
@@ -114,6 +120,7 @@ généreuses, mais crédibles pour un jardin de particulier. Pas de construction
     for z in c['zones'] + ([c['focal']] if c.get('focal') else []):
         z['polygone_px'] = [[round(x / k), round(y / k)] for x, y in z['polygone']]
     if c.get('focal'): c['focal']['nom'] = 'Point focal'
+    if c.get('parcelle'): c['parcelle_px'] = [[round(x / k), round(y / k)] for x, y in c['parcelle']]
     c.update(ville=ville, departement=str(dep), climat=clim)
     json.dump(c, open(sortie, 'w'), ensure_ascii=False, indent=1)
     return c
@@ -129,6 +136,10 @@ def consigne_image(c, zones):
         lignes.append(f"{i}. {z['nom']} : {z['consigne']}")
     if c['sol']['action'] != 'garder':
         lignes.append(f"Sol : {c['sol']['description']}")
+    lignes.append("Utiliser UNIQUEMENT ces végétaux, aucun autre : " + ', '.join(f"{x['latin']} ({x['nom']})" for x in c['palette']) + '.')
+    if c.get('reperes'): lignes.append('Échelle : ' + c['reperes'] + '. Respecter les hauteurs indiquées.')
+    lignes.append("Ne rien changer chez les voisins ni dans la rue (voitures, portails, clôtures voisines). Les produits en bois "
+                  "(pergola, terrasse, clôtures) restent identiques : les plantes poussent devant, jamais à leur place.")
     lignes.append("Plantes installées depuis deux ou trois ans, sol couvert, bordures nettes. Photo naturelle et crédible, "
                   "pas un rendu 3D. Pas de personnage, pas de construction ajoutée.")
     return '\n'.join(lignes)
@@ -153,14 +164,15 @@ def generer(base, zones, c, args, sortie, tag, focal=None):
     if not os.path.exists(vide): Image.new('RGBA', Image.open(base).size, (0, 0, 0, 0)).save(vide)
     env = dict(os.environ, IMG_MODEL=MODELE_IMAGE, FONDU_ZONE='6', MOBILIER_SEPARE='1', HAUT_MOBILIER='0')
     if args.garder: env['GARDER'] = args.garder
-    if focal:
-        fj = os.path.join(args.dossier, f'focal_{tag}.json'); json.dump([focal['polygone_px']], open(fj, 'w')); env['LIBRE_POLY'] = fj
+    fj = os.path.join(args.dossier, f'libre_{tag}.json'); json.dump([z['polygone_px'] for z in zones], open(fj, 'w')); env['LIBRE_POLY'] = fj
+    if c.get('parcelle_px'):
+        pj = os.path.join(args.dossier, 'parcelle.json'); json.dump([c['parcelle_px']], open(pj, 'w')); env['PARCELLE'] = pj
     cmd = ['python3', os.path.join(RENDU, 'amenage.py'), base, zj, '1', cj, sortie, args.calque,
            args.pieds if args.pieds != '-' else vide, args.terrasse if args.terrasse != '-' else vide,
-           '0.3' if args.pieds != '-' else '0.0']
+           '0.0']
     r = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if r.returncode: raise RuntimeError(r.stderr[-1500:])
-    if focal:   # devant les produits, on ne garde de l'IA que le feuillage ; le produit exact reste partout ailleurs
+    if True:   # devant les produits, on ne garde de l'IA que le feuillage ; le produit exact reste partout ailleurs
         r = subprocess.run(['python3', os.path.join(ICI, 'feuillage_devant.py'), sortie, base, fj, union_calques(args), sortie], capture_output=True, text=True)
         if r.returncode: raise RuntimeError(r.stderr[-1500:])
 
@@ -168,22 +180,30 @@ def generer(base, zones, c, args, sortie, tag, focal=None):
 RUBRIQUE = """Tu relis un visuel de démonstration commerciale : photo réelle d'un jardin, transformée par un projet paysager autour
 de produits bois Cover Green (pergola, terrasse, clôtures : ne pas les juger). Tu es à la fois architecte paysagiste exigeant
 et retoucheur qui traque les montages. Première image : photo avant. Deuxième : visuel aménagé, avec grille jaune
-légendée tous les 100 px. Concept visé : {concept}
+légendée tous les 100 px. Troisième image (même cadrage) : les produits posés AVANT l'aménagement, référence pour vérifier
+que rien n'a été abîmé. Concept visé : {concept}
+Vérifie en priorité, en zoomant mentalement : 1) produits intacts (clôtures complètes jusqu'au sol, sans découpe ni
+entaille, pergola, terrasse), 2) rien de changé chez les voisins ni dans la rue (voitures, portails, maisons), 3) végétaux
+uniquement de la palette du concept, 4) échelle réaliste par rapport aux repères (clôture, pergola, portes), 5) plantes
+plantées du bon côté de la clôture, 6) halos, flous, bandes, découpes nettes, objets absurdes.
 Réponds en JSON : {{"waouh": note sur 10, "credibilite_paysagere": note sur 10, "montage": note sur 10 (10 = aucun défaut visible),
-"livrable": true|false, "defauts": ["défaut précis avec position"],
+"livrable": true|false, "defauts": [{{"gravite": "grave|moyen|leger", "texte": "défaut précis avec position"}}],
 "corrections": [{{"nom": "...", "polygone": [[x,y],...], "consigne": "ce qu'on doit voir dans cette zone après correction"}}]}}
 Au plus 3 corrections, chacune sur une zone précise du jardin (jamais sur les produits ni la maison), uniquement pour des
 défauts réels et importants : plante inadaptée à l'exposition ou au climat, floraisons incohérentes, massif maigre, plante
 coupée net, flou ou halo, objet absurde, raccord visible. Vérifie que le point focal et chaque élément annoncé du concept sont bien visibles ; s'il manque le point focal, la
 correction correspondante couvre toute la hauteur de l'arbre (elle peut passer devant une clôture). Une correction ne doit pas affadir le projet : garder les contrastes
-et la générosité qui font l'effet waouh. Livrable = waouh >= 7, credibilite >= 7 et montage >= 7."""
+et la générosité qui font l'effet waouh. Livrable = waouh >= 7, credibilite >= 7, montage >= 8 et AUCUN défaut grave. Sois aussi sévère qu'un client exigeant."""
 
 
-def relire(avant, apres_path, calque, c):
+def relire(avant, apres_path, calque, c, produits=None):
     av = Image.open(avant).convert('RGB'); ap = Image.open(apres_path).convert('RGB')
+    pr = Image.open(produits).convert('RGB') if produits else av
     v, k = vue_grille(ap)
     resume = f"{c['titre']} : {c['intention']} Point focal : {c['point_focal']}. Exposition {c['exposition']}, climat {c['climat']}."
-    r = gpt(RUBRIQUE.format(concept=resume), [av.resize(v.size), v], 'high')
+    r = gpt(RUBRIQUE.format(concept=resume), [av.resize(v.size), v, pr.resize(v.size)], 'high')
+    graves = [d for d in r.get('defauts', []) if isinstance(d, dict) and d.get('gravite') == 'grave']
+    r['livrable'] = bool(r.get('livrable')) and not graves and r['montage'] >= 8 and r['waouh'] >= 7 and r['credibilite_paysagere'] >= 7
     for z in r.get('corrections', []):
         z['polygone_px'] = [[round(x / k), round(y / k)] for x, y in z['polygone']]
     return r
@@ -236,7 +256,7 @@ def main():
     print('concept :', c['titre'], '|', c['exposition'], '|', len(c['zones']), 'zones', flush=True)
     cur = os.path.join(a.dossier, 'v0.jpg')
     if not os.path.exists(cur): generer(a.image, c['zones'], c, a, cur, 'v0', c.get('focal'))
-    r = relire(avant, cur, cal, c); journal.append({'version': 'v0', **r})
+    r = relire(avant, cur, cal, c, a.image); journal.append({'version': 'v0', **r})
     print('v0 :', r['waouh'], r['credibilite_paysagere'], r['montage'], 'livrable' if r['livrable'] else '', flush=True)
     for t in range(1, a.tours + 1):
         if r['livrable'] or not r.get('corrections'): break
@@ -244,7 +264,7 @@ def main():
         foc = next((z for z in r['corrections'] if 'focal' in z['nom'].lower()), None)
         autres = [z for z in r['corrections'] if z is not foc]
         generer(cur, autres or [foc], c, a, nv, f'v{t}', foc if autres else None)
-        r2 = relire(avant, nv, cal, c); journal.append({'version': f'v{t}', **r2})
+        r2 = relire(avant, nv, cal, c, a.image); journal.append({'version': f'v{t}', **r2})
         print(f'v{t} :', r2['waouh'], r2['credibilite_paysagere'], r2['montage'], 'livrable' if r2['livrable'] else '', flush=True)
         if score(r2) > score(r) or (r2['livrable'] and not r['livrable']):
             cur, r = nv, r2

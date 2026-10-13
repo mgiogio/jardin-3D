@@ -37,11 +37,16 @@ if os.environ.get('GARDER'):   # éléments du client à ne jamais repeindre (po
     edit &= ~(np.asarray(g_) > 0)
 edit &= ~(prod & ~libre)
 if sep: edit &= ~deck
+if os.environ.get('PARCELLE'):   # limite de la parcelle du client : rien n'est repeint au-delà (voisins, rue, voitures)
+    p_ = Image.new('L', (W, H), 0); dp_ = ImageDraw.Draw(p_)
+    for poly in json.load(open(os.environ['PARCELLE'])): dp_.polygon([(x * k, y * k) for x, y in poly], fill=255)
+    parcelle = np.asarray(p_) > 0; edit &= parcelle
+else: parcelle = np.ones((H, W), bool)
 lp = np.zeros((H, W), bool)
 if os.environ.get('LIBRE_POLY'):   # zones où la végétation peut passer devant les produits (ex. arbre en pot devant l'angle de la terrasse)
     l_ = Image.new('L', (W, H), 0); dl = ImageDraw.Draw(l_)
     for poly in json.load(open(os.environ['LIBRE_POLY'])): dl.polygon([(x * k, y * k) for x, y in poly], fill=255)
-    lp = np.asarray(l_) > 0; edit |= lp
+    lp = (np.asarray(l_) > 0) & parcelle; edit |= lp
 E = Image.fromarray((edit * 255).astype('uint8'))
 mask = img.convert('RGBA'); mask.putalpha(E.point(lambda v: 0 if v else 255))
 def png(im):
