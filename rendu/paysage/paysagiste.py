@@ -215,27 +215,29 @@ et la générosité qui font l'effet waouh. Livrable = waouh >= 7, credibilite >
 
 
 def claude(consigne, images, journal_brut=None):
-    import urllib.request
+    import urllib.request, urllib.error
     contenu = [{'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': b64(im)}} for im in images]
     contenu.append({'type': 'text', 'text': consigne + "\nRéponds uniquement avec l'objet JSON valide, sans texte autour. "
                     "Dans les textes, n'utilise pas de guillemets doubles (utilise « » ou des apostrophes)."})
-    msgs = [{'role': 'user', 'content': contenu}, {'role': 'assistant', 'content': '{'}]
+    msgs = [{'role': 'user', 'content': contenu}]
     for essai in range(3):
         corps = {'model': MODELE_RELECTEUR, 'max_tokens': 6000, 'messages': msgs}
         req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=json.dumps(corps).encode(), headers={
             'x-api-key': os.environ['ANTHROPIC_API_KEY'], 'anthropic-version': '2023-06-01', 'content-type': 'application/json'})
         try:
             r = json.load(urllib.request.urlopen(req, timeout=600))
-        except Exception:
-            time.sleep(8); continue
-        t = '{' + ''.join(b.get('text', '') for b in r['content'] if b['type'] == 'text')
+        except urllib.error.HTTPError as e:
+            print('   relecture Claude, erreur', e.code, e.read()[:300], flush=True); time.sleep(8); continue
+        except Exception as e:
+            print('   relecture Claude, erreur', e, flush=True); time.sleep(8); continue
+        t = ''.join(b.get('text', '') for b in r['content'] if b['type'] == 'text')
+        t = t[t.find('{'):] if '{' in t else t
         if journal_brut: open(journal_brut, 'a').write(t + '\n-----\n')
         try:
             return json.loads(t[:t.rindex('}') + 1])
         except Exception:
             msgs = [{'role': 'user', 'content': contenu}, {'role': 'assistant', 'content': t},
-                    {'role': 'user', 'content': "Ce JSON est invalide. Renvoie exactement le même contenu en JSON strictement valide."},
-                    {'role': 'assistant', 'content': '{'}]
+                    {'role': 'user', 'content': "Ce JSON est invalide. Renvoie exactement le même contenu en JSON strictement valide, sans aucun texte autour."}]
     raise RuntimeError('relecture Claude : JSON invalide après 3 essais')
 
 
