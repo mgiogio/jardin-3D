@@ -63,6 +63,9 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
         ls = Sc[..., :3].mean(-1, keepdims=True)
         sat_s = (Sc[..., :3][m].std(-1)).mean() + 1; sat_e = env.std(-1).mean() + 1
         Sc[..., :3] = ls + (Sc[..., :3] - ls) * min(1.0, 0.55 + 0.45 * sat_e / sat_s)   # pas plus saturé que la scène
+        if COUVERT:   # ciel couvert : moins de contraste et de saturation, comme la photo
+            mu = Sc[..., :3][m].mean(); Sc[..., :3] = mu + (Sc[..., :3] - mu) * 0.8
+            ls = Sc[..., :3].mean(-1, keepdims=True); Sc[..., :3] = ls + (Sc[..., :3] - ls) * 0.75
         for c_ in range(3): Sc[..., c_] = ndi.gaussian_filter(Sc[..., c_], 0.6)
     # ombres : ombre de contact (ellipse au pied) et ombre portée douce vers l'arrière gauche
     sh = np.zeros((H, W), np.float32)
@@ -81,12 +84,11 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     out *= (1 - sh[..., None])
     ac = ndi.gaussian_filter(ac[..., 0], 0.7)[..., None]            # bord adouci (pas de détourage au cutter)
     if APRES_IA:   # le bas du pot appartient à la passe IA (plantes devant) : on ne recolle que le haut
-        coupe = int(p['y'] - (Y1 - Y0) * 0.2) - Y0
-        if coupe < ac.shape[0]: ac = ac.copy(); ac[max(0, coupe):] = 0
+        pass
     out[Y0:Y1, X0:X1] = out[Y0:Y1, X0:X1] * (1 - ac) + Sc[..., :3] * ac
     # produits plus proches que le sujet (leur pied est plus bas dans l'image) : ils repassent devant
     mz = np.zeros((H, W), np.float32); mz[Y0:Y1, X0:X1] = ac[..., 0]
-    mz[int(p['y'] - (Y1 - Y0) * 0.2):] = 0; masque = np.maximum(masque, mz)
+    masque = np.maximum(masque, ndi.binary_dilation(mz > 0.3, iterations=6).astype(np.float32))   # sujet entier protégé, avec une marge
     devant = (pied > p['y'] + 12)
     out[devant] = base[devant]
 Image.fromarray(np.clip(out, 0, 255).astype('uint8')).save(sys.argv[5], quality=94)

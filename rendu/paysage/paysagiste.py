@@ -259,8 +259,24 @@ def relire(avant, apres_path, calque, c, produits=None):
     zoom = [ap.crop(b).resize((v.width, round(v.width * (b[3] - b[1]) / (b[2] - b[0])))) for b in
             [(0, 0, ap.width // 2, ap.height // 2), (ap.width // 2, 0, ap.width, ap.height // 2),
              (0, ap.height // 2, ap.width // 2, ap.height), (ap.width // 2, ap.height // 2, ap.width, ap.height)]]
-    consigne = RUBRIQUE.format(concept=resume) + "\nImages 4 à 7 : les quatre quarts du visuel aménagé agrandis (haut gauche, haut droite, bas gauche, bas droite) pour voir les détails."
-    r = claude(consigne, [av.resize(v.size), v, pr.resize(v.size)] + zoom, os.path.join(os.path.dirname(apres_path), 'relectures_brutes.txt')) if os.environ.get('ANTHROPIC_API_KEY') else gpt(consigne, [av.resize(v.size), v, pr.resize(v.size)], 'high')
+    # carte des modifications par rapport aux produits posés (rouge = pixels changés) et gros plans autour des sujets
+    import numpy as np
+    A_ = np.asarray(ap).astype(np.int16); B_ = np.asarray(pr.resize(ap.size)).astype(np.int16)
+    ch = np.abs(A_ - B_).max(-1) > 25
+    carte = (np.asarray(ap).astype(np.float32) * 0.45).astype(np.uint8); carte[ch] = [230, 30, 30]
+    carte = Image.fromarray(carte).resize(v.size)
+    gros = []
+    for s_ in c.get('sujets', []):
+        if not s_.get('sol_px'): continue
+        x_, y_ = s_['sol_px']; hb = int(ap.height * 0.35)
+        b_ = (max(0, x_ - hb // 2), max(0, y_ - hb), min(ap.width, x_ + hb // 2), min(ap.height, y_ + hb // 4))
+        for im_ in (pr.resize(ap.size), ap): gros.append(im_.crop(b_).resize((600, round(600 * (b_[3] - b_[1]) / max(1, b_[2] - b_[0])))))
+    consigne = RUBRIQUE.format(concept=resume) + ("\nImages 4 à 7 : les quatre quarts du visuel aménagé agrandis (haut gauche, haut droite, bas gauche, bas droite)."
+        "\nImage 8 : carte des modifications (rouge = pixels changés par rapport aux produits posés). Toute modification hors des massifs ajoutés "
+        "et des grands sujets est un défaut GRAVE : plante ou paillage existant transformé, objet effacé, voisin modifié, tache sur un produit."
+        "\nImages suivantes, par paires (avant, après) : gros plans autour de chaque grand sujet. Vérifie objets fantômes, pied du pot, ombres, détourage.")
+    zoom = zoom + [carte] + gros
+    r = claude(consigne, [av.resize(v.size), v, pr.resize(v.size)] + zoom[:4] + zoom[4:], os.path.join(os.path.dirname(apres_path), 'relectures_brutes.txt')) if os.environ.get('ANTHROPIC_API_KEY') else gpt(consigne, [av.resize(v.size), v, pr.resize(v.size)], 'high')
     graves = [d for d in r.get('defauts', []) if isinstance(d, dict) and d.get('gravite') == 'grave']
     r['livrable'] = bool(r.get('livrable')) and not graves and r['montage'] >= 8 and r['waouh'] >= 7 and r['credibilite_paysagere'] >= 7
     for z in r.get('corrections', []):

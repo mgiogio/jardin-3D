@@ -18,7 +18,7 @@ zones = poly(sys.argv[3]); libre = poly(sys.argv[5]) if len(sys.argv) > 5 else n
 
 P = CLIPSegProcessor.from_pretrained('CIDAS/clipseg-rd64-refined'); M = CLIPSegForImageSegmentation.from_pretrained('CIDAS/clipseg-rd64-refined')
 STRUCT = ['house wall', 'roof', 'window', 'car', 'green box', 'metal gate', 'wooden fence', 'concrete post', 'paved path', 'heat pump',
-          'existing shrub', 'flower bed', 'hedge', 'tree']
+          'existing shrub', 'flower bed', 'hedge', 'tree', 'mulch', 'bark mulch bed', 'ornamental grass', 'lavender']
 VEG = ['lawn grass', 'bare soil', 'gravel', 'sky']
 def probas(im, textes):
     out = np.zeros((len(textes), H, W), np.float32); T = 520
