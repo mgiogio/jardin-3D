@@ -11,7 +11,9 @@ ICI = os.path.dirname(os.path.abspath(__file__))
 img = Image.open(sys.argv[1]).convert('RGB'); W, H = img.size
 pl = json.load(open(sys.argv[2])); cam = json.load(open(sys.argv[3]))
 prod = np.asarray(Image.open(sys.argv[4]).convert('RGBA').resize((W, H)).getchannel('A')) > 120
-dossier = sys.argv[6] if len(sys.argv) > 6 else os.path.join(ICI, 'sujets')
+dossier = sys.argv[6] if len(sys.argv) > 6 and sys.argv[6] != '-' else os.path.join(ICI, 'sujets')
+sortie_masque = sys.argv[7] if len(sys.argv) > 7 else None
+masque = np.zeros((H, W), np.float32)
 SUJ = json.load(open(os.path.join(ICI, 'sujets.json')))
 f = (H / 2) / math.tan(math.radians(cam['vfov'] / 2))
 def ppm(y):   # pixels par mètre (hauteur) pour un objet posé au sol dont le pied est à la ligne y
@@ -54,8 +56,12 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     if m.any():
         sm, ss = Sc[..., :3][m].mean(0), Sc[..., :3][m].std(0) + 1
         em, es = env.mean(0), env.std(0) + 1
-        g = (0.6 + 0.4 * em.mean() / max(sm.mean(), 1))          # luminosité seulement, sans teinter le sujet
+        g = (0.35 + 0.65 * em.mean() / max(sm.mean(), 1))         # luminosité de la scène autour
         Sc[..., :3] = Sc[..., :3] * g
+        ls = Sc[..., :3].mean(-1, keepdims=True)
+        sat_s = (Sc[..., :3][m].std(-1)).mean() + 1; sat_e = env.std(-1).mean() + 1
+        Sc[..., :3] = ls + (Sc[..., :3] - ls) * min(1.0, 0.55 + 0.45 * sat_e / sat_s)   # pas plus saturé que la scène
+        for c_ in range(3): Sc[..., c_] = ndi.gaussian_filter(Sc[..., c_], 0.6)
     # ombres : ombre de contact (ellipse au pied) et ombre portée douce vers l'arrière gauche
     sh = np.zeros((H, W), np.float32)
     yy, xx = np.ogrid[:H, :W]
@@ -73,7 +79,11 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     out *= (1 - sh[..., None])
     out[Y0:Y1, X0:X1] = out[Y0:Y1, X0:X1] * (1 - ac) + Sc[..., :3] * ac
     # produits plus proches que le sujet (leur pied est plus bas dans l'image) : ils repassent devant
+    mz = np.zeros((H, W), np.float32); mz[Y0:Y1, X0:X1] = ac[..., 0]
+    mz[int(p['y'] - (Y1 - Y0) * 0.2):] = 0; masque = np.maximum(masque, mz)
     devant = (pied > p['y'] + 12)
     out[devant] = base[devant]
 Image.fromarray(np.clip(out, 0, 255).astype('uint8')).save(sys.argv[5], quality=94)
+if sortie_masque:
+    o = Image.new('RGBA', (W, H), (0, 0, 0, 0)); o.putalpha(Image.fromarray(((masque > 0.4) * 255).astype('uint8'))); o.save(sortie_masque)
 print('ok', len(pl), 'sujets posés')

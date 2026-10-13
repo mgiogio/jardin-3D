@@ -2,9 +2,10 @@
 import json, os, sys, base64, urllib.request, concurrent.futures as cf
 S = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sujets.json')))
 K = os.environ['OPENAI_API_KEY']; out = sys.argv[1]
-B = ("Product photo of a single potted plant for a garden, isolated, centered, entirely visible from the bottom of the pot to the top "
-     "of the foliage with margin, straight-on view at eye level, soft natural daylight from the upper right, realistic, no shadow, "
-     "transparent background, no text, no other object. ")
+B = ("Real photograph, not an illustration: a single real potted plant as found in a French garden center, natural irregular "
+     "growth, botanically accurate, isolated, entirely visible from the bottom of the pot to the top of the foliage with margin, "
+     "straight-on view at eye level, soft overcast daylight, natural colors (not oversaturated), no shadow, transparent background, "
+     "no text, no other object. ")
 def go(k):
     f = os.path.join(out, k + '.png')
     if os.path.exists(f): return k, 'deja'

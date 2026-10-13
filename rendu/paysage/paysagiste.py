@@ -150,6 +150,10 @@ def consigne_image(c, zones):
     if c.get('reperes'): lignes.append('Échelle : ' + c['reperes'] + '. Respecter les hauteurs indiquées.')
     lignes.append("Ne rien changer chez les voisins ni dans la rue (voitures, portails, clôtures voisines). Les produits en bois "
                   "(pergola, terrasse, clôtures) restent identiques : les plantes poussent devant, jamais à leur place.")
+    lignes.append("Plantation de paysagiste : grandes masses de 5 à 7 pieds de la même plante, répétées, sol entièrement "
+                  "couvert, pas de plantes annuelles ni de fleurs de balcon (pas de pétunias, surfinias, géraniums de balcon). "
+                  "Les pots et bacs déjà posés restent tels quels : les massifs les entourent et passent un peu devant leur pied, "
+                  "avec une ombre douce au sol.")
     lignes.append("Plantes installées depuis deux ou trois ans, sol couvert, bordures nettes. Photo naturelle et crédible, "
                   "pas un rendu 3D. Pas de personnage, pas de construction ajoutée.")
     return '\n'.join(lignes)
@@ -166,11 +170,16 @@ def union_calques(args):
     return u
 
 
-def poser(massifs, c, args, sortie):
-    pj = os.path.join(args.dossier, '_sujets.json')
+def poser(base, c, args, sortie):
+    """Pose les grands sujets sur l'image de base ; renvoie le calque produits + sujets (protégé de l'IA)."""
+    pj = os.path.join(args.dossier, '_sujets.json'); mj = os.path.join(args.dossier, '_sujets_masque.png')
     json.dump([{'sujet': s['sujet'], 'x': s['sol_px'][0], 'y': s['sol_px'][1]} for s in c.get('sujets', []) if s['sujet'] in SUJ], open(pj, 'w'))
-    r = subprocess.run(['python3', os.path.join(ICI, 'poser_sujets.py'), massifs, pj, args.cam, union_calques(args), sortie], capture_output=True, text=True)
+    r = subprocess.run(['python3', os.path.join(ICI, 'poser_sujets.py'), base, pj, args.cam, union_calques(args), sortie, '-', mj], capture_output=True, text=True)
     if r.returncode: raise RuntimeError(r.stderr[-1500:])
+    from PIL import ImageChops
+    cal = Image.open(args.calque).convert('RGBA'); a = ImageChops.lighter(cal.getchannel('A'), Image.open(mj).getchannel('A').resize(cal.size))
+    u = os.path.join(args.dossier, '_produits_sujets.png'); o = Image.new('RGBA', cal.size, (128, 128, 128, 0)); o.putalpha(a); o.save(u)
+    return u
 
 
 def generer(base, zones, c, args, sortie, tag):
@@ -183,7 +192,7 @@ def generer(base, zones, c, args, sortie, tag):
     fj = os.path.join(args.dossier, '_aucune.json'); json.dump([], open(fj, 'w'))
     if c.get('parcelle_px'):
         pj = os.path.join(args.dossier, 'parcelle.json'); json.dump([c['parcelle_px']], open(pj, 'w')); env['PARCELLE'] = pj
-    cmd = ['python3', os.path.join(RENDU, 'amenage.py'), base, zj, '1', cj, sortie, args.calque,
+    cmd = ['python3', os.path.join(RENDU, 'amenage.py'), base, zj, '1', cj, sortie, getattr(args, 'calque_ia', args.calque),
            args.pieds if args.pieds != '-' else vide, args.terrasse if args.terrasse != '-' else vide,
            '0.0']
     r = subprocess.run(cmd, env=env, capture_output=True, text=True)
@@ -306,24 +315,31 @@ def main():
     cp = os.path.join(a.dossier, 'concept.json')
     c = json.load(open(cp)) if os.path.exists(cp) else concept(img, cal, a.ville, a.dep, a.style, cp)
     print('concept :', c['titre'], '|', c['exposition'], '|', len(c['zones']), 'zones', flush=True)
-    mas = os.path.join(a.dossier, 'v0_massifs.jpg'); cur = os.path.join(a.dossier, 'v0.jpg')
-    if not os.path.exists(mas): generer(a.image, c['zones'], c, a, mas, 'v0')
-    poser(mas, c, a, cur)
+    def version(tag, c_, base_massifs, zones):
+        """sujets posés d'abord, puis massifs IA autour (sujets protégés, sauf le bas du pot)"""
+        suj = os.path.join(a.dossier, f'{tag}_sujets.jpg'); out = os.path.join(a.dossier, f'{tag}.jpg')
+        if base_massifs is None:
+            a.calque_ia = poser(a.image, c_, a, suj); generer(suj, zones, c_, a, out, tag)
+        else:
+            generer(base_massifs, zones, c_, a, out, tag)
+        return out
+    cur = os.path.join(a.dossier, 'v0.jpg')
+    if not os.path.exists(cur): cur = version('v0', c, None, c['zones'])
+    else: a.calque_ia = poser(a.image, c, a, os.path.join(a.dossier, 'v0_sujets.jpg'))
     r = relire(avant, cur, cal, c, a.image); journal.append({'version': 'v0', **r})
     print('v0 :', r['waouh'], r['credibilite_paysagere'], r['montage'], 'livrable' if r['livrable'] else '', flush=True)
     for t in range(1, a.tours + 1):
         if r['livrable'] or not (r.get('corrections') or r.get('sujets')): break
-        c2 = dict(c); 
+        c2 = dict(c)
         ok = [s for s in (r.get('sujets') or []) if s.get('sujet') in SUJ and s.get('sol_px')]
-        if ok: c2['sujets'] = ok          # une proposition du relecteur n'est retenue que si elle cite des sujets de la banque
-        nm = os.path.join(a.dossier, f'v{t}_massifs.jpg'); nv = os.path.join(a.dossier, f'v{t}.jpg')
-        if r.get('corrections'): generer(mas, r['corrections'], c, a, nm, f'v{t}')
-        else: Image.open(mas).save(nm, quality=94)
-        poser(nm, c2, a, nv)
+        if ok:   # sujets déplacés : on repart de la photo, sujets reposés, massifs regénérés (avec les corrections)
+            c2['sujets'] = ok; nv = version(f'v{t}', c2, None, c['zones'] + (r.get('corrections') or []))
+        else:
+            nv = version(f'v{t}', c2, cur, r['corrections'])
         r2 = relire(avant, nv, cal, c2, a.image); journal.append({'version': f'v{t}', **r2})
         print(f'v{t} :', r2['waouh'], r2['credibilite_paysagere'], r2['montage'], 'livrable' if r2['livrable'] else '', flush=True)
         if score(r2) > score(r) or (r2['livrable'] and not r['livrable']):
-            cur, mas, r, c = nv, nm, r2, c2
+            cur, r, c = nv, r2, c2
         else:
             print(f'v{t} rejetée (pas mieux que la précédente)', flush=True)
     final = os.path.join(a.dossier, 'final.jpg'); Image.open(cur).save(final, quality=94)
