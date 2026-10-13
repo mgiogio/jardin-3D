@@ -214,21 +214,29 @@ hors parcelle) ou d'une échelle fausse, propose "sujets" : la liste complète c
 et la générosité qui font l'effet waouh. Livrable = waouh >= 7, credibilite >= 7, montage >= 8 et AUCUN défaut grave. Sois aussi sévère qu'un client exigeant."""
 
 
-def claude(consigne, images):
+def claude(consigne, images, journal_brut=None):
     import urllib.request
     contenu = [{'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': b64(im)}} for im in images]
-    contenu.append({'type': 'text', 'text': consigne + "\nRéponds uniquement avec l'objet JSON, sans texte autour."})
-    corps = {'model': MODELE_RELECTEUR, 'max_tokens': 4000, 'messages': [{'role': 'user', 'content': contenu}]}
-    req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=json.dumps(corps).encode(), headers={
-        'x-api-key': os.environ['ANTHROPIC_API_KEY'], 'anthropic-version': '2023-06-01', 'content-type': 'application/json'})
+    contenu.append({'type': 'text', 'text': consigne + "\nRéponds uniquement avec l'objet JSON valide, sans texte autour. "
+                    "Dans les textes, n'utilise pas de guillemets doubles (utilise « » ou des apostrophes)."})
+    msgs = [{'role': 'user', 'content': contenu}, {'role': 'assistant', 'content': '{'}]
     for essai in range(3):
+        corps = {'model': MODELE_RELECTEUR, 'max_tokens': 6000, 'messages': msgs}
+        req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=json.dumps(corps).encode(), headers={
+            'x-api-key': os.environ['ANTHROPIC_API_KEY'], 'anthropic-version': '2023-06-01', 'content-type': 'application/json'})
         try:
-            r = json.load(urllib.request.urlopen(req, timeout=600)); break
+            r = json.load(urllib.request.urlopen(req, timeout=600))
         except Exception:
-            if essai == 2: raise
-            time.sleep(8)
-    t = ''.join(b.get('text', '') for b in r['content'] if b['type'] == 'text')
-    return json.loads(t[t.index('{'):t.rindex('}') + 1])
+            time.sleep(8); continue
+        t = '{' + ''.join(b.get('text', '') for b in r['content'] if b['type'] == 'text')
+        if journal_brut: open(journal_brut, 'a').write(t + '\n-----\n')
+        try:
+            return json.loads(t[:t.rindex('}') + 1])
+        except Exception:
+            msgs = [{'role': 'user', 'content': contenu}, {'role': 'assistant', 'content': t},
+                    {'role': 'user', 'content': "Ce JSON est invalide. Renvoie exactement le même contenu en JSON strictement valide."},
+                    {'role': 'assistant', 'content': '{'}]
+    raise RuntimeError('relecture Claude : JSON invalide après 3 essais')
 
 
 def relire(avant, apres_path, calque, c, produits=None):
@@ -240,7 +248,7 @@ def relire(avant, apres_path, calque, c, produits=None):
             [(0, 0, ap.width // 2, ap.height // 2), (ap.width // 2, 0, ap.width, ap.height // 2),
              (0, ap.height // 2, ap.width // 2, ap.height), (ap.width // 2, ap.height // 2, ap.width, ap.height)]]
     consigne = RUBRIQUE.format(concept=resume) + "\nImages 4 à 7 : les quatre quarts du visuel aménagé agrandis (haut gauche, haut droite, bas gauche, bas droite) pour voir les détails."
-    r = claude(consigne, [av.resize(v.size), v, pr.resize(v.size)] + zoom) if os.environ.get('ANTHROPIC_API_KEY') else gpt(consigne, [av.resize(v.size), v, pr.resize(v.size)], 'high')
+    r = claude(consigne, [av.resize(v.size), v, pr.resize(v.size)] + zoom, os.path.join(os.path.dirname(apres_path), 'relectures_brutes.txt')) if os.environ.get('ANTHROPIC_API_KEY') else gpt(consigne, [av.resize(v.size), v, pr.resize(v.size)], 'high')
     graves = [d for d in r.get('defauts', []) if isinstance(d, dict) and d.get('gravite') == 'grave']
     r['livrable'] = bool(r.get('livrable')) and not graves and r['montage'] >= 8 and r['waouh'] >= 7 and r['credibilite_paysagere'] >= 7
     for z in r.get('corrections', []):
