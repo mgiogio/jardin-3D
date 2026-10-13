@@ -179,6 +179,10 @@ def generer(base, zones, c, args, sortie, tag, focal=None):
     if True:   # devant les produits, on ne garde de l'IA que le feuillage ; le produit exact reste partout ailleurs
         r = subprocess.run(['python3', os.path.join(ICI, 'feuillage_devant.py'), sortie, base, fj, union_calques(args), sortie], capture_output=True, text=True)
         if r.returncode: raise RuntimeError(r.stderr[-1500:])
+    # garde-fou : l'existant (maisons, voitures, caissons, portails, murs) n'est jamais repeint, seul le feuillage peut passer devant
+    r = subprocess.run(['python3', os.path.join(ICI, 'garde_existant.py'), sortie, base, zj, sortie, fj], capture_output=True, text=True)
+    if r.returncode: raise RuntimeError(r.stderr[-1500:])
+    print('   ', r.stdout.strip(), flush=True)
 
 
 RUBRIQUE = """Tu relis un visuel de démonstration commerciale : photo réelle d'un jardin, transformée par un projet paysager autour
