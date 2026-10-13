@@ -1,0 +1,1678 @@
+{
+ "plantes": [
+  {
+   "latin": "Acer palmatum 'Bloodgood'",
+   "nom": "Érable du Japon pourpre",
+   "role": "focal",
+   "expo": [
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "japonisant",
+    "contemporain"
+   ],
+   "floraison": "",
+   "hiver": "caduc, feuillage pourpre avr.-nov.",
+   "hauteur_m": 1.5,
+   "entretien": "faible",
+   "couleur": "pourpre"
+  },
+  {
+   "latin": "Olea europaea",
+   "nom": "Olivier",
+   "role": "focal",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "mediterraneen",
+    "contemporain"
+   ],
+   "floraison": "",
+   "hiver": "persistant gris argent",
+   "hauteur_m": 2.5,
+   "entretien": "faible",
+   "couleur": "gris argent"
+  },
+  {
+   "latin": "Lagerstroemia indica",
+   "nom": "Lilas des Indes",
+   "role": "focal",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade",
+    "oceanique"
+   ],
+   "styles": [
+    "mediterraneen",
+    "ville",
+    "contemporain"
+   ],
+   "floraison": "juil.-sept.",
+   "hiver": "caduc, écorce décorative",
+   "hauteur_m": 3,
+   "entretien": "faible",
+   "couleur": "rose ou blanc"
+  },
+  {
+   "latin": "Amelanchier lamarckii",
+   "nom": "Amélanchier",
+   "role": "focal",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "contemporain",
+    "ville"
+   ],
+   "floraison": "avril",
+   "hiver": "caduc, feuillage orange en automne",
+   "hauteur_m": 3,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Cornus kousa",
+   "nom": "Cornouiller du Japon",
+   "role": "focal",
+   "expo": [
+    "mi-ombre",
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "japonisant",
+    "ville",
+    "champetre"
+   ],
+   "floraison": "juin",
+   "hiver": "caduc, rouge en automne",
+   "hauteur_m": 3,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Prunus serrulata 'Amanogawa'",
+   "nom": "Cerisier à fleurs colonnaire",
+   "role": "focal",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "ville",
+    "japonisant",
+    "contemporain"
+   ],
+   "floraison": "avril",
+   "hiver": "caduc",
+   "hauteur_m": 4,
+   "entretien": "faible",
+   "couleur": "rose"
+  },
+  {
+   "latin": "Trachycarpus fortunei",
+   "nom": "Palmier de Chine",
+   "role": "focal",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "ville",
+    "contemporain"
+   ],
+   "floraison": "",
+   "hiver": "persistant",
+   "hauteur_m": 3,
+   "entretien": "faible",
+   "couleur": "vert"
+  },
+  {
+   "latin": "Pinus mugo 'Mughus'",
+   "nom": "Pin de montagne",
+   "role": "focal",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "continental",
+    "montagnard",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "contemporain",
+    "japonisant"
+   ],
+   "floraison": "",
+   "hiver": "persistant",
+   "hauteur_m": 1.2,
+   "entretien": "faible",
+   "couleur": "vert sombre"
+  },
+  {
+   "latin": "Arbutus unedo",
+   "nom": "Arbousier",
+   "role": "focal",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "mediterraneen",
+    "champetre"
+   ],
+   "floraison": "oct.-déc.",
+   "hiver": "persistant, fruits rouges",
+   "hauteur_m": 2.5,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Fatsia japonica",
+   "nom": "Fatsia",
+   "role": "structure",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "ville",
+    "contemporain",
+    "japonisant"
+   ],
+   "floraison": "oct.",
+   "hiver": "persistant, grandes feuilles",
+   "hauteur_m": 1.5,
+   "entretien": "faible",
+   "couleur": "vert brillant"
+  },
+  {
+   "latin": "Pittosporum tobira 'Nana'",
+   "nom": "Pittosporum nain",
+   "role": "structure",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "mediterraneen",
+    "contemporain",
+    "ville"
+   ],
+   "floraison": "mai",
+   "hiver": "persistant, boule",
+   "hauteur_m": 0.8,
+   "entretien": "faible",
+   "couleur": "vert"
+  },
+  {
+   "latin": "Ilex crenata",
+   "nom": "Houx crénelé (boules)",
+   "role": "structure",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "contemporain",
+    "japonisant",
+    "ville"
+   ],
+   "floraison": "",
+   "hiver": "persistant, taillé en boules",
+   "hauteur_m": 0.8,
+   "entretien": "taille 1 fois par an",
+   "couleur": "vert sombre"
+  },
+  {
+   "latin": "Sarcococca confusa",
+   "nom": "Sarcococca",
+   "role": "structure",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "champetre"
+   ],
+   "floraison": "janv.-févr. parfumé",
+   "hiver": "persistant",
+   "hauteur_m": 0.8,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Nandina domestica",
+   "nom": "Bambou sacré",
+   "role": "structure",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "japonisant",
+    "contemporain",
+    "ville"
+   ],
+   "floraison": "juin",
+   "hiver": "persistant, rouge en hiver",
+   "hauteur_m": 1,
+   "entretien": "faible",
+   "couleur": "rouge et vert"
+  },
+  {
+   "latin": "Fargesia murielae",
+   "nom": "Bambou non traçant",
+   "role": "structure",
+   "expo": [
+    "mi-ombre",
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "japonisant",
+    "contemporain",
+    "ville"
+   ],
+   "floraison": "",
+   "hiver": "persistant",
+   "hauteur_m": 2.5,
+   "entretien": "faible",
+   "couleur": "vert"
+  },
+  {
+   "latin": "Choisya ternata",
+   "nom": "Oranger du Mexique",
+   "role": "structure",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "contemporain",
+    "champetre"
+   ],
+   "floraison": "avril-mai, remontant",
+   "hiver": "persistant",
+   "hauteur_m": 1.5,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Viburnum tinus",
+   "nom": "Laurier-tin",
+   "role": "structure",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "champetre",
+    "ville"
+   ],
+   "floraison": "déc.-mars",
+   "hiver": "persistant",
+   "hauteur_m": 2,
+   "entretien": "faible",
+   "couleur": "blanc rosé"
+  },
+  {
+   "latin": "Euonymus japonicus 'Green Spire'",
+   "nom": "Fusain colonnaire",
+   "role": "structure",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen",
+    "continental"
+   ],
+   "styles": [
+    "contemporain",
+    "ville"
+   ],
+   "floraison": "",
+   "hiver": "persistant, colonne",
+   "hauteur_m": 1.2,
+   "entretien": "faible",
+   "couleur": "vert"
+  },
+  {
+   "latin": "Buxus sempervirens / Ilex crenata",
+   "nom": "Boules persistantes",
+   "role": "structure",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "contemporain"
+   ],
+   "floraison": "",
+   "hiver": "persistant",
+   "hauteur_m": 0.6,
+   "entretien": "taille",
+   "couleur": "vert"
+  },
+  {
+   "latin": "Cistus x purpureus",
+   "nom": "Ciste",
+   "role": "structure",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "mediterraneen"
+   ],
+   "floraison": "mai-juin",
+   "hiver": "persistant",
+   "hauteur_m": 1,
+   "entretien": "très faible",
+   "couleur": "rose"
+  },
+  {
+   "latin": "Phlomis fruticosa",
+   "nom": "Sauge de Jérusalem",
+   "role": "structure",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "mediterraneen"
+   ],
+   "floraison": "juin",
+   "hiver": "persistant gris",
+   "hauteur_m": 1,
+   "entretien": "très faible",
+   "couleur": "jaune"
+  },
+  {
+   "latin": "Rosmarinus officinalis",
+   "nom": "Romarin",
+   "role": "structure",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade",
+    "oceanique"
+   ],
+   "styles": [
+    "mediterraneen",
+    "champetre"
+   ],
+   "floraison": "mars-mai",
+   "hiver": "persistant",
+   "hauteur_m": 0.8,
+   "entretien": "très faible",
+   "couleur": "bleu"
+  },
+  {
+   "latin": "Teucrium fruticans",
+   "nom": "Germandrée arbustive",
+   "role": "structure",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "mediterraneen",
+    "contemporain"
+   ],
+   "floraison": "mai-août",
+   "hiver": "persistant argenté",
+   "hauteur_m": 1,
+   "entretien": "très faible",
+   "couleur": "bleu pâle"
+  },
+  {
+   "latin": "Abelia x grandiflora",
+   "nom": "Abélia",
+   "role": "structure",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "champetre"
+   ],
+   "floraison": "juil.-oct.",
+   "hiver": "semi-persistant",
+   "hauteur_m": 1.2,
+   "entretien": "faible",
+   "couleur": "blanc rosé"
+  },
+  {
+   "latin": "Hydrangea arborescens 'Annabelle'",
+   "nom": "Hortensia Annabelle",
+   "role": "fleuri",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "ville",
+    "champetre",
+    "contemporain"
+   ],
+   "floraison": "juin-sept.",
+   "hiver": "caduc",
+   "hauteur_m": 1.2,
+   "entretien": "taille en mars",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Hydrangea paniculata 'Vanille Fraise'",
+   "nom": "Hortensia paniculé",
+   "role": "fleuri",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "contemporain",
+    "ville"
+   ],
+   "floraison": "juil.-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 1.5,
+   "entretien": "taille en mars",
+   "couleur": "blanc puis rose"
+  },
+  {
+   "latin": "Hydrangea quercifolia",
+   "nom": "Hortensia à feuilles de chêne",
+   "role": "fleuri",
+   "expo": [
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "champetre"
+   ],
+   "floraison": "juin-août",
+   "hiver": "caduc, rouge en automne",
+   "hauteur_m": 1.5,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Rosa 'The Fairy' / rosier paysager",
+   "nom": "Rosier paysager",
+   "role": "fleuri",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "cottage"
+   ],
+   "floraison": "juin-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 0.8,
+   "entretien": "taille légère",
+   "couleur": "rose"
+  },
+  {
+   "latin": "Perovskia atriplicifolia",
+   "nom": "Sauge d'Afghanistan",
+   "role": "fleuri",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen"
+   ],
+   "styles": [
+    "contemporain",
+    "mediterraneen",
+    "champetre"
+   ],
+   "floraison": "juil.-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 1,
+   "entretien": "rabattre en mars",
+   "couleur": "bleu lavande"
+  },
+  {
+   "latin": "Lavandula angustifolia 'Hidcote'",
+   "nom": "Lavande",
+   "role": "fleuri",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "mediterraneen",
+    "champetre",
+    "contemporain"
+   ],
+   "floraison": "juin-août",
+   "hiver": "persistant gris",
+   "hauteur_m": 0.5,
+   "entretien": "taille après floraison",
+   "couleur": "violet"
+  },
+  {
+   "latin": "Ceanothus 'Concha'",
+   "nom": "Céanothe",
+   "role": "fleuri",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "mediterraneen",
+    "champetre"
+   ],
+   "floraison": "mai",
+   "hiver": "persistant",
+   "hauteur_m": 1.5,
+   "entretien": "faible",
+   "couleur": "bleu"
+  },
+  {
+   "latin": "Spiraea japonica 'Goldflame'",
+   "nom": "Spirée",
+   "role": "fleuri",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "ville"
+   ],
+   "floraison": "juin",
+   "hiver": "caduc",
+   "hauteur_m": 0.7,
+   "entretien": "faible",
+   "couleur": "rose"
+  },
+  {
+   "latin": "Geranium 'Rozanne'",
+   "nom": "Géranium vivace",
+   "role": "vivace",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "cottage",
+    "ville",
+    "contemporain"
+   ],
+   "floraison": "juin-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 0.4,
+   "entretien": "faible",
+   "couleur": "bleu violet"
+  },
+  {
+   "latin": "Nepeta x faassenii",
+   "nom": "Népéta",
+   "role": "vivace",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen",
+    "oceanique"
+   ],
+   "styles": [
+    "champetre",
+    "contemporain",
+    "mediterraneen"
+   ],
+   "floraison": "mai-sept.",
+   "hiver": "caduc",
+   "hauteur_m": 0.4,
+   "entretien": "rabattre après 1re floraison",
+   "couleur": "bleu lavande"
+  },
+  {
+   "latin": "Salvia nemorosa 'Caradonna'",
+   "nom": "Sauge des bois",
+   "role": "vivace",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "contemporain",
+    "champetre"
+   ],
+   "floraison": "juin-sept.",
+   "hiver": "caduc",
+   "hauteur_m": 0.5,
+   "entretien": "rabattre",
+   "couleur": "violet"
+  },
+  {
+   "latin": "Echinacea purpurea",
+   "nom": "Échinacée",
+   "role": "vivace",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique_degrade",
+    "continental",
+    "oceanique"
+   ],
+   "styles": [
+    "champetre",
+    "contemporain"
+   ],
+   "floraison": "juil.-sept.",
+   "hiver": "caduc",
+   "hauteur_m": 0.8,
+   "entretien": "faible",
+   "couleur": "rose"
+  },
+  {
+   "latin": "Achillea 'Terracotta'",
+   "nom": "Achillée",
+   "role": "vivace",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen"
+   ],
+   "styles": [
+    "contemporain",
+    "champetre"
+   ],
+   "floraison": "juin-sept.",
+   "hiver": "caduc",
+   "hauteur_m": 0.7,
+   "entretien": "faible",
+   "couleur": "terracotta"
+  },
+  {
+   "latin": "Gaura lindheimeri",
+   "nom": "Gaura",
+   "role": "vivace",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade",
+    "oceanique"
+   ],
+   "styles": [
+    "mediterraneen",
+    "contemporain",
+    "champetre"
+   ],
+   "floraison": "juin-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 0.8,
+   "entretien": "faible",
+   "couleur": "blanc rosé"
+  },
+  {
+   "latin": "Erigeron karvinskianus",
+   "nom": "Pâquerette des murailles",
+   "role": "vivace",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "mediterraneen",
+    "champetre",
+    "ville"
+   ],
+   "floraison": "mai-nov.",
+   "hiver": "semi-persistant",
+   "hauteur_m": 0.3,
+   "entretien": "aucun",
+   "couleur": "blanc rosé"
+  },
+  {
+   "latin": "Anemone x hybrida 'Honorine Jobert'",
+   "nom": "Anémone du Japon",
+   "role": "vivace",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "champetre",
+    "japonisant"
+   ],
+   "floraison": "août-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 1,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Hosta 'Halcyon'",
+   "nom": "Hosta bleu",
+   "role": "vivace",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "ville",
+    "japonisant"
+   ],
+   "floraison": "juil.",
+   "hiver": "caduc",
+   "hauteur_m": 0.4,
+   "entretien": "faible",
+   "couleur": "feuillage bleu"
+  },
+  {
+   "latin": "Brunnera 'Jack Frost'",
+   "nom": "Brunnera",
+   "role": "vivace",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "ville",
+    "champetre"
+   ],
+   "floraison": "avril-mai",
+   "hiver": "caduc, feuillage argent",
+   "hauteur_m": 0.4,
+   "entretien": "faible",
+   "couleur": "feuillage argent"
+  },
+  {
+   "latin": "Heuchera 'Palace Purple'",
+   "nom": "Heuchère pourpre",
+   "role": "vivace",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "ville",
+    "contemporain"
+   ],
+   "floraison": "juin",
+   "hiver": "persistant",
+   "hauteur_m": 0.4,
+   "entretien": "faible",
+   "couleur": "feuillage pourpre"
+  },
+  {
+   "latin": "Bergenia cordifolia",
+   "nom": "Bergénia",
+   "role": "vivace",
+   "expo": [
+    "mi-ombre",
+    "ombre",
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen",
+    "montagnard"
+   ],
+   "styles": [
+    "ville",
+    "contemporain"
+   ],
+   "floraison": "mars-avril",
+   "hiver": "persistant",
+   "hauteur_m": 0.4,
+   "entretien": "aucun",
+   "couleur": "rose"
+  },
+  {
+   "latin": "Alchemilla mollis",
+   "nom": "Alchémille",
+   "role": "vivace",
+   "expo": [
+    "mi-ombre",
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "ville"
+   ],
+   "floraison": "juin",
+   "hiver": "caduc",
+   "hauteur_m": 0.4,
+   "entretien": "faible",
+   "couleur": "vert acide"
+  },
+  {
+   "latin": "Hemerocallis",
+   "nom": "Hémérocalle",
+   "role": "vivace",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "contemporain"
+   ],
+   "floraison": "juin-août",
+   "hiver": "caduc",
+   "hauteur_m": 0.7,
+   "entretien": "faible",
+   "couleur": "orange ou jaune"
+  },
+  {
+   "latin": "Agapanthus",
+   "nom": "Agapanthe",
+   "role": "vivace",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "mediterraneen",
+    "contemporain"
+   ],
+   "floraison": "juil.-août",
+   "hiver": "caduc ou persistant",
+   "hauteur_m": 0.8,
+   "entretien": "faible",
+   "couleur": "bleu"
+  },
+  {
+   "latin": "Euphorbia characias",
+   "nom": "Euphorbe",
+   "role": "vivace",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "mediterraneen",
+    "contemporain"
+   ],
+   "floraison": "mars-mai",
+   "hiver": "persistant glauque",
+   "hauteur_m": 1,
+   "entretien": "faible",
+   "couleur": "vert chartreuse"
+  },
+  {
+   "latin": "Iris germanica",
+   "nom": "Iris",
+   "role": "vivace",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "mediterraneen"
+   ],
+   "floraison": "mai",
+   "hiver": "caduc",
+   "hauteur_m": 0.8,
+   "entretien": "faible",
+   "couleur": "bleu"
+  },
+  {
+   "latin": "Hakonechloa macra 'Aureola'",
+   "nom": "Herbe du Japon dorée",
+   "role": "graminee",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "japonisant",
+    "contemporain"
+   ],
+   "floraison": "",
+   "hiver": "caduc, doré mai-nov.",
+   "hauteur_m": 0.4,
+   "entretien": "rabattre en mars",
+   "couleur": "doré"
+  },
+  {
+   "latin": "Stipa tenuissima",
+   "nom": "Stipe cheveux d'ange",
+   "role": "graminee",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade",
+    "oceanique",
+    "continental"
+   ],
+   "styles": [
+    "contemporain",
+    "mediterraneen",
+    "champetre"
+   ],
+   "floraison": "juin-sept.",
+   "hiver": "semi-persistant blond",
+   "hauteur_m": 0.5,
+   "entretien": "peigner au printemps",
+   "couleur": "blond"
+  },
+  {
+   "latin": "Pennisetum alopecuroides 'Hameln'",
+   "nom": "Herbe aux écouvillons",
+   "role": "graminee",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique_degrade",
+    "continental",
+    "oceanique",
+    "mediterraneen"
+   ],
+   "styles": [
+    "contemporain",
+    "champetre"
+   ],
+   "floraison": "août-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 0.6,
+   "entretien": "rabattre en mars",
+   "couleur": "beige rosé"
+  },
+  {
+   "latin": "Miscanthus sinensis 'Gracillimus'",
+   "nom": "Eulalie",
+   "role": "graminee",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "contemporain",
+    "japonisant"
+   ],
+   "floraison": "sept.-oct.",
+   "hiver": "marcescent",
+   "hauteur_m": 1.5,
+   "entretien": "rabattre en mars",
+   "couleur": "beige"
+  },
+  {
+   "latin": "Calamagrostis 'Karl Foerster'",
+   "nom": "Calamagrostis",
+   "role": "graminee",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "contemporain"
+   ],
+   "floraison": "juin-sept.",
+   "hiver": "marcescent, vertical",
+   "hauteur_m": 1.5,
+   "entretien": "rabattre en mars",
+   "couleur": "blond"
+  },
+  {
+   "latin": "Carex 'Everillo'",
+   "nom": "Laîche chartreuse",
+   "role": "graminee",
+   "expo": [
+    "mi-ombre",
+    "ombre",
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "contemporain"
+   ],
+   "floraison": "",
+   "hiver": "persistant",
+   "hauteur_m": 0.4,
+   "entretien": "aucun",
+   "couleur": "chartreuse"
+  },
+  {
+   "latin": "Festuca glauca",
+   "nom": "Fétuque bleue",
+   "role": "graminee",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen",
+    "montagnard"
+   ],
+   "styles": [
+    "contemporain",
+    "mediterraneen"
+   ],
+   "floraison": "",
+   "hiver": "persistant bleu",
+   "hauteur_m": 0.3,
+   "entretien": "peigner",
+   "couleur": "bleu"
+  },
+  {
+   "latin": "Muhlenbergia capillaris",
+   "nom": "Muhly",
+   "role": "graminee",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade"
+   ],
+   "styles": [
+    "contemporain",
+    "mediterraneen"
+   ],
+   "floraison": "sept.-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 0.8,
+   "entretien": "rabattre en mars",
+   "couleur": "rose"
+  },
+  {
+   "latin": "Dryopteris filix-mas",
+   "nom": "Fougère mâle",
+   "role": "couvre_sol",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "ville",
+    "champetre"
+   ],
+   "floraison": "",
+   "hiver": "caduc",
+   "hauteur_m": 0.8,
+   "entretien": "aucun",
+   "couleur": "vert"
+  },
+  {
+   "latin": "Polystichum setiferum",
+   "nom": "Fougère à soies",
+   "role": "couvre_sol",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental"
+   ],
+   "styles": [
+    "ville",
+    "japonisant"
+   ],
+   "floraison": "",
+   "hiver": "persistant",
+   "hauteur_m": 0.6,
+   "entretien": "aucun",
+   "couleur": "vert"
+  },
+  {
+   "latin": "Vinca minor",
+   "nom": "Petite pervenche",
+   "role": "couvre_sol",
+   "expo": [
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "ville"
+   ],
+   "floraison": "mars-mai",
+   "hiver": "persistant",
+   "hauteur_m": 0.15,
+   "entretien": "aucun",
+   "couleur": "bleu"
+  },
+  {
+   "latin": "Thymus serpyllum",
+   "nom": "Thym serpolet",
+   "role": "couvre_sol",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen",
+    "montagnard"
+   ],
+   "styles": [
+    "mediterraneen",
+    "champetre"
+   ],
+   "floraison": "juin-juil.",
+   "hiver": "persistant",
+   "hauteur_m": 0.1,
+   "entretien": "aucun",
+   "couleur": "rose"
+  },
+  {
+   "latin": "Ophiopogon japonicus",
+   "nom": "Herbe aux turquoises",
+   "role": "couvre_sol",
+   "expo": [
+    "mi-ombre",
+    "ombre",
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "japonisant",
+    "contemporain",
+    "ville"
+   ],
+   "floraison": "",
+   "hiver": "persistant",
+   "hauteur_m": 0.15,
+   "entretien": "aucun",
+   "couleur": "vert sombre"
+  },
+  {
+   "latin": "Trachelospermum jasminoides",
+   "nom": "Jasmin étoilé",
+   "role": "grimpante",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "ville",
+    "mediterraneen",
+    "contemporain"
+   ],
+   "floraison": "juin-juil. parfumé",
+   "hiver": "persistant",
+   "hauteur_m": 4,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Wisteria sinensis",
+   "nom": "Glycine",
+   "role": "grimpante",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen"
+   ],
+   "styles": [
+    "champetre",
+    "mediterraneen"
+   ],
+   "floraison": "avril-mai",
+   "hiver": "caduc",
+   "hauteur_m": 8,
+   "entretien": "taille 2 fois par an",
+   "couleur": "mauve"
+  },
+  {
+   "latin": "Clematis armandii",
+   "nom": "Clématite persistante",
+   "role": "grimpante",
+   "expo": [
+    "soleil",
+    "mi-ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "mediterraneen"
+   ],
+   "styles": [
+    "ville",
+    "champetre"
+   ],
+   "floraison": "mars-avril parfumé",
+   "hiver": "persistant",
+   "hauteur_m": 5,
+   "entretien": "faible",
+   "couleur": "blanc"
+  },
+  {
+   "latin": "Rosa 'New Dawn'",
+   "nom": "Rosier grimpant",
+   "role": "grimpante",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "montagnard"
+   ],
+   "styles": [
+    "champetre",
+    "cottage"
+   ],
+   "floraison": "juin-oct.",
+   "hiver": "caduc",
+   "hauteur_m": 4,
+   "entretien": "taille",
+   "couleur": "rose pâle"
+  },
+  {
+   "latin": "Parthenocissus tricuspidata",
+   "nom": "Vigne vierge",
+   "role": "grimpante",
+   "expo": [
+    "soleil",
+    "mi-ombre",
+    "ombre"
+   ],
+   "climats": [
+    "oceanique",
+    "oceanique_degrade",
+    "continental",
+    "mediterraneen",
+    "montagnard"
+   ],
+   "styles": [
+    "ville",
+    "champetre"
+   ],
+   "floraison": "",
+   "hiver": "caduc, rouge en automne",
+   "hauteur_m": 8,
+   "entretien": "faible",
+   "couleur": "vert puis rouge"
+  },
+  {
+   "latin": "Vitis vinifera",
+   "nom": "Vigne (treille)",
+   "role": "grimpante",
+   "expo": [
+    "soleil"
+   ],
+   "climats": [
+    "mediterraneen",
+    "oceanique_degrade",
+    "oceanique"
+   ],
+   "styles": [
+    "mediterraneen",
+    "champetre"
+   ],
+   "floraison": "",
+   "hiver": "caduc",
+   "hauteur_m": 5,
+   "entretien": "taille",
+   "couleur": "vert"
+  }
+ ],
+ "climats": {
+  "_doc": "Climat par numéro de département (France métropolitaine). Par défaut : oceanique_degrade.",
+  "oceanique": [
+   "14",
+   "22",
+   "29",
+   "35",
+   "40",
+   "44",
+   "50",
+   "56",
+   "61",
+   "64",
+   "85",
+   "17",
+   "33",
+   "79",
+   "53"
+  ],
+  "mediterraneen": [
+   "04",
+   "06",
+   "11",
+   "13",
+   "2A",
+   "2B",
+   "30",
+   "34",
+   "66",
+   "83",
+   "84",
+   "07",
+   "26",
+   "48"
+  ],
+  "continental": [
+   "08",
+   "10",
+   "21",
+   "25",
+   "39",
+   "51",
+   "52",
+   "54",
+   "55",
+   "57",
+   "58",
+   "67",
+   "68",
+   "70",
+   "71",
+   "88",
+   "89",
+   "90",
+   "01",
+   "03",
+   "42",
+   "43",
+   "63",
+   "69",
+   "71"
+  ],
+  "montagnard": [
+   "05",
+   "09",
+   "15",
+   "38",
+   "65",
+   "73",
+   "74",
+   "19",
+   "23"
+  ]
+ },
+ "styles": {
+  "ville": "jardin de ville : feuillages, structure persistante, strates denses, potées, lumière dans l'ombre",
+  "mediterraneen": "sec et lumineux : gris argent, graminées blondes, olivier, gravier, terre cuite",
+  "champetre": "jardin de campagne naturel : vivaces généreuses, rosiers, graminées, bordures souples",
+  "contemporain": "lignes nettes, répétition, graminées en masses, boules persistantes, bordures acier, palette restreinte",
+  "japonisant": "érable, mousse, bambou, pas japonais, gravier ratissé, asymétrie et calme",
+  "cottage": "profusion fleurie, roses, couleurs pastel"
+ }
+}
