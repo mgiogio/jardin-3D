@@ -164,7 +164,8 @@ def generer(base, zones, c, args, sortie, tag, focal=None):
     if not os.path.exists(vide): Image.new('RGBA', Image.open(base).size, (0, 0, 0, 0)).save(vide)
     env = dict(os.environ, IMG_MODEL=MODELE_IMAGE, FONDU_ZONE='6', MOBILIER_SEPARE='1', HAUT_MOBILIER='0')
     if args.garder: env['GARDER'] = args.garder
-    fj = os.path.join(args.dossier, f'libre_{tag}.json'); json.dump([z['polygone_px'] for z in zones], open(fj, 'w')); env['LIBRE_POLY'] = fj
+    libres = [z['polygone_px'] for z in zones if 'focal' in z.get('nom', '').lower()] or [z['polygone_px'] for z in zones]
+    fj = os.path.join(args.dossier, f'libre_{tag}.json'); json.dump(libres, open(fj, 'w')); env['LIBRE_POLY'] = fj
     if c.get('parcelle_px'):
         pj = os.path.join(args.dossier, 'parcelle.json'); json.dump([c['parcelle_px']], open(pj, 'w')); env['PARCELLE'] = pj
     cmd = ['python3', os.path.join(RENDU, 'amenage.py'), base, zj, '1', cj, sortie, args.calque,

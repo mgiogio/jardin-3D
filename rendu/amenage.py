@@ -46,7 +46,7 @@ lp = np.zeros((H, W), bool)
 if os.environ.get('LIBRE_POLY'):   # zones où la végétation peut passer devant les produits (ex. arbre en pot devant l'angle de la terrasse)
     l_ = Image.new('L', (W, H), 0); dl = ImageDraw.Draw(l_)
     for poly in json.load(open(os.environ['LIBRE_POLY'])): dl.polygon([(x * k, y * k) for x, y in poly], fill=255)
-    lp = (np.asarray(l_) > 0) & parcelle; edit |= lp
+    lp = np.asarray(l_) > 0; edit |= lp   # pas de limite de parcelle ici : la couronne d'un arbre dépasse au-dessus de la clôture
 E = Image.fromarray((edit * 255).astype('uint8'))
 mask = img.convert('RGBA'); mask.putalpha(E.point(lambda v: 0 if v else 255))
 def png(im):
