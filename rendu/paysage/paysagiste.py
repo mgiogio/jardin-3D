@@ -118,8 +118,8 @@ clôture de 1,8 m d'environ 1 m »), à la taille qu'ils ont trois ans après pl
 Règles : aucun texte (diagnostic, intention, point focal, sol, palette, éclairage, entretien) ne cite de coordonnées.
 Grands sujets : 1 à 3, le premier est le point focal. "sol" = point de contact au sol du pied du pot, en coordonnées de la
 grille, à l'intérieur de la parcelle, sur un sol libre (pelouse, terre, dalles), à au moins 60 cm d'une clôture ou d'un mur,
-jamais sur une plante existante ni sur un produit. Banque disponible : {json.dumps({k: {x: v[x] for x in ('nom', 'h', 'expo', 'styles')} for k, v in SUJ.items() if not k.startswith('_')}, ensure_ascii=False)}
-Massifs généreux : au moins 1,2 m de profondeur réelle au pied des clôtures, plus en fond de jardin, contours en courbes
+jamais sur une plante existante ni sur un produit. Le pot peut être posé dans un massif (la plantation l'entoure) ou sur un sol dur. Banque disponible : {json.dumps({k: {x: v[x] for x in ('nom', 'h', 'expo', 'styles')} for k, v in SUJ.items() if not k.startswith('_')}, ensure_ascii=False)}
+Massifs généreux : au moins 1,5 m de profondeur réelle au pied des clôtures, plus en fond de jardin, contours en courbes
 tendues ou lignes nettes selon le style. Règles des zones (massifs bas uniquement, moins de 1 m) : 2 à 4 zones, polygones en coordonnées de la grille, sur le sol ou les murs à aménager, jamais sur les
 produits cernés en magenta, jamais sur la maison (sauf grimpante sur un mur nu), ni sur le ciel. Assez grandes pour être
 généreuses, mais crédibles pour un jardin de particulier. Pas de construction (ni mur, ni abri, ni clôture en plus)."""
@@ -139,6 +139,7 @@ def consigne_image(c, zones):
               "cadrage, la même perspective, la même lumière et le même grain. Hors des zones à modifier rien ne change : "
               "la maison, la pergola, la terrasse, les clôtures, le mobilier, le ciel et les voisins restent identiques.",
               f"Projet d'un architecte paysagiste : {c['intention']} Exposition {c['exposition']}.",
+              f"Lumière : exactement celle de la photo ({c.get('lumiere_photo', 'identique à la photo')}) ; les nouvelles plantes ont la même lumière, les mêmes ombres et la même saturation que le reste de la photo.",
               "Dans les zones à modifier uniquement :"]
     for i, z in enumerate(zones, 1):
         lignes.append(f"{i}. {z['nom']} : {z['consigne']}")
@@ -322,6 +323,9 @@ def main():
             a.calque_ia = poser(a.image, c_, a, suj); generer(suj, zones, c_, a, out, tag)
         else:
             generer(base_massifs, zones, c_, a, out, tag)
+        pj = os.path.join(a.dossier, '_sujets.json')
+        r_ = subprocess.run(['python3', os.path.join(ICI, 'poser_sujets.py'), out, pj, a.cam, union_calques(a), out, '-', '-', 'apres_ia'], capture_output=True, text=True)
+        if r_.returncode: raise RuntimeError(r_.stderr[-1500:])
         return out
     cur = os.path.join(a.dossier, 'v0.jpg')
     if not os.path.exists(cur): cur = version('v0', c, None, c['zones'])

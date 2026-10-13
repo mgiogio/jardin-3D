@@ -12,7 +12,9 @@ img = Image.open(sys.argv[1]).convert('RGB'); W, H = img.size
 pl = json.load(open(sys.argv[2])); cam = json.load(open(sys.argv[3]))
 prod = np.asarray(Image.open(sys.argv[4]).convert('RGBA').resize((W, H)).getchannel('A')) > 120
 dossier = sys.argv[6] if len(sys.argv) > 6 and sys.argv[6] != '-' else os.path.join(ICI, 'sujets')
-sortie_masque = sys.argv[7] if len(sys.argv) > 7 else None
+sortie_masque = sys.argv[7] if len(sys.argv) > 7 and sys.argv[7] != '-' else None
+APRES_IA = len(sys.argv) > 8 and sys.argv[8] == 'apres_ia'
+COUVERT = cam.get('couvert', False)
 masque = np.zeros((H, W), np.float32)
 SUJ = json.load(open(os.path.join(ICI, 'sujets.json')))
 f = (H / 2) / math.tan(math.radians(cam['vfov'] / 2))
@@ -73,10 +75,14 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     proj = np.asarray(Image.fromarray((sil * 255).astype('uint8')).transform((W, H), Image.AFFINE,
             (1, -cc, cc * gy, 0, 1 / e, gy * (1 - 1 / e)), resample=Image.BILINEAR)).astype(np.float32) / 255
     proj[:max(0, int(gy - (Y1 - Y0) * e) - 2)] = 0; proj[int(gy) + 3:] = 0
-    proj = ndi.gaussian_filter(proj, max(2, s.width * 0.03)) * 0.35
+    proj = ndi.gaussian_filter(proj, max(2, s.width * (0.08 if COUVERT else 0.03))) * (0.18 if COUVERT else 0.45)
     sh = np.clip(np.maximum(sh, proj), 0, 0.6)
     sh = ndi.gaussian_filter(sh, 2) * (1 - sil)
     out *= (1 - sh[..., None])
+    ac = ndi.gaussian_filter(ac[..., 0], 0.7)[..., None]            # bord adouci (pas de détourage au cutter)
+    if APRES_IA:   # le bas du pot appartient à la passe IA (plantes devant) : on ne recolle que le haut
+        coupe = int(p['y'] - (Y1 - Y0) * 0.2) - Y0
+        if coupe < ac.shape[0]: ac = ac.copy(); ac[max(0, coupe):] = 0
     out[Y0:Y1, X0:X1] = out[Y0:Y1, X0:X1] * (1 - ac) + Sc[..., :3] * ac
     # produits plus proches que le sujet (leur pied est plus bas dans l'image) : ils repassent devant
     mz = np.zeros((H, W), np.float32); mz[Y0:Y1, X0:X1] = ac[..., 0]
