@@ -314,7 +314,8 @@ def main():
     for t in range(1, a.tours + 1):
         if r['livrable'] or not (r.get('corrections') or r.get('sujets')): break
         c2 = dict(c); 
-        if r.get('sujets'): c2['sujets'] = r['sujets']
+        ok = [s for s in (r.get('sujets') or []) if s.get('sujet') in SUJ and s.get('sol_px')]
+        if ok: c2['sujets'] = ok          # une proposition du relecteur n'est retenue que si elle cite des sujets de la banque
         nm = os.path.join(a.dossier, f'v{t}_massifs.jpg'); nv = os.path.join(a.dossier, f'v{t}.jpg')
         if r.get('corrections'): generer(mas, r['corrections'], c, a, nm, f'v{t}')
         else: Image.open(mas).save(nm, quality=94)
