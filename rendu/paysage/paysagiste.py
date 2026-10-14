@@ -200,16 +200,6 @@ def generer(base, zones, c, args, sortie, tag):
         r = subprocess.run(['python3', os.path.join(ICI, 'vegetation_existante.py'), args.image, union_calques(args), ve], capture_output=True, text=True)
         if r.returncode: raise RuntimeError(r.stderr[-1500:])
         print('   ', r.stdout.strip(), flush=True)
-    # verrou final : hors des zones de massifs (légèrement élargies), l'image est STRICTEMENT celle d'entrée (voisins, voitures, gazon)
-    import numpy as np
-    from scipy import ndimage as ndi_
-    ia = np.asarray(Image.open(sortie).convert('RGB')).astype(np.float32); H_, W_ = ia.shape[:2]
-    bs = np.asarray(Image.open(base).convert('RGB').resize((W_, H_))).astype(np.float32)
-    zm = Image.new('L', (W_, H_), 0); dz = ImageDraw.Draw(zm)
-    for z in zones: dz.polygon([tuple(q) for q in z['polygone_px']], fill=255)
-    zm = ndi_.binary_dilation(np.asarray(zm) > 0, iterations=12)
-    mk = ndi_.gaussian_filter(zm.astype(np.float32), 4)[..., None]
-    Image.fromarray(np.clip(ia * mk + bs * (1 - mk), 0, 255).astype('uint8')).save(sortie, quality=94)
     env['GARDER_MASQUE'] = ve
     cmd = ['python3', os.path.join(RENDU, 'amenage.py'), base, zj, '1', cj, sortie, getattr(args, 'calque_ia', args.calque),
            vide, args.terrasse if args.terrasse != '-' else vide,
@@ -220,6 +210,16 @@ def generer(base, zones, c, args, sortie, tag):
     r = subprocess.run(['python3', os.path.join(ICI, 'garde_existant.py'), sortie, base, zj, sortie, fj], capture_output=True, text=True)
     if r.returncode: raise RuntimeError(r.stderr[-1500:])
     print('   ', r.stdout.strip(), flush=True)
+    # verrou final : hors des zones de massifs (légèrement élargies), l'image est STRICTEMENT celle d'entrée (voisins, voitures, gazon)
+    import numpy as np
+    from scipy import ndimage as ndi_
+    ia = np.asarray(Image.open(sortie).convert('RGB')).astype(np.float32); H_, W_ = ia.shape[:2]
+    bs = np.asarray(Image.open(base).convert('RGB').resize((W_, H_))).astype(np.float32)
+    zm = Image.new('L', (W_, H_), 0); dz = ImageDraw.Draw(zm)
+    for z in zones: dz.polygon([tuple(q) for q in z['polygone_px']], fill=255)
+    zm = ndi_.binary_dilation(np.asarray(zm) > 0, iterations=12)
+    mk = ndi_.gaussian_filter(zm.astype(np.float32), 4)[..., None]
+    Image.fromarray(np.clip(ia * mk + bs * (1 - mk), 0, 255).astype('uint8')).save(sortie, quality=94)
 
 
 RUBRIQUE = """Tu relis un visuel de démonstration commerciale : photo réelle d'un jardin, transformée par un projet paysager autour
