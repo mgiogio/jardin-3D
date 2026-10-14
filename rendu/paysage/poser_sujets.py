@@ -103,7 +103,9 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     out[Y0:Y1, X0:X1] = out[Y0:Y1, X0:X1] * (1 - ac) + Sc[..., :3] * ac
     # produits plus proches que le sujet (leur pied est plus bas dans l'image) : ils repassent devant
     mz = np.zeros((H, W), np.float32); mz[Y0:Y1, X0:X1] = ac[..., 0]
-    masque = np.maximum(masque, ndi.binary_dilation(mz > 0.3, iterations=6).astype(np.float32))   # sujet entier protégé, avec une marge
+    # sujet entier protégé, y compris les trous de la couronne (l'IA ne doit pas repeindre ce qu'on voit entre les branches)
+    sil_ = ndi.binary_closing(mz > 0.3, iterations=max(6, s.width // 12)); sil_ = ndi.binary_fill_holes(sil_)
+    masque = np.maximum(masque, ndi.binary_dilation(sil_, iterations=6).astype(np.float32))
     devant = (pied > p['y'] + 12)
     out[devant] = base[devant]
 Image.fromarray(np.clip(out, 0, 255).astype('uint8')).save(sys.argv[5], quality=94)

@@ -218,6 +218,8 @@ def generer(base, zones, c, args, sortie, tag):
     zm = Image.new('L', (W_, H_), 0); dz = ImageDraw.Draw(zm)
     for z in zones: dz.polygon([tuple(q) for q in z['polygone_px']], fill=255)
     zm = ndi_.binary_dilation(np.asarray(zm) > 0, iterations=12)
+    sm_ = os.path.join(args.dossier, '_sujets_masque.png')
+    if os.path.exists(sm_): zm &= ~(np.asarray(Image.open(sm_).getchannel('A').resize((W_, H_))) > 127)
     mk = ndi_.gaussian_filter(zm.astype(np.float32), 4)[..., None]
     Image.fromarray(np.clip(ia * mk + bs * (1 - mk), 0, 255).astype('uint8')).save(sortie, quality=94)
 
