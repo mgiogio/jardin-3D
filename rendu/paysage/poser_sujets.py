@@ -46,14 +46,26 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     wpx = s.width * hpx / s.height
     s = s.resize((max(2, round(wpx)), max(2, round(hpx))), Image.LANCZOS)
     S = np.asarray(s).astype(np.float32); a = S[..., 3:] / 255
-    def recouvrement(cx):
-        a0, b0 = max(0, round(cx - s.width / 2)), min(W, round(cx + s.width / 2)); t0 = max(0, round(p['y'] - s.height))
+    s0 = s
+    def recouvrement(cx, sw, sh_):
+        a0, b0 = max(0, round(cx - sw / 2)), min(W, round(cx + sw / 2)); t0 = max(0, round(p['y'] - sh_))
         if b0 <= a0: return 1.0
         return float((prod[t0:round(p['y']), a0:b0] & (pied[t0:round(p['y']), a0:b0] < p['y'])).mean())
-    if recouvrement(p['x']) > 0.03:      # ne jamais masquer un produit Cover Green : on glisse le sujet sur sa ligne de sol
-        cands = sorted(range(int(s.width * 0.5), W - int(s.width * 0.5), max(4, s.width // 8)), key=lambda cx: abs(cx - p['x']))
-        best = min(cands[:400], key=lambda cx: (recouvrement(cx) > 0.03, abs(cx - p['x'])))
-        print('  ', p['sujet'], 'décalé de', best - p['x'], 'px pour dégager les produits'); p['x'] = best
+    bord = lambda cx, sw: cx - sw / 2 < W * 0.08 or cx + sw / 2 > W * 0.92      # couronne coupée par le bord / collée au mur
+    if recouvrement(p['x'], s.width, s.height) > 0.03 or bord(p['x'], s.width):
+        choix = None
+        for ech in (1.0, 0.85, 0.72):                    # on glisse d'abord (au plus 20 % de la largeur), puis on réduit le sujet
+            sw, sh_ = s0.width * ech, s0.height * ech
+            cands = [cx for cx in range(int(sw / 2), int(W - sw / 2), max(4, int(sw) // 8)) if abs(cx - p['x']) < W * 0.2]
+            ok = [cx for cx in cands if recouvrement(cx, sw, sh_) <= 0.03 and not bord(cx, sw)]
+            if ok: choix = (min(ok, key=lambda cx: abs(cx - p['x'])), ech); break
+        if choix:
+            print('  ', p['sujet'], 'replacé de', choix[0] - p['x'], 'px, échelle', choix[1], 'pour dégager les produits')
+            p['x'] = choix[0]
+            if choix[1] < 1: s = s0.resize((max(2, round(s0.width * choix[1])), max(2, round(s0.height * choix[1]))), Image.LANCZOS)
+        else:
+            print('  ', p['sujet'], 'impossible à placer sans masquer un produit : non posé'); continue
+    S = np.asarray(s).astype(np.float32)
     x0, y0 = round(p['x'] - s.width / 2), round(p['y'] - s.height)
     # zone d'image couverte (avec découpage aux bords)
     sx0, sy0 = max(0, -x0), max(0, -y0); X0, Y0 = max(0, x0), max(0, y0)
