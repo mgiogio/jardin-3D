@@ -39,7 +39,8 @@ for x in range(W):
             pied[y, x] = bas
         else: bas = -1
         y -= 1
-for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plus proche
+pl = sorted(pl, key=lambda q: q['y'])
+for p in pl:                 # du plus loin au plus proche
     s = Image.open(os.path.join(dossier, p['sujet'] + '.png')).convert('RGBA')
     s = s.crop(s.getchannel('A').point(lambda a: 255 if a > 20 else 0).getbbox())
     hpx = SUJ[p['sujet']]['h'] * ppm(p['y']) * k * p.get('echelle', 1.0)
@@ -52,7 +53,9 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
         if b0 <= a0: return 1.0
         return float((prod[t0:round(p['y']), a0:b0] & (pied[t0:round(p['y']), a0:b0] < p['y'])).mean())
     bord = lambda cx, sw: cx - sw / 2 < W * 0.08 or cx + sw / 2 > W * 0.92      # couronne coupée par le bord / collée au mur
-    if recouvrement(p['x'], s.width, s.height) > 0.03 or bord(p['x'], s.width):
+    if p.get('fixe'):
+        if p.get('echelle_auto', 1) < 1: s = s0.resize((max(2, round(s0.width * p['echelle_auto'])), max(2, round(s0.height * p['echelle_auto']))), Image.LANCZOS)
+    elif recouvrement(p['x'], s.width, s.height) > 0.03 or bord(p['x'], s.width):
         choix = None
         for ech in (1.0, 0.85, 0.72):                    # on glisse d'abord (au plus 20 % de la largeur), puis on réduit le sujet
             sw, sh_ = s0.width * ech, s0.height * ech
@@ -61,10 +64,10 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
             if ok: choix = (min(ok, key=lambda cx: abs(cx - p['x'])), ech); break
         if choix:
             print('  ', p['sujet'], 'replacé de', choix[0] - p['x'], 'px, échelle', choix[1], 'pour dégager les produits')
-            p['x'] = choix[0]
+            p['x'] = choix[0]; p['echelle_auto'] = choix[1]
             if choix[1] < 1: s = s0.resize((max(2, round(s0.width * choix[1])), max(2, round(s0.height * choix[1]))), Image.LANCZOS)
         else:
-            print('  ', p['sujet'], 'impossible à placer sans masquer un produit : non posé'); continue
+            print('  ', p['sujet'], 'impossible à placer sans masquer un produit : non posé'); p['abandon'] = True; continue
     S = np.asarray(s).astype(np.float32)
     x0, y0 = round(p['x'] - s.width / 2), round(p['y'] - s.height)
     # zone d'image couverte (avec découpage aux bords)
@@ -121,6 +124,8 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     devant = (pied > p['y'] + 12)
     out[devant] = base[devant]
 Image.fromarray(np.clip(out, 0, 255).astype('uint8')).save(sys.argv[5], quality=94)
+if not APRES_IA:   # positions finales mémorisées : la pose après l'IA les reprend telles quelles
+    json.dump([dict(q, fixe=True) for q in pl if not q.get('abandon')], open(sys.argv[2], 'w'))
 if sortie_masque:
     o = Image.new('RGBA', (W, H), (0, 0, 0, 0)); o.putalpha(Image.fromarray(((masque > 0.4) * 255).astype('uint8'))); o.save(sortie_masque)
 print('ok', len(pl), 'sujets posés')

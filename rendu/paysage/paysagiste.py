@@ -223,7 +223,7 @@ def generer(base, zones, c, args, sortie, tag):
     prep = os.path.join(args.dossier, f'_prep_{tag}.jpg')
     r = subprocess.run(['python3', os.path.join(ICI, 'bordures.py'), 'preparer', base, zj, exc, prep], capture_output=True, text=True)
     if r.returncode: raise RuntimeError(r.stderr[-1500:])
-    base_ia = prep
+    base_ia = base   # le paillage pré-peint laissait des arcs fantômes dans la pelouse : l'IA part de la photo
     cmd = ['python3', os.path.join(RENDU, 'amenage.py'), base_ia, zj, '1', cj, sortie, getattr(args, 'calque_ia', args.calque),
            vide, args.terrasse if args.terrasse != '-' else vide,
            '0.0']
