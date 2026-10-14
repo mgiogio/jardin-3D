@@ -14,6 +14,7 @@ prod = np.asarray(Image.open(sys.argv[4]).convert('RGBA').resize((W, H)).getchan
 dossier = sys.argv[6] if len(sys.argv) > 6 and sys.argv[6] != '-' else os.path.join(ICI, 'sujets')
 sortie_masque = sys.argv[7] if len(sys.argv) > 7 and sys.argv[7] != '-' else None
 APRES_IA = len(sys.argv) > 8 and sys.argv[8] == 'apres_ia'
+SANS_OMBRE = len(sys.argv) > 8 and sys.argv[8] == 'sans_ombre'   # première pose (avant l'IA) : ombres posées une seule fois, après
 COUVERT = cam.get('couvert', False)
 masque = np.zeros((H, W), np.float32)
 SUJ = json.load(open(os.path.join(ICI, 'sujets.json')))
@@ -45,6 +46,14 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     wpx = s.width * hpx / s.height
     s = s.resize((max(2, round(wpx)), max(2, round(hpx))), Image.LANCZOS)
     S = np.asarray(s).astype(np.float32); a = S[..., 3:] / 255
+    def recouvrement(cx):
+        a0, b0 = max(0, round(cx - s.width / 2)), min(W, round(cx + s.width / 2)); t0 = max(0, round(p['y'] - s.height))
+        if b0 <= a0: return 1.0
+        return float((prod[t0:round(p['y']), a0:b0] & (pied[t0:round(p['y']), a0:b0] < p['y'])).mean())
+    if recouvrement(p['x']) > 0.08:      # ne jamais masquer un produit Cover Green : on glisse le sujet sur sa ligne de sol
+        cands = sorted(range(int(s.width * 0.5), W - int(s.width * 0.5), max(4, s.width // 8)), key=lambda cx: abs(cx - p['x']))
+        best = min(cands[:400], key=lambda cx: (recouvrement(cx) > 0.08, abs(cx - p['x'])))
+        print('  ', p['sujet'], 'décalé de', best - p['x'], 'px pour dégager les produits'); p['x'] = best
     x0, y0 = round(p['x'] - s.width / 2), round(p['y'] - s.height)
     # zone d'image couverte (avec découpage aux bords)
     sx0, sy0 = max(0, -x0), max(0, -y0); X0, Y0 = max(0, x0), max(0, y0)
@@ -67,6 +76,12 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
             mu = Sc[..., :3][m].mean(); Sc[..., :3] = mu + (Sc[..., :3] - mu) * 0.8
             ls = Sc[..., :3].mean(-1, keepdims=True); Sc[..., :3] = ls + (Sc[..., :3] - ls) * 0.75
         for c_ in range(3): Sc[..., c_] = ndi.gaussian_filter(Sc[..., c_], 0.6)
+        hh_, ww_ = Sc.shape[:2]; yy_ = np.linspace(0, 1, hh_)[:, None]; xx_ = np.linspace(0, 1, ww_)[None, :]
+        pot = np.clip((yy_ - 0.62) / 0.06, 0, 1)                                  # bas du sujet = contenant
+        cote = 0.72 + 0.28 * xx_ ** 0.8                                            # face gauche à l'ombre (soleil avant droit)
+        base_ao = 1 - 0.35 * np.clip((yy_ - 0.9) / 0.1, 0, 1)                     # assombri au contact du sol
+        fac = 1 - pot * (1 - cote * base_ao) * (0.5 if COUVERT else 1.0)
+        Sc[..., :3] *= fac[..., None]
     # ombres : ombre de contact (ellipse au pied) et ombre portée douce vers l'arrière gauche
     sh = np.zeros((H, W), np.float32)
     yy, xx = np.ogrid[:H, :W]
@@ -81,7 +96,7 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
     proj = ndi.gaussian_filter(proj, max(2, s.width * (0.08 if COUVERT else 0.03))) * (0.18 if COUVERT else 0.45)
     sh = np.clip(np.maximum(sh, proj), 0, 0.6)
     sh = ndi.gaussian_filter(sh, 2) * (1 - sil)
-    out *= (1 - sh[..., None])
+    if not SANS_OMBRE: out *= (1 - sh[..., None])
     ac = ndi.gaussian_filter(ac[..., 0], 0.7)[..., None]            # bord adouci (pas de détourage au cutter)
     if APRES_IA:   # le bas du pot appartient à la passe IA (plantes devant) : on ne recolle que le haut
         pass

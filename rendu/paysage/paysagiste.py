@@ -116,7 +116,9 @@ les voitures, les portails et clôtures des voisins. Les zones doivent rester à
 Chaque consigne donne les hauteurs des végétaux en mètres ET par rapport aux repères visibles (ex. « l'arbre dépasse la
 clôture de 1,8 m d'environ 1 m »), à la taille qu'ils ont trois ans après plantation, pas à maturité.
 Règles : aucun texte (diagnostic, intention, point focal, sol, palette, éclairage, entretien) ne cite de coordonnées.
-Grands sujets : 1 à 3, le premier est le point focal. "sol" = point de contact au sol du pied du pot, en coordonnées de la
+Grands sujets : 1 à 3, le premier est le point focal. Un grand sujet ne se place JAMAIS devant un produit Cover Green
+(pergola, terrasse, clôture) ni dans l'axe de vue de la pergola : il l'accompagne sur le côté ou en avant-plan latéral, à
+au moins 1,5 m d'un mur de maison (couronne comprise) et sans cacher une plante existante remarquable. "sol" = point de contact au sol du pied du pot, en coordonnées de la
 grille, à l'intérieur de la parcelle, sur un sol libre (pelouse, terre, dalles), à au moins 60 cm d'une clôture ou d'un mur,
 jamais sur une plante existante ni sur un produit. Le pot peut être posé dans un massif (la plantation l'entoure) ou sur un sol dur. Banque disponible : {json.dumps({k: {x: v[x] for x in ('nom', 'h', 'expo', 'styles')} for k, v in SUJ.items() if not k.startswith('_')}, ensure_ascii=False)}
 Massifs généreux : au moins 1,5 m de profondeur réelle au pied des clôtures, plus en fond de jardin, contours en courbes
@@ -175,7 +177,7 @@ def poser(base, c, args, sortie):
     """Pose les grands sujets sur l'image de base ; renvoie le calque produits + sujets (protégé de l'IA)."""
     pj = os.path.join(args.dossier, '_sujets.json'); mj = os.path.join(args.dossier, '_sujets_masque.png')
     json.dump([{'sujet': s['sujet'], 'x': s['sol_px'][0], 'y': s['sol_px'][1]} for s in c.get('sujets', []) if s['sujet'] in SUJ], open(pj, 'w'))
-    r = subprocess.run(['python3', os.path.join(ICI, 'poser_sujets.py'), base, pj, args.cam, union_calques(args), sortie, '-', mj], capture_output=True, text=True)
+    r = subprocess.run(['python3', os.path.join(ICI, 'poser_sujets.py'), base, pj, args.cam, union_calques(args), sortie, '-', mj, 'sans_ombre'], capture_output=True, text=True)
     if r.returncode: raise RuntimeError(r.stderr[-1500:])
     from PIL import ImageChops
     cal = Image.open(args.calque).convert('RGBA'); a = ImageChops.lighter(cal.getchannel('A'), Image.open(mj).getchannel('A').resize(cal.size))
