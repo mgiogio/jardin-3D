@@ -50,9 +50,9 @@ for p in sorted(pl, key=lambda q: q['y']):                 # du plus loin au plu
         a0, b0 = max(0, round(cx - s.width / 2)), min(W, round(cx + s.width / 2)); t0 = max(0, round(p['y'] - s.height))
         if b0 <= a0: return 1.0
         return float((prod[t0:round(p['y']), a0:b0] & (pied[t0:round(p['y']), a0:b0] < p['y'])).mean())
-    if recouvrement(p['x']) > 0.08:      # ne jamais masquer un produit Cover Green : on glisse le sujet sur sa ligne de sol
+    if recouvrement(p['x']) > 0.03:      # ne jamais masquer un produit Cover Green : on glisse le sujet sur sa ligne de sol
         cands = sorted(range(int(s.width * 0.5), W - int(s.width * 0.5), max(4, s.width // 8)), key=lambda cx: abs(cx - p['x']))
-        best = min(cands[:400], key=lambda cx: (recouvrement(cx) > 0.08, abs(cx - p['x'])))
+        best = min(cands[:400], key=lambda cx: (recouvrement(cx) > 0.03, abs(cx - p['x'])))
         print('  ', p['sujet'], 'décalé de', best - p['x'], 'px pour dégager les produits'); p['x'] = best
     x0, y0 = round(p['x'] - s.width / 2), round(p['y'] - s.height)
     # zone d'image couverte (avec découpage aux bords)
