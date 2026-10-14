@@ -155,8 +155,6 @@ def consigne_image(c, zones):
                   "(pergola, terrasse, clôtures) restent identiques : les plantes poussent devant, jamais à leur place.")
     lignes.append("Plantation de paysagiste : grandes masses de 5 à 7 pieds de la même plante, répétées, sol entièrement "
                   "couvert, pas de plantes annuelles ni de fleurs de balcon (pas de pétunias, surfinias, géraniums de balcon). "
-                  "Les zones à modifier sont des lits de plantation déjà paillés d'écorce : on y plante densément, le paillage "
-                  "n'est visible qu'entre les plantes, et le bord du massif reste net (une bordure acier sera posée). "
                   "Les pots et bacs déjà posés restent tels quels : les massifs les entourent et passent un peu devant leur pied, "
                   "avec une ombre douce au sol.")
     lignes.append("Plantes installées depuis deux ou trois ans, sol couvert, bordures nettes. Photo naturelle et crédible, "
@@ -198,7 +196,7 @@ def lisser(poly, n=3):
 
 
 def generer(base, zones, c, args, sortie, tag):
-    zones = [dict(z, polygone_px=lisser(z['polygone_px'])) for z in zones]
+    if os.environ.get('LISSER_ZONES'): zones = [dict(z, polygone_px=lisser(z['polygone_px'])) for z in zones]
     zj = os.path.join(args.dossier, f'zones_{tag}.json'); json.dump([z['polygone_px'] for z in zones], open(zj, 'w'))
     cj = os.path.join(args.dossier, f'consigne_{tag}.txt'); open(cj, 'w').write(consigne_image(c, zones))
     vide = os.path.join(args.dossier, '_vide.png')
@@ -245,8 +243,9 @@ def generer(base, zones, c, args, sortie, tag):
     if os.path.exists(sm_): zm &= ~(np.asarray(Image.open(sm_).getchannel('A').resize((W_, H_))) > 127)
     mk = ndi_.gaussian_filter(zm.astype(np.float32), 4)[..., None]
     Image.fromarray(np.clip(ia * mk + bs * (1 - mk), 0, 255).astype('uint8')).save(sortie, quality=94)
-    r = subprocess.run(['python3', os.path.join(ICI, 'bordures.py'), 'border', sortie, zj, exc, sortie], capture_output=True, text=True)
-    if r.returncode: raise RuntimeError(r.stderr[-1500:])
+    if os.environ.get('BORDURE_ACIER'):   # expérimental : arcs parasites sur la pelouse en test, désactivé par défaut
+        r = subprocess.run(['python3', os.path.join(ICI, 'bordures.py'), 'border', sortie, zj, exc, sortie], capture_output=True, text=True)
+        if r.returncode: raise RuntimeError(r.stderr[-1500:])
 
 
 RUBRIQUE = """Tu relis un visuel de démonstration commerciale : photo réelle d'un jardin, transformée par un projet paysager autour
