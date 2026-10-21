@@ -245,3 +245,4 @@ h2 { font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
 .summary dt { font-weight: 600; color: var(--ink-2); }
 .summary dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 520px) { .summary div { grid-template-columns: 1fr; gap: 2px; } }
+.upload.is-drag { border-color: var(--green); background: #DDF1D5; border-style: solid; }

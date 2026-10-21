@@ -196,7 +196,7 @@ const STEPS = [
     render: () => `
       <div id="photo-list" class="photo-grid"></div>
       <label class="upload upload-main" id="photo-label"><input id="files" type="file" accept="image/*" multiple>
-        <span>Ajouter une photo</span><small>Prenez-la maintenant ou choisissez-la dans vos photos</small></label>
+        <span>Ajouter une photo</span><small>Prenez-la maintenant, choisissez-la dans vos photos ou glissez-la ici</small></label>
       <p class="small" id="photo-more"></p>`,
     mount(root) {
       const list = $('#photo-list', root), more = $('#photo-more', root);
@@ -218,9 +218,9 @@ const STEPS = [
       // Le téléphone propose lui-même « Prendre une photo » ou « Photothèque ».
       // Capteurs allumés au clic ; une photo datée de moins de 2 minutes vient d'être prise sur place.
       $('#photo-label', root).addEventListener('click', () => { startSensors(); });
-      $('#files', root).addEventListener('change', async (e) => {
+      const addFiles = async (files) => {
         const snap = sensorSnapshot();
-        for (const f of [...e.target.files].slice(0, 3 - state.photos.length)) {
+        for (const f of [...files].filter((x) => x.type.startsWith('image/')).slice(0, 3 - state.photos.length)) {
           const p = { name: f.name, size: f.size, type: f.type, file: f, url: URL.createObjectURL(f), guess: null };
           const justTaken = Date.now() - (f.lastModified || 0) < 120000;
           const ex = await readExifView(f);
@@ -229,8 +229,14 @@ const STEPS = [
           state.photos.push(p);
           if (state.photos.length === 1) state.view = null;
         }
-        e.target.value = ''; draw();
-      });
+        draw();
+      };
+      $('#files', root).addEventListener('change', async (e) => { await addFiles(e.target.files); e.target.value = ''; });
+      // Glisser-déposer (ordinateur) : sur toute l'étape, la zone d'ajout s'allume au survol
+      const lab = $('#photo-label', root);
+      ['dragenter', 'dragover'].forEach((ev) => root.addEventListener(ev, (e) => { e.preventDefault(); lab.classList.add('is-drag'); }));
+      ['dragleave', 'dragend'].forEach((ev) => root.addEventListener(ev, (e) => { if (!root.contains(e.relatedTarget)) lab.classList.remove('is-drag'); }));
+      root.addEventListener('drop', async (e) => { e.preventDefault(); lab.classList.remove('is-drag'); if (e.dataTransfer?.files?.length) await addFiles(e.dataTransfer.files); });
       list.addEventListener('click', (e) => {
         const del = e.target.closest('[data-del]'); if (!del) return;
         const i = +del.dataset.del; URL.revokeObjectURL(state.photos[i].url); state.photos.splice(i, 1);
