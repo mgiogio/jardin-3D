@@ -228,9 +228,10 @@ def generer(base, zones, c, args, sortie, tag):
     r = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if r.returncode: raise RuntimeError(r.stderr[-1500:])
     # garde-fou : l'existant (maisons, voitures, caissons, portails, murs) n'est jamais repeint, seul le feuillage peut passer devant
-    r = subprocess.run(['python3', os.path.join(ICI, 'garde_existant.py'), sortie, base, zj, sortie, fj], capture_output=True, text=True)
-    if r.returncode: raise RuntimeError(r.stderr[-1500:])
-    print('   ', r.stdout.strip(), flush=True)
+    if not os.environ.get('SANS_GARDE'):   # SANS_GARDE=1 : zones préparées à la main (sol nettoyé), rien d'existant à protéger dedans
+        r = subprocess.run(['python3', os.path.join(ICI, 'garde_existant.py'), sortie, base, zj, sortie, fj], capture_output=True, text=True)
+        if r.returncode: raise RuntimeError(r.stderr[-1500:])
+        print('   ', r.stdout.strip(), flush=True)
     # verrou final : hors des zones de massifs (légèrement élargies), l'image est STRICTEMENT celle d'entrée (voisins, voitures, gazon)
     import numpy as np
     from scipy import ndimage as ndi_
