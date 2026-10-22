@@ -5,7 +5,7 @@ src, cal, prompt, out = sys.argv[1:5]
 img = Image.open(src).convert('RGB'); W, H = img.size
 fen = np.asarray(Image.open(cal).convert('RGBA').getchannel('A')) > 120
 m = Image.new('L', (W, H), 0); d = ImageDraw.Draw(m)
-d.polygon([(0, 1400), (262, 1240), (262, 1050), (818, 1050), (818, 1190), (1095, 1190), (1120, 1380), (1180, 1500), (1180, 1920), (0, 1920)], fill=255)
+d.polygon([(0, 1400), (262, 1240), (262, 995), (818, 995), (818, 1190), (1095, 1190), (1120, 1380), (1180, 1500), (1180, 1920), (0, 1920)], fill=255)
 edit = np.asarray(m) > 0
 pied = np.zeros((H, W), bool)                       # plantes autorisées devant le bas de la clôture
 for x in range(W):
