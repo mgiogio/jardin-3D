@@ -1,0 +1,66 @@
+{
+ "_note": "Produits Cover Green proposés par le diagnostic. Fourchettes volontairement arrondies (les produits sont configurés sur le site). Les photos de référence servent à reproduire NOS produits dans le visuel.",
+ "cloture": {
+  "nom": "Clôture bois occultante",
+  "lien": "https://www.cover.green/cloture-bois-jardin/",
+  "prix_m": [
+   115,
+   140
+  ],
+  "hauteur": "1,80 m",
+  "refs": [
+   "cloture_ensemble.jpg",
+   "cloture_angle.jpg",
+   "cloture_lames.jpg"
+  ],
+  "description_visuel": "la clôture bois Cover Green occultante à lames horizontales jointives en Douglas, poteaux carrés en bois, teinte bois naturel légèrement doré, hauteur 1,80 m",
+  "photo": "cloture_ensemble.jpg"
+ },
+ "pergola": {
+  "nom": "Pergola bois brise-soleil",
+  "lien": "https://www.cover.green/pergola-autoportante-3x3/",
+  "prix": [
+   1100,
+   1400
+  ],
+  "format": "autoportante 3 x 3 m",
+  "refs": [
+   "pergola_ensemble.jpg",
+   "pergola_lames.jpg",
+   "pergola_connecteurs.jpg"
+  ],
+  "description_visuel": "la pergola bois Cover Green autoportante 3 x 3 m : poteaux carrés 9 x 9 cm en lamellé-collé, poutres doubles, toiture brise-soleil à lames fines rapprochées posées sur les poutres, connecteurs d'angle en métal gris anthracite, teinte bois naturel légèrement doré, hauteur 2,50 m",
+  "photo": "pergola_ensemble.jpg"
+ },
+ "besoins": {
+  "intimite": [
+   "cloture",
+   "pergola"
+  ],
+  "ombre": [
+   "pergola"
+  ],
+  "recevoir": [
+   "pergola",
+   "cloture"
+  ],
+  "embellir": [
+   "cloture"
+  ],
+  "sol": [
+   "pergola"
+  ],
+  "_defaut": [
+   "cloture",
+   "pergola"
+  ]
+ },
+ "refs_urls": {
+  "pergola_ensemble.jpg": "https://cover.green/wp-content/uploads/2026/08/brottier-2-768x1024.jpg",
+  "pergola_lames.jpg": "https://cover.green/wp-content/uploads/2026/08/sibenaler-1.jpg",
+  "pergola_connecteurs.jpg": "https://cover.green/wp-content/uploads/2026/08/devaux-1-1024x768.jpg",
+  "cloture_ensemble.jpg": "https://cover.green/wp-content/uploads/2026/08/moiroux-2-1024x768.jpg",
+  "cloture_angle.jpg": "https://cover.green/wp-content/uploads/2026/08/moiroux-1-1024x768.jpg",
+  "cloture_lames.jpg": "https://cover.green/wp-content/uploads/2026/08/dardonville-1-1024x768.jpg"
+ }
+}

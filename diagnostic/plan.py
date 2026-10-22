@@ -4,6 +4,8 @@ import sys, json, math, numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from scipy import ndimage as ndi
 D, out = sys.argv[1], sys.argv[2]
+import os
+AUTO = os.environ.get('PLAN_AUTO') == '1'          # mode automatique : pas de rue supposée ni de produits placés à la main
 g = np.load(f'{D}/geo.npz', allow_pickle=True); dg = json.load(open(f'{D}/diagnostic.json'))
 pts, ete, par, mai = g['pts'], g['ete'], g['parcelle'], g['maison']
 bats, hb, cli = g['bats'], g['hb'], g['client']
@@ -23,8 +25,9 @@ def halo(self, xy, t, **k):
 ImageDraw.ImageDraw.text = halo
 # rue au sud de la parcelle
 ys = par[:, 1].min()
-d.rectangle([0, T(0, ys - 1.2)[1], W, T(0, ys - 6.5)[1]], fill=C['road'])
-d.text((W / 2, T(0, ys - 3.9)[1]), 'RUE', font=font(11 * SS, True), fill=C['muted'], anchor='mm')
+if not AUTO:
+    d.rectangle([0, T(0, ys - 1.2)[1], W, T(0, ys - 6.5)[1]], fill=C['road'])
+    d.text((W / 2, T(0, ys - 3.9)[1]), 'RUE', font=font(11 * SS, True), fill=C['muted'], anchor='mm')
 # soleil : raster lissé, limité au jardin
 grid = np.full((H, W), np.nan, np.float32)
 acc = np.zeros((H, W), np.float32); cnt = np.zeros((H, W), np.float32)
@@ -67,19 +70,26 @@ for v in [v for v in dg['vis_a_vis'] if v['hauteur_m'] >= 6][:2]:
         d.line([p0, p1], fill=C['red'], width=2 * SS)
     d.ellipse([a[0] - 5 * SS, a[1] - 5 * SS, a[0] + 5 * SS, a[1] + 5 * SS], fill=C['red'])
     d.text((a[0], a[1] + 9 * SS), "vue depuis l'étage", font=font(9 * SS, True), fill=C['red'], anchor='mt')
-# produits proposés (cour avant)
-xs = par[:, 0].min(); yh = mai[:, 1].min()
-fx = xs + 0.35
-d.line([T(fx, yh + 0.3), T(fx, ys + 0.2)], fill=C['fence'], width=5 * SS)
-d.text((T(fx, (yh + ys) / 2)[0] - 8 * SS, T(fx, (yh + ys) / 2)[1]), 'Clôture 1,80 m', font=font(10 * SS, True), fill=C['fence'], anchor='rm')
-px0 = xs + 1.0; py0 = ys + 0.3
-d.rectangle([T(px0, py0 + 3)[0], T(px0, py0 + 3)[1], T(px0 + 3, py0)[0], T(px0 + 3, py0)[1]], fill=(255, 255, 255), outline=C['perg'], width=3 * SS)
-for k in range(1, 10):
-    xx = px0 + 3 * k / 10; d.line([T(xx, py0 + 3), T(xx, py0)], fill=C['perg'], width=SS)
-d.text((T(px0 + 3, py0 + 1.5)[0] + 8 * SS, T(px0 + 3, py0 + 1.5)[1]), 'Pergola\n3 x 3 m', font=font(10 * SS, True), fill=C['perg'], anchor='lm')
+if not AUTO:
+    # produits proposés (cour avant)
+    xs = par[:, 0].min(); yh = mai[:, 1].min()
+    fx = xs + 0.35
+    d.line([T(fx, yh + 0.3), T(fx, ys + 0.2)], fill=C['fence'], width=5 * SS)
+    d.text((T(fx, (yh + ys) / 2)[0] - 8 * SS, T(fx, (yh + ys) / 2)[1]), 'Clôture 1,80 m', font=font(10 * SS, True), fill=C['fence'], anchor='rm')
+    px0 = xs + 1.0; py0 = ys + 0.3
+    d.rectangle([T(px0, py0 + 3)[0], T(px0, py0 + 3)[1], T(px0 + 3, py0)[0], T(px0 + 3, py0)[1]], fill=(255, 255, 255), outline=C['perg'], width=3 * SS)
+    for k in range(1, 10):
+        xx = px0 + 3 * k / 10; d.line([T(xx, py0 + 3), T(xx, py0)], fill=C['perg'], width=SS)
+    d.text((T(px0 + 3, py0 + 1.5)[0] + 8 * SS, T(px0 + 3, py0 + 1.5)[1]), 'Pergola\n3 x 3 m', font=font(10 * SS, True), fill=C['perg'], anchor='lm')
 # étiquette jardin arrière
-jy = (mai[:, 1].max() + par[:, 1].max()) / 2
-d.text(T(par[:, 0].mean(), jy), 'Jardin arrière\nplein soleil', font=font(12 * SS, True), fill=C['ink'], anchor='mm', align='center')
+if AUTO:   # étiquette au point du jardin le plus loin de la maison
+    from shapely.geometry import Polygon as _P, Point as _Pt
+    mp = _P(mai); pp = _P(par); ok = [q for q in pts if pp.exterior.distance(_Pt(q)) > 2.5] or list(pts)
+    far = max(ok, key=lambda q: min(mp.distance(_Pt(q)), 12) - 0.3 * abs(mp.distance(_Pt(q)) - 12)); h = float(np.mean(ete))
+    d.text(T(*far), f'Votre jardin\n{h:.0f} h de soleil en juin'.replace('.', ','), font=font(11 * SS, True), fill=C['ink'], anchor='mm', align='center')
+else:
+    jy = (mai[:, 1].max() + par[:, 1].max()) / 2
+    d.text(T(par[:, 0].mean(), jy), 'Jardin arrière\nplein soleil', font=font(12 * SS, True), fill=C['ink'], anchor='mm', align='center')
 # nord + échelle
 nx, ny = W - 26 * SS, 30 * SS
 d.polygon([(nx, ny - 16 * SS), (nx - 8 * SS, ny + 8 * SS), (nx, ny + 3 * SS), (nx + 8 * SS, ny + 8 * SS)], fill=C['ink'])

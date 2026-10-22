@@ -50,6 +50,13 @@ for p in choix:
 json.dump({'climat': clim, 'expo': expo, 'style': style, 'plantes': plantes}, open(f'{OUT}/plantes.json', 'w'), ensure_ascii=False, indent=1)
 print(clim, expo, style, [p['nom'] for p in plantes])
 
+# ---- photos des plantes : banque générée une fois (banque_plantes.py) ----
+BANQUE = os.environ.get('BANQUE_PLANTES', '')
+slug = lambda t: re.sub(r'[^a-z0-9]+', '-', t.lower()).strip('-')[:50]
+for p in plantes: p['photo'] = f"{slug(p['latin'])}.jpg"
+if os.environ.get('SAISONS_VISUELS', '1') == '0':
+    json.dump({'climat': clim, 'expo': expo, 'style': style, 'plantes': plantes}, open(f'{OUT}/plantes.json', 'w'), ensure_ascii=False, indent=1)
+    sys.exit(0)
 # ---- visuels ----
 KEY = os.environ['OPENAI_API_KEY']; MODEL = os.environ.get('IMG_MODEL', 'gpt-image-2.5-sunburst')
 def post(url, body, ct):
