@@ -1,177 +1,157 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex"><title>Mon projet jardin Cover Green</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap">
+<style>body{margin:0;background:#fff}</style></head><body>
+<!--DEBUT-->
 <style>
-/* Mise en page : une colonne de lecture (projet du client), cartes de constats en grille, liste de matériel façon bon de commande, barre d'action collante en bas sur mobile */
-:root{
-  --bg:#f5f6f2; --surface:#ffffff; --ink:#1d2a22; --muted:#5d6b62; --line:#dfe4dc;
-  --green:#1f5a3d; --green-soft:#e3efe7; --orange:#e8742a; --orange-ink:#ffffff; --sun:#f2a62b; --warn:#b4472b;
-  --display:"Roboto Slab", Georgia, serif; --body:"Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#121813;--surface:#1b231d;--ink:#e8eee9;--muted:#a3b1a7;--line:#2c3830;--green:#7cc49b;--green-soft:#1f3328;--orange:#f08a44;--orange-ink:#1b1208;--sun:#f2b24b;--warn:#e7876b;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#121813;--surface:#1b231d;--ink:#e8eee9;--muted:#a3b1a7;--line:#2c3830;--green:#7cc49b;--green-soft:#1f3328;--orange:#f08a44;--orange-ink:#1b1208;--sun:#f2b24b;--warn:#e7876b;color-scheme:dark}
-*{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--body)}
-.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
-.maquette{background:var(--green-soft);color:var(--green);font-size:13px;padding-block:8px;text-align:center}
-.maquette .wrap{padding-block:0}
-header.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:18px;border-bottom:1px solid var(--line)}
-.logo{font:700 20px/1 var(--display);color:var(--green);letter-spacing:.01em}
-.logo small{display:block;font:500 11px/1.4 var(--body);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
-.ref{font-size:13px;color:var(--muted);text-align:right}
-.ref b{color:var(--ink);font-variant-numeric:tabular-nums}
-.hero{padding-block:28px 8px}
-.eyebrow{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--green);font-weight:700}
-h1{font:700 clamp(28px,5vw,42px)/1.12 var(--display);margin:.25em 0 .3em;text-wrap:balance}
-h2{font:700 clamp(22px,3.4vw,28px)/1.2 var(--display);margin:0 0 6px;text-wrap:balance}
-.lead{color:var(--muted);max-width:62ch;margin:0}
-.reserve{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px}
-.reserve .dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
-section{padding-block:34px 6px}
-.sub{color:var(--muted);margin:0 0 18px;max-width:64ch}
+/* Page « Mon projet jardin » - charte Cover Green v1.1. Tout est préfixé .cgp pour cohabiter avec le thème du site. */
+.cgp{--vert:#049E00;--orange:#EB5A00;--orange-survol:#C84800;--orange-pale:#FDEBE0;--brume:#EAF7E5;--gris:#F4F6F7;--txt:#1E211F;--muted:#5B625E;--ligne:#E1E5E3;
+  color:var(--txt);font:400 16px/1.6 "Roboto","Roboto Secours",Arial,sans-serif;font-variant-ligatures:none;-webkit-font-smoothing:antialiased}
+.cgp *{box-sizing:border-box}
+.cgp .wrap{max-width:1080px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px)) 64px}
+.cgp h1,.cgp h2,.cgp h3,.cgp h4{font-family:inherit;color:var(--txt);margin:0}
+.cgp .v{color:var(--vert)}
+.cgp .pt{color:var(--orange)}
+/* en-tête de page */
+.cgp .hero{padding:32px 0 8px}
+.cgp .eyebrow{font-size:14px;font-weight:700;color:var(--vert)}
+.cgp h1{font-weight:800;font-size:clamp(32px,5vw,48px);line-height:1.1;margin:6px 0 12px}
+.cgp .lead{color:var(--muted);max-width:64ch;margin:0}
+.cgp .ref{font-size:13px;color:var(--muted);margin-top:10px}
+/* onglets vers les sections */
+.cgp .onglets{position:sticky;top:var(--cgp-haut,0px);z-index:20;background:#fff;border-bottom:1px solid var(--ligne);margin:20px 0 0}
+.cgp .onglets ul{list-style:none;margin:0 auto;padding:10px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;max-width:1080px}
+.cgp .onglets ul::-webkit-scrollbar{display:none}
+.cgp .onglets a{display:block;white-space:nowrap;text-decoration:none;color:var(--txt);font-weight:500;font-size:15px;padding:9px 16px;border-radius:8px;background:var(--gris)}
+.cgp .onglets a:hover{background:var(--brume)}
+.cgp .onglets a.on{background:var(--vert);color:#fff;font-weight:700}
+.cgp .onglets a:focus-visible{outline:2px solid var(--vert);outline-offset:2px}
+.cgp section{padding:48px 0 0;scroll-margin-top:calc(var(--cgp-haut,0px) + 72px)}
+.cgp h2{font-weight:800;font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin-bottom:8px}
+.cgp h3{font-weight:700;font-size:18px;line-height:1.3}
+.cgp .sub{color:var(--muted);margin:0 0 22px;max-width:66ch}
+.cgp .carte{background:#fff;border:1px solid var(--ligne);border-radius:8px}
 /* avant / après */
-.cmp{position:relative;max-width:560px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--line);user-select:none;touch-action:pan-y}
-.cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.cmp .av{clip-path:inset(0 calc(100% - var(--p,50%)) 0 0)}
-.cmp .bar{position:absolute;top:0;bottom:0;left:var(--p,50%);width:3px;background:#fff;transform:translateX(-50%);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
-.cmp .tag{position:absolute;top:12px;font:700 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;background:rgba(0,0,0,.55);color:#fff;padding:6px 8px;border-radius:4px}
-.cmp .tag.l{left:12px}.cmp .tag.r{right:12px}
-.cmp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
-.visu{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:28px;align-items:start}
-.visu aside{min-width:0}
-.note{font-size:13px;color:var(--muted);margin-top:10px}
-.bullets{margin:0;padding:0;list-style:none;display:grid;gap:12px}
-.bullets li{display:grid;grid-template-columns:22px 1fr;gap:10px}
-.bullets li::before{content:"";width:10px;height:10px;margin-top:8px;border-radius:2px;background:var(--green)}
-/* constats */
-.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.fact{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:6px;align-content:start}
-.fact .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.fact .v{font:700 30px/1.1 var(--display);font-variant-numeric:tabular-nums}
-.fact .v small{font:500 15px var(--body);color:var(--muted)}
-.fact p{margin:0;font-size:15px}
-.fact .so{font-size:14px;color:var(--green);font-weight:500}
-.sunbar{display:flex;gap:2px;height:14px;margin-top:4px}
-.sunbar i{flex:1;border-radius:2px;background:var(--line)}
-.sunbar i.on{background:var(--sun)}
-.sunbar i.hot{background:var(--orange)}
-.hours{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.planrow{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:24px;margin-top:20px;align-items:start}
-.plan{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
-.plan img{display:block;width:100%;border-radius:6px}
-.legend{display:grid;gap:8px;font-size:14px;margin:0;padding:0;list-style:none}
-.legend li{display:flex;gap:10px;align-items:center}
-.sw{width:16px;height:16px;border-radius:3px;flex:none}
-/* matériel */
-.bom{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.grp{padding:16px 18px;border-bottom:1px solid var(--line)}
-.grp h3{font:700 18px/1.3 var(--display);margin:0 0 4px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.grp h3 span{font:500 14px var(--body);color:var(--muted)}
-.grp .why{font-size:14px;color:var(--muted);margin:0 0 10px}
-.line{display:grid;grid-template-columns:56px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding-block:8px;border-top:1px dashed var(--line)}
-.line:first-of-type{border-top:0}
-.line img{width:56px;height:56px;object-fit:cover;border-radius:6px;background:var(--line)}
-.line .n{min-width:0}
-.line .n b{display:block;font-weight:500;font-size:15px}
-.line .n small{color:var(--muted);font-size:13px}
-.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.qty button{width:32px;height:32px;border:0;background:transparent;color:var(--ink);font:500 18px var(--body);cursor:pointer}
-.qty button:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
-.qty output{min-width:30px;text-align:center;font-variant-numeric:tabular-nums}
-.price{min-width:88px;text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
-.prod{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:16px;align-items:start}
-.prod img{width:96px;height:96px;object-fit:cover;border-radius:8px}
-.prod h3{font:700 18px/1.3 var(--display);margin:0 0 4px}
-.spec{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 0 8px}
-.spec div{display:flex;gap:6px;font-size:14px}.spec dt{color:var(--muted)}.spec dd{margin:0;font-weight:500}
-.slide{display:grid;gap:4px;font-size:13px;color:var(--muted);max-width:280px}
-.slide input{accent-color:var(--green)}
-.est{display:grid;gap:6px;justify-items:end;text-align:right;min-width:150px}
-.est small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
-.est b{font:700 19px var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
-.btn.sm{padding:8px 14px;font-size:14px}
-.refs{display:grid;grid-template-columns:1fr 1fr;gap:10px}.refs img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px}
-.diag2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.diag2 div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}.diag2 h3{font:700 17px var(--display);margin:0 0 8px}.diag2 ul{margin:0;padding-left:18px;display:grid;gap:6px}
-@media (max-width:760px){.diag2{grid-template-columns:1fr}}
-.tot{padding:18px;display:grid;gap:6px;background:var(--green-soft)}
-.tot .r{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
-.tot .big{font:700 26px var(--display)}
-.tot .ok{color:var(--green);font-weight:500}
-.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
-.btn{appearance:none;border:0;border-radius:8px;padding:14px 20px;font:700 16px var(--body);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
-.btn.cta{background:var(--orange);color:var(--orange-ink)}
-.btn.ghost{background:transparent;color:var(--green);border:2px solid var(--green)}
-.btn:focus-visible{outline:3px solid var(--green);outline-offset:2px}
-.toast{margin-top:12px;font-size:14px;color:var(--green);font-weight:500}
-/* étapes suivantes */
-.next{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:8px;align-content:start}
-.step .lock{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
-.step.done .lock{color:var(--green)}
-.step h4{margin:0;font:700 17px/1.3 var(--display)}
-.step p{margin:0;font-size:14px;color:var(--muted)}
-.saisons{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:28px;align-items:start}
-.sview .simg{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;display:block}
-.stabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.stab{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:500 14px var(--body);cursor:pointer}
-.stab.on{background:var(--green);border-color:var(--green);color:var(--surface)}
-.stab:focus-visible{outline:2px solid var(--green);outline-offset:2px}
-.cal{min-width:0;overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
-.cal table{border-collapse:separate;border-spacing:3px;width:100%;font-size:13px}
-.cal th{font-weight:500;color:var(--muted);text-align:center}
-.cal tbody th{text-align:left;color:var(--ink);white-space:nowrap;padding-right:8px}
-.cal td{height:22px;min-width:18px;border-radius:3px;background:var(--bg)}
-.cal td.fo{background:var(--green-soft)}
-.cal td.fl{background:var(--orange)}
-.calleg{display:flex;gap:16px;margin-top:10px}
-.pcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:22px}
-.pcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:grid;align-content:start}
-.pcard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
-.pc{padding:14px;display:grid;gap:4px}
-.pc .role{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);font-weight:700}
-.pc h4{margin:0;font:700 17px/1.25 var(--display)}
-.pc i{color:var(--muted);font-size:13px}
-.badges{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}
-.badge{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--green-soft);color:var(--green);font-weight:500}
-.pc dl{margin:4px 0 0;display:grid;gap:3px;font-size:13px}
-.pc dl div{display:grid;grid-template-columns:72px 1fr;gap:6px}.pc dt{color:var(--muted)}.pc dd{margin:0}
-@media (max-width:760px){.saisons{grid-template-columns:1fr}.pcards{grid-template-columns:1fr 1fr}}
-@media (max-width:460px){.pcards{grid-template-columns:1fr}}
-footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-block:18px}
-.sticky{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:5}
-.sticky .t{font-variant-numeric:tabular-nums;line-height:1.2}
-.sticky .t b{font:700 20px var(--display);display:block}
-.sticky .t small{color:var(--muted);font-size:12px}
+.cgp .visu{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:28px;align-items:start}
+.cgp .cmp{position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--gris);user-select:none;touch-action:pan-y}
+.cgp .cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.cgp .cmp .av{clip-path:inset(0 calc(100% - var(--p,50%)) 0 0)}
+.cgp .cmp .bar{position:absolute;top:0;bottom:0;left:var(--p,50%);width:3px;background:#fff;transform:translateX(-50%)}
+.cgp .cmp .tag{position:absolute;top:12px;font:700 13px/1 inherit;background:#fff;color:var(--txt);padding:7px 10px;border-radius:8px}
+.cgp .cmp .tag.l{left:12px}.cgp .cmp .tag.r{right:12px;background:var(--vert);color:#fff}
+.cgp .cmp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.cgp .note{font-size:13px;color:var(--muted);margin:10px 0 0}
+.cgp .bloc{padding:20px;display:grid;gap:10px}
+.cgp .bloc+.bloc{margin-top:14px}
+.cgp .bloc.brume{background:var(--brume);border-color:var(--brume)}
+.cgp .bloc ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.cgp .bloc li{display:grid;grid-template-columns:14px 1fr;gap:10px}
+.cgp .bloc li::before{content:"";width:8px;height:8px;margin-top:9px;border-radius:2px;background:var(--vert)}
+.cgp .refs{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cgp .refs img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px}
+/* terrain */
+.cgp .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cgp .fact{padding:20px;display:grid;gap:6px;align-content:start;background:var(--gris);border-radius:8px}
+.cgp .fact .k{font-size:14px;color:var(--muted);font-weight:700}
+.cgp .fact .val{font-weight:800;font-size:32px;line-height:1.1;font-variant-numeric:tabular-nums}
+.cgp .fact .val small{font-weight:500;font-size:15px;color:var(--muted)}
+.cgp .fact p{margin:0;font-size:15px}
+.cgp .sunbar{display:flex;gap:2px;height:14px;margin-top:6px}
+.cgp .sunbar i{flex:1;border-radius:2px;background:#fff}
+.cgp .sunbar i.on{background:var(--vert)}
+.cgp .hours{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cgp .planrow{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:28px;margin-top:22px;align-items:start}
+.cgp .plan{padding:10px}.cgp .plan img{display:block;width:100%;border-radius:4px}
+.cgp .legend{display:grid;gap:8px;font-size:15px;margin:12px 0 0;padding:0;list-style:none}
+.cgp .legend li{display:flex;gap:10px;align-items:center}
+.cgp .sw{width:16px;height:16px;border-radius:3px;flex:none}
+/* plantes */
+.cgp .cal{overflow-x:auto;padding:16px}
+.cgp .cal table{border-collapse:separate;border-spacing:3px;width:100%;font-size:14px}
+.cgp .cal th{font-weight:500;color:var(--muted);text-align:center}
+.cgp .cal tbody th{text-align:left;color:var(--txt);white-space:nowrap;padding-right:10px}
+.cgp .cal td{height:22px;min-width:18px;border-radius:3px;background:var(--gris)}
+.cgp .cal td.fo{background:var(--brume)}
+.cgp .cal td.fl{background:var(--vert)}
+.cgp .calleg{display:flex;gap:18px;margin-top:12px}
+.cgp .pcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:22px}
+.cgp .pcard{overflow:hidden;display:grid;align-content:start}
+.cgp .pcard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.cgp .pc{padding:16px;display:grid;gap:4px}
+.cgp .pc .role{font-size:13px;color:var(--vert);font-weight:700}
+.cgp .pc h4{font-weight:700;font-size:18px;line-height:1.25}
+.cgp .pc i{color:var(--muted);font-size:14px}
+.cgp .badges{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}
+.cgp .badge{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--brume);color:var(--txt);font-weight:500}
+.cgp .pc dl{margin:4px 0 0;display:grid;gap:3px;font-size:14px}
+.cgp .pc dl div{display:grid;grid-template-columns:78px 1fr;gap:6px}.cgp .pc dt{color:var(--muted)}.cgp .pc dd{margin:0}
+/* produits */
+.cgp .bom{overflow:hidden}
+.cgp .prod{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:20px;align-items:center;padding:20px;border-bottom:1px solid var(--ligne)}
+.cgp .prod img{width:120px;height:120px;object-fit:cover;border-radius:8px}
+.cgp .prod h3{margin-bottom:4px}
+.cgp .why{font-size:15px;color:var(--muted);margin:0 0 10px}
+.cgp .spec{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0}
+.cgp .spec div{display:flex;gap:6px;font-size:14px}.cgp .spec dt{color:var(--muted)}.cgp .spec dd{margin:0;font-weight:500}
+.cgp .est{display:grid;gap:8px;justify-items:end;text-align:right}
+.cgp .est small{color:var(--muted);font-size:13px}
+.cgp .est b{font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cgp .tot{padding:20px;display:grid;gap:6px;background:var(--brume)}
+.cgp .tot .r{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
+.cgp .tot .big{font-weight:800;font-size:26px}
+/* boutons : modèle CTA Cover Green */
+.cgp .cta{display:inline-flex;align-items:center;justify-content:center;height:56px;min-width:200px;padding:0 24px;border-radius:8px;border:1px solid var(--orange);font:600 16px/1 inherit;text-decoration:none;cursor:pointer;background:var(--orange);color:#fff;transition:background-color .15s,color .15s,border-color .15s}
+.cgp .cta:hover{background:var(--orange-survol);border-color:var(--orange-survol);color:#fff}
+.cgp .cta.sec{background:#fff;color:var(--orange)}
+.cgp .cta.sec:hover{background:var(--orange-pale);color:var(--orange-survol);border-color:var(--orange-survol)}
+.cgp .cta.gris{background:#fff;color:var(--txt);border-color:var(--txt)}
+.cgp .cta.gris:hover{background:var(--gris)}
+.cgp .cta.reduit{height:48px}
+.cgp .cta:focus-visible{outline:3px solid var(--vert);outline-offset:2px}
+.cgp .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.cgp .fin{margin-top:48px;font-size:14px;color:var(--muted);border-top:1px solid var(--ligne);padding-top:18px}
 @media (max-width:760px){
-  .visu,.planrow{grid-template-columns:1fr}
-  .facts,.next{grid-template-columns:1fr}
-  .prod{grid-template-columns:64px minmax(0,1fr)}.prod img{width:64px;height:64px}
-  .est{grid-column:1 / -1;justify-items:start;text-align:left;grid-template-columns:auto auto auto;align-items:center;gap:10px}
-  .ref{display:none}
+  .cgp .visu,.cgp .planrow{grid-template-columns:1fr}
+  .cgp .facts{grid-template-columns:1fr}
+  .cgp .pcards{grid-template-columns:1fr 1fr}
+  .cgp .prod{grid-template-columns:72px minmax(0,1fr);align-items:start}.cgp .prod img{width:72px;height:72px}
+  .cgp .est{grid-column:1 / -1;justify-items:start;text-align:left}
+  .cgp .cta{min-width:160px}
 }
-@media (prefers-reduced-motion:no-preference){.btn{transition:transform .15s}.btn:active{transform:scale(.98)}}
-</style></head><body>
+@media (max-width:460px){.cgp .pcards{grid-template-columns:1fr}}
+</style>
+<div class="cgp">
+<div class="wrap" style="padding-bottom:0">
+  <div class="hero"><div class="eyebrow">{{VILLE}}</div><h1>Votre projet <span class="v">jardin</span><span class="pt">.</span></h1>
+    <p class="lead">Nous avons étudié votre jardin à partir de votre adresse et de votre photo. Voici ce qu'il a de bien, ce que nous vous proposons et les produits Cover Green pour le réaliser.</p>
+    <p class="ref">Projet {{ID}}, créé le {{DATE}}</p></div>
+</div>
+<nav class="onglets" aria-label="Sections de votre projet"><div class="wrap" style="padding-bottom:0"><ul>
+  <li><a href="#cgp-visuel">Votre jardin demain</a></li>
+  <li><a href="#cgp-terrain">Soleil et terrain</a></li>
+  <li><a href="#cgp-plantes">Vos plantes</a></li>
+  <li><a href="#cgp-produits">Vos produits et budget</a></li>
+</ul></div></nav>
 <div class="wrap">
-  <header class="top"><div class="logo">Cover Green<small>Mon projet jardin</small></div><div class="ref">Projet <b>{{ID}}</b><br>créé le {{DATE}}</div></header>
-  <div class="hero"><div class="eyebrow">{{VILLE}}</div><h1>Votre projet jardin</h1>
-    <p class="lead">Nous avons étudié votre jardin à partir de votre adresse et de votre photo. Voici ce qu'il a de bien, ce que nous vous proposons et les produits Cover Green pour le réaliser.</p></div>
-  <section aria-labelledby="t-visu"><h2 id="t-visu">Votre jardin, demain</h2>
-    <div class="visu"><div>{{VISUEL}}</div><aside><div class="diag2" style="grid-template-columns:1fr;margin-top:0"><div><h3>Ses atouts</h3><ul>{{ATOUTS}}</ul></div><div><h3>Nos pistes</h3><ul>{{PISTES}}</ul></div></div></aside></div></section>
-  <section aria-labelledby="t-diag"><h2 id="t-diag">Ce que votre adresse dit de votre jardin</h2>
+  <section id="cgp-visuel"><h2>Votre jardin, <span class="v">demain</span></h2>
+    <div class="visu"><div>{{VISUEL}}</div><aside><div class="carte bloc"><h3>Ses atouts</h3><ul>{{ATOUTS}}</ul></div><div class="carte bloc brume"><h3>Nos pistes</h3><ul>{{PISTES}}</ul></div></aside></div></section>
+  <section id="cgp-terrain"><h2>Ce que votre adresse dit de votre <span class="v">jardin</span></h2>
     <p class="sub">Calculé à partir du cadastre et des bâtiments de l'IGN : la vraie position du soleil heure par heure et la hauteur réelle des maisons voisines.</p>
     <div class="facts">{{FAITS}}</div>
-    <div class="planrow"><div class="plan">{{PLAN}}</div><div><h3 style="font:700 18px var(--display);margin:0 0 10px">Votre parcelle vue du ciel</h3>
-      <ul class="legend"><li><span class="sw" style="background:linear-gradient(90deg,#96acc4,#ffde8c,#e8742a)"></span>Heures de soleil le 21 juin, de l'ombre au plein soleil</li><li><span class="sw" style="background:#344239"></span>Votre maison</li><li><span class="sw" style="background:#d6dad2;border:1px solid #b0b6ac"></span>Maisons voisines, avec leur hauteur</li><li><span class="sw" style="background:#c43428;border-radius:50%"></span>Voisin qui a vue sur votre jardin</li></ul></div></div></section>
-  <section aria-labelledby="t-saisons"><h2 id="t-saisons">Vos plantes, saison par saison</h2>
+    {{PLANBLOC}}</section>
+  <section id="cgp-plantes"><h2>Vos plantes, saison par <span class="v">saison</span></h2>
     <p class="sub">Choisies pour votre climat, votre exposition, votre style et un entretien minimal.</p>
-    <div class="cal" role="region" aria-label="Calendrier des plantes"><table><thead><tr><th></th>{{MOIS}}</tr></thead><tbody>{{CAL}}</tbody></table>
-      <ul class="legend calleg"><li><span class="sw" style="background:var(--orange)"></span>En fleurs</li><li><span class="sw" style="background:var(--green-soft);border:1px solid var(--line)"></span>En feuillage</li></ul></div>
+    <div class="carte cal" role="region" aria-label="Calendrier des plantes"><table><thead><tr><th></th>{{MOIS}}</tr></thead><tbody>{{CAL}}</tbody></table>
+      <ul class="legend calleg"><li><span class="sw" style="background:var(--vert)"></span>En fleurs</li><li><span class="sw" style="background:var(--brume)"></span>En feuillage</li></ul></div>
     <div class="pcards">{{CARTES}}</div></section>
-  <section aria-labelledby="t-bom"><h2 id="t-bom">Votre projet Cover Green</h2>
+  <section id="cgp-produits"><h2>Votre projet <span class="v">Cover Green</span></h2>
     <p class="sub">Chaque produit s'ouvre dans son configurateur : vous ajustez selon votre terrain et vous commandez.</p>
-    <div class="bom">{{PRODUITS}}<div class="tot"><div class="r big"><span>Budget estimé</span><span>{{BUDGET}}</span></div><div class="r"><span>Livraison</span><span class="ok">Offerte dès 2 000 €</span></div><div class="r"><span>Paiement</span><span>en 1x à 4x sans frais</span></div><p class="note" style="margin:4px 0 0">Prix exact dans le configurateur, selon vos choix finaux.</p></div></div>
-    <div class="actions"><a class="btn ghost" href="https://www.cover.green/contact/">Être rappelé par un conseiller</a></div></section>
-  <footer>Bois Douglas français traité autoclave et structures en lamellé-collé, transformés en France. Cette page est personnelle : gardez ce lien pour retrouver votre projet.</footer>
+    <div class="carte bom">{{PRODUITS}}<div class="tot"><div class="r big"><span>Budget estimé</span><span>{{BUDGET}}</span></div><div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div><div class="r"><span>Paiement</span><span>en 1x à 4x sans frais</span></div><p class="note" style="margin:4px 0 0">Prix exact dans le configurateur, selon vos choix finaux.</p></div></div>
+    <div class="actions"><a class="cta gris" href="https://www.cover.green/contact/">Être rappelé par un conseiller</a></div></section>
+  <p class="fin">Cette page est personnelle : gardez ce lien pour retrouver votre projet.</p>
 </div>
-<script>const c=document.getElementById("cmp"),r=document.getElementById("cmp-range");if(c&&r)r.addEventListener("input",()=>c.style.setProperty("--p",r.value+"%"));</script>
+</div>
+<script>(()=>{const c=document.getElementById("cmp"),r=document.getElementById("cmp-range");if(c&&r)r.addEventListener("input",()=>c.style.setProperty("--p",r.value+"%"));
+const L=[...document.querySelectorAll(".cgp .onglets a")],S=L.map(a=>document.querySelector(a.getAttribute("href"))).filter(Boolean);
+const maj=()=>{let k=0;S.forEach((s,i)=>{if(s.getBoundingClientRect().top<160)k=i});L.forEach((a,i)=>a.classList.toggle("on",i===k))};addEventListener("scroll",maj,{passive:true});maj();})();</script>
+<!--FIN-->
 </body></html>

@@ -4,7 +4,7 @@
 #   GET  /projet/{id}                  page personnelle « Mon projet jardin »
 #   GET  /fichiers/{id}/{nom}          images du projet ; /assets/... images communes (plantes, réalisations)
 import os, json, secrets, threading, html, time
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pipeline
@@ -79,13 +79,13 @@ def rendre(pid, d):
     v = (g.get('vis_a_vis') or [None])[0]
     faits = ''
     if g:
-        faits += f'''<div class="fact"><span class="k">Soleil le 21 juin</span><span class="v">{str(g["soleil_ete_h_moyen"]).replace(".", ",")} h <small>par jour</small></span>
-          <div class="sunbar">{''.join(f'<i class="{"on hot" if 8 + k / 2 >= 14 else "on"}" style="opacity:{0.35 + 0.65 * f:.2f}"></i>' if f > 0.05 else '<i></i>' for k, f in enumerate(g.get("soleil_ete_profil_8h_21h") or []))}</div>
+        faits += f'''<div class="fact"><span class="k">Soleil le 21 juin</span><span class="val">{str(g["soleil_ete_h_moyen"]).replace(".", ",")} h <small>par jour</small></span>
+          <div class="sunbar">{''.join(f'<i class="on" style="opacity:{0.35 + 0.65 * f:.2f}"></i>' if f > 0.05 else '<i></i>' for k, f in enumerate(g.get("soleil_ete_profil_8h_21h") or []))}</div>
           <div class="hours"><span>8 h</span><span>14 h</span><span>21 h</span></div><p>Dont {str(g["soleil_ete_apres14h_h"]).replace(".", ",")} h après 14 h, au moment le plus chaud.</p></div>'''
         if v and v['hauteur_m'] >= 5:
-            faits += f'''<div class="fact"><span class="k">Vis-à-vis</span><span class="v">{v["hauteur_m"]:.0f} m <small>de haut, à {str(v["distance_m"]).replace(".", ",")} m</small></span>
+            faits += f'''<div class="fact"><span class="k">Vis-à-vis</span><span class="val">{v["hauteur_m"]:.0f} m <small>de haut, à {str(v["distance_m"]).replace(".", ",")} m</small></span>
           <p>Une maison voisine côté {e(v["direction"])} a vue depuis son étage sur votre jardin.</p></div>'''
-        faits += f'''<div class="fact"><span class="k">Votre terrain</span><span class="v">{g["surface_parcelle_m2"]} m² <small>dont {g["surface_jardin_m2"]} de jardin</small></span>
+        faits += f'''<div class="fact"><span class="k">Votre terrain</span><span class="val">{g["surface_parcelle_m2"]} m² <small>dont {g["surface_jardin_m2"]} de jardin</small></span>
           <p>{g["part_jardin_plus_6h_ete"]} % du jardin a plus de 6 h de soleil en été.</p></div>'''
     atouts = ''.join(f'<li>{e(a)}</li>' for a in L.get('atouts') or []); pistes = ''.join(f'<li>{e(a)}</li>' for a in L.get('pistes') or [])
     visuel = (f'''<div class="cmp" id="cmp" style="--p:50%"><img src="/fichiers/{pid}/visuel.jpg" alt="Idée d'aménagement avec nos produits"><img class="av" src="/fichiers/{pid}/photo.jpg" alt="Votre photo">
@@ -98,11 +98,14 @@ def rendre(pid, d):
         <dl><div><dt>Fleurs</dt><dd>{e(p["floraison"] or "feuillage décoratif")}</dd></div><div><dt>Hiver</dt><dd>{e(p["hiver"])}</dd></div><div><dt>Entretien</dt><dd>{e(p["entretien"])}</dd></div></dl></div></article>''' for p in pl)
     M = 'JFMAMJJASOND'
     cal = ''.join(f'<tr><th scope="row">{e(p["nom"])}</th>' + ''.join(f'<td class="{"fl" if m + 1 in p["mois_fleurs"] else ("fo" if ("persistant" in p["hiver"] or "marcescent" in p["hiver"] or 4 <= m + 1 <= 10) else "")}"></td>' for m in range(12)) + '</tr>' for p in pl)
-    prods = ''.join(f'''<div class="grp"><div class="prod"><img src="/assets/refs/{p["photo"]}" alt=""><div class="n"><h3>{e(p["nom"])}</h3><p class="why">{e(p.get("placement"))}</p>
+    VERBE = {'cloture': 'Configurer ma clôture', 'pergola': 'Configurer ma pergola'}
+    prods = ''.join(f'''<div class="prod"><img src="/assets/refs/{p["photo"]}" alt=""><div><h3>{e(p["nom"])}</h3><p class="why">{e(p.get("placement"))}</p>
         <dl class="spec">{''.join(f'<div><dt>{e(k)}</dt><dd>{e(x)}</dd></div>' for k, x in p["detail"].items())}</dl></div>
-        <div class="est"><small>Estimation</small><b>{eur(p["prix"][0])} à {eur(p["prix"][1])}</b><a class="btn ghost sm" href="{p["lien"]}" target="_blank" rel="noopener">Configurer</a></div></div></div>''' for p in D['produits'])
+        <div class="est"><small>Estimation</small><b>{eur(p["prix"][0])} à {eur(p["prix"][1])}</b><a class="cta reduit{"" if i == 0 else " sec"}" href="{p["lien"]}" target="_blank" rel="noopener">{VERBE.get(p.get("cle"), "Configurer")}</a></div></div>''' for i, p in enumerate(D['produits']))
+    planbloc = (f'''<div class="planrow"><div class="carte plan"><img src="/fichiers/{pid}/plan.png" alt="Votre parcelle vue du ciel"></div><div><h3>Votre parcelle vue du ciel</h3>
+      <ul class="legend"><li><span class="sw" style="background:linear-gradient(90deg,#96acc4,#ffde8c,#e8742a)"></span>Heures de soleil le 21 juin, de l'ombre au plein soleil</li><li><span class="sw" style="background:#344239"></span>Votre maison</li><li><span class="sw" style="background:#d6dad2;border:1px solid #b0b6ac"></span>Maisons voisines, avec leur hauteur</li><li><span class="sw" style="background:#c43428;border-radius:50%"></span>Voisin qui a vue sur votre jardin</li></ul></div></div>''' if D.get('plan') else '')
     rep = {'ID': e(pid), 'VILLE': e(D.get('ville')), 'DATE': e(D.get('cree_le')), 'VISUEL': visuel, 'FAITS': faits, 'ATOUTS': atouts, 'PISTES': pistes,
-           'PLAN': f'<img src="/fichiers/{pid}/plan.png" alt="Votre parcelle vue du ciel">' if D.get('plan') else '', 'CARTES': cartes,
+           'PLANBLOC': planbloc, 'CARTES': cartes,
            'CAL': cal, 'MOIS': ''.join(f'<th scope="col">{m}</th>' for m in M), 'PRODUITS': prods, 'BUDGET': f'{eur(D["budget"][0])} à {eur(D["budget"][1])}'}
     out = GABARIT
     for k, x in rep.items(): out = out.replace('{{' + k + '}}', x)
@@ -122,6 +125,15 @@ def page(pid: str):
         if etat.get('statut') == 'erreur': return HTMLResponse(ATTENTE.replace('se prépare', 'arrive bientôt').replace('<meta http-equiv="refresh" content="8">', ''), status_code=200)
         return HTMLResponse(ATTENTE)
     return HTMLResponse(rendre(pid, d))
+
+
+@app.get('/fragment/{pid}', response_class=HTMLResponse)
+def fragment(pid: str, request: Request):
+    # contenu seul (styles + page), à insérer dans une page du site entre l'en-tête et le pied de page
+    d = dossier(pid); etat = json.load(open(f'{d}/etat.json')) if os.path.exists(f'{d}/etat.json') else {}
+    if etat.get('statut') != 'pret': return HTMLResponse('', status_code=202)
+    h = rendre(pid, d); base = str(request.base_url).rstrip('/').replace('http://', 'https://')
+    return HTMLResponse(h[h.index('<!--DEBUT-->'):h.index('<!--FIN-->')].replace('src="/', f'src="{base}/'))
 
 
 @app.get('/sante')
