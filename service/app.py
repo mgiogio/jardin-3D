@@ -74,14 +74,21 @@ LAB = {'printemps': 'Printemps', 'ete': 'Été', 'automne': 'Automne', 'hiver': 
 ROLE = {'focal': 'Arbuste vedette', 'structure': 'Persistant de structure', 'vivace': 'Vivace fleurie', 'graminee': 'Graminée', 'grimpante': 'Grimpante', 'fleuri': 'Arbuste fleuri', 'couvre_sol': 'Couvre-sol'}
 
 
+def soleil(f):
+    # même dégradé que le plan vu du ciel : ombre (bleu-gris) -> soleil doux (jaune) -> plein soleil (orange)
+    f = max(0.0, min(1.0, float(f))); pts = [(0, (150, 172, 196)), (0.5, (255, 222, 140)), (1, (232, 116, 42))]
+    (a, ca), (b, cb) = (pts[0], pts[1]) if f <= 0.5 else (pts[1], pts[2]); t = (f - a) / (b - a)
+    return '#%02x%02x%02x' % tuple(round(ca[i] + (cb[i] - ca[i]) * t) for i in range(3))
+
+
 def rendre(pid, d):
     D = json.load(open(f'{d}/data.json')); g = D.get('diag') or {}; L = D.get('lecture') or {}
     v = (g.get('vis_a_vis') or [None])[0]
     faits = ''
     if g:
         faits += f'''<div class="fact"><span class="k">Soleil le 21 juin</span><span class="val">{str(g["soleil_ete_h_moyen"]).replace(".", ",")} h <small>par jour</small></span>
-          <div class="sunbar">{''.join(f'<i class="on" style="opacity:{0.35 + 0.65 * f:.2f}"></i>' if f > 0.05 else '<i></i>' for k, f in enumerate(g.get("soleil_ete_profil_8h_21h") or []))}</div>
-          <div class="hours"><span>8 h</span><span>14 h</span><span>21 h</span></div><p>Dont {str(g["soleil_ete_apres14h_h"]).replace(".", ",")} h après 14 h, au moment le plus chaud.</p></div>'''
+          <div class="sunbar">{''.join(f'<i style="background:{soleil(f)}"></i>' for f in (g.get("soleil_ete_profil_8h_21h") or []))}</div>
+          <div class="hours"><span>8 h</span><span>14 h</span><span>21 h</span></div><div class="sunleg"><span>ombre</span><i></i><span>plein soleil</span></div><p>Dont {str(g["soleil_ete_apres14h_h"]).replace(".", ",")} h après 14 h, au moment le plus chaud.</p></div>'''
         if v and v['hauteur_m'] >= 5:
             faits += f'''<div class="fact"><span class="k">Vis-à-vis</span><span class="val">{v["hauteur_m"]:.0f} m <small>de haut, à {str(v["distance_m"]).replace(".", ",")} m</small></span>
           <p>Une maison voisine côté {e(v["direction"])} a vue depuis son étage sur votre jardin.</p></div>'''

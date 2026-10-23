@@ -147,8 +147,9 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
  "plantes": {"grands_sujets": n (arbres ou gros arbustes en sujet), "arbustes": n, "vivaces_graminees": n (touffes)}, "contenants": {"grands_bacs": n, "pots": n},
  "sol": {"refait": true ou false (sol neuf différent de la photo d'origine), "type": "dalles", "gravier", "pelouse" ou null, "m2": surface estimée}, "eclairage": n (points lumineux)}""",
                       [Image.open(f'{dossier}/visuel.jpg'), im])
-            T = {'canape': (500, 1400), 'fauteuil': (150, 400), 'table_basse': (100, 300), 'table_repas': (300, 900), 'chaise': (50, 150),
-                 'bain_de_soleil': (150, 400), 'parasol': (100, 300), 'banc': (150, 400)}
+            # milieu de gamme (prix moyens constatés en jardinerie et chez les enseignes de mobilier)
+            T = {'canape': (700, 1000), 'fauteuil': (200, 300), 'table_basse': (150, 250), 'table_repas': (400, 650), 'chaise': (70, 110),
+                 'bain_de_soleil': (200, 300), 'parasol': (150, 250), 'banc': (200, 300)}
             lignes = {}
             mob = [0, 0]
             for m in inv.get('mobilier') or []:
@@ -157,17 +158,17 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
             if mob[1]: lignes['Mobilier de jardin'] = mob
             pl = inv.get('plantes') or {}
             g, a_, v = [max(0, min(n, int(pl.get(k) or 0))) for k, n in (('grands_sujets', 4), ('arbustes', 20), ('vivaces_graminees', 40))]
-            pla = [g * 150 + a_ * 25 + v * 8, g * 400 + a_ * 60 + v * 15]
+            pla = [g * 200 + a_ * 30 + v * 9, g * 300 + a_ * 45 + v * 13]
             if pla[1]: lignes['Plantes'] = pla
             co = inv.get('contenants') or {}
             gb, po = max(0, min(10, int(co.get('grands_bacs') or 0))), max(0, min(15, int(co.get('pots') or 0)))
-            if gb + po: lignes['Bacs et pots'] = [gb * 100 + po * 30, gb * 300 + po * 80]
+            if gb + po: lignes['Bacs et pots'] = [gb * 150 + po * 40, gb * 220 + po * 60]
             so = inv.get('sol') or {}
             if so.get('refait') and so.get('type') in ('dalles', 'gravier', 'pelouse'):
-                m2 = max(5, min(60, int(so.get('m2') or 15))); pm = {'dalles': (35, 70), 'gravier': (8, 20), 'pelouse': (5, 15)}[so['type']]
+                m2 = max(5, min(60, int(so.get('m2') or 15))); pm = {'dalles': (45, 60), 'gravier': (10, 15), 'pelouse': (8, 12)}[so['type']]
                 lignes[{'dalles': 'Dallage', 'gravier': 'Gravier', 'pelouse': 'Gazon'}[so['type']] + f' (environ {m2} m²)'] = [m2 * pm[0], m2 * pm[1]]
             ec = max(0, min(12, int(inv.get('eclairage') or 0)))
-            if ec: lignes['Éclairage'] = [ec * 20, ec * 60]
+            if ec: lignes['Éclairage'] = [ec * 30, ec * 45]
             if lignes:
                 r50 = lambda n: max(50, int(round(n / 50.0) * 50))
                 lignes = {k: [r50(v[0]), max(r50(v[1]), r50(v[0]) + 50)] for k, v in lignes.items()}
