@@ -2,7 +2,7 @@
 # Déploie le service « Diagnostic jardin Cover Green » sur Cloud Run. À lancer dans Cloud Shell, depuis le dossier du dépôt.
 #   bash deploy-diagnostic.sh ID_DU_PROJET_GOOGLE_CLOUD
 set -euo pipefail
-PROJET=${1:?Indiquez l'identifiant du projet Google Cloud}; REGION=europe-west1; SERVICE=diagnostic-jardin
+PROJET=${1:?Indiquez le projet Google Cloud}; REGION=europe-west1; SERVICE=diagnostic-jardin
 BUCKET=${PROJET}-diagnostic-jardin; IMAGE=$REGION-docker.pkg.dev/$PROJET/cover-green/$SERVICE:latest
 gcloud config set project "$PROJET"
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com storage.googleapis.com
