@@ -93,11 +93,22 @@ def rendre(pid, d):
           <p class="note">Idée d'aménagement non contractuelle, réalisée avec nos produits.</p>''' if D.get('visuel') else
               '<div class="refs">' + ''.join(f'<img src="/assets/refs/{p["photo"]}" alt="{e(p["nom"])} Cover Green">' for p in D['produits']) + '</div><p class="note">Des réalisations Cover Green proches de votre projet.</p>')
     pl = (D.get('plantes') or {}).get('plantes') or []
+    M = 'JFMAMJJASOND'
+    NOMS_MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+    def periodes(ms):   # [3, 4, 10, 11] -> « mars-avr. ou oct.-nov. »
+        ms = sorted(ms); g = []
+        for m in ms:
+            if g and m == g[-1][-1] + 1: g[-1].append(m)
+            else: g.append([m])
+        return ' ou '.join(NOMS_MOIS[a[0] - 1] + ('-' + NOMS_MOIS[a[-1] - 1] if len(a) > 1 else '') for a in g)
+    def case(p, m):
+        c = 'fl' if m in p['mois_fleurs'] else ('fo' if ('persistant' in p['hiver'] or 'marcescent' in p['hiver'] or 4 <= m <= 10) else '')
+        pl = '<b aria-label="à planter"></b>' if m in (p.get('mois_plantation') or []) else ''
+        return f'<td class="{c}">{pl}</td>'
+    cal = ''.join(f'<tr><th scope="row">{e(p["nom"])}</th>' + ''.join(case(p, m + 1) for m in range(12)) + '</tr>' for p in pl)
     cartes = ''.join(f'''<article class="pcard"><img src="/assets/plantes/{e(p["photo"])}" alt="{e(p["nom"])}" loading="lazy"><div class="pc"><span class="role">{ROLE.get(p["role"], p["role"])}</span><h4>{e(p["nom"])}</h4><i>{e(p["latin"])}</i>
         <div class="badges">{''.join(f'<span class="badge">{LAB[s]}</span>' for s in ("printemps", "ete", "automne", "hiver") if s in p["saisons"])}</div>
-        <dl><div><dt>Fleurs</dt><dd>{e(p["floraison"] or "feuillage décoratif")}</dd></div><div><dt>Hiver</dt><dd>{e(p["hiver"])}</dd></div><div><dt>Entretien</dt><dd>{e(p["entretien"])}</dd></div></dl></div></article>''' for p in pl)
-    M = 'JFMAMJJASOND'
-    cal = ''.join(f'<tr><th scope="row">{e(p["nom"])}</th>' + ''.join(f'<td class="{"fl" if m + 1 in p["mois_fleurs"] else ("fo" if ("persistant" in p["hiver"] or "marcescent" in p["hiver"] or 4 <= m + 1 <= 10) else "")}"></td>' for m in range(12)) + '</tr>' for p in pl)
+        <dl><div><dt>Fleurs</dt><dd>{e(p["floraison"] or "feuillage décoratif")}</dd></div><div><dt>Plantation</dt><dd>{periodes(p.get("mois_plantation") or [])}</dd></div><div><dt>Hiver</dt><dd>{e(p["hiver"])}</dd></div><div><dt>Entretien</dt><dd>{e(p["entretien"])}</dd></div></dl></div></article>''' for p in pl)
     VERBE = {'cloture': 'Configurer ma clôture', 'pergola': 'Configurer ma pergola'}
     prods = ''.join(f'''<div class="prod"><img src="/assets/refs/{p["photo"]}" alt=""><div><h3>{e(p["nom"])}</h3><p class="why">{e(p.get("placement"))}</p>
         <dl class="spec">{''.join(f'<div><dt>{e(k)}</dt><dd>{e(x)}</dd></div>' for k, x in p["detail"].items())}</dl></div>

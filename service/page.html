@@ -13,20 +13,22 @@
 .cgp .v{color:var(--vert)}
 .cgp .pt{color:var(--orange)}
 /* en-tête de page */
-.cgp .hero{padding:32px 0 8px}
+.cgp .hero{padding:20px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 24px}
 .cgp .eyebrow{font-size:14px;font-weight:700;color:var(--vert)}
-.cgp h1{font-weight:800;font-size:clamp(32px,5vw,48px);line-height:1.1;margin:6px 0 12px}
-.cgp .lead{color:var(--muted);max-width:64ch;margin:0}
-.cgp .ref{font-size:13px;color:var(--muted);margin-top:10px}
+.cgp h1{font-weight:800;font-size:clamp(26px,4vw,36px);line-height:1.15;margin:2px 0 0}
+.cgp .lead{color:var(--muted);margin:4px 0 0;flex-basis:100%;font-size:15px}
+.cgp .ref{font-size:13px;color:var(--muted);margin:0}
 /* onglets vers les sections */
-.cgp .onglets{position:sticky;top:var(--cgp-haut,0px);z-index:20;background:#fff;border-bottom:1px solid var(--ligne);margin:20px 0 0}
-.cgp .onglets ul{list-style:none;margin:0 auto;padding:10px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;max-width:1080px}
+.cgp .onglets{position:sticky;top:var(--cgp-haut,0px);z-index:20;background:#fff;border-bottom:1px solid var(--ligne);margin:14px 0 0;transition:top .25s ease}
+@media (prefers-reduced-motion:reduce){.cgp .onglets{transition:none}}
+.cgp .onglets ul{list-style:none;margin:0 auto;padding:8px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;max-width:1080px}
 .cgp .onglets ul::-webkit-scrollbar{display:none}
 .cgp .onglets a{display:block;white-space:nowrap;text-decoration:none;color:var(--txt);font-weight:500;font-size:15px;padding:9px 16px;border-radius:8px;background:var(--gris)}
 .cgp .onglets a:hover{background:var(--brume)}
 .cgp .onglets a.on{background:var(--vert);color:#fff;font-weight:700}
 .cgp .onglets a:focus-visible{outline:2px solid var(--vert);outline-offset:2px}
-.cgp section{padding:48px 0 0;scroll-margin-top:calc(var(--cgp-haut,0px) + 72px)}
+.cgp section{padding:48px 0 0}
+.cgp section:first-of-type{padding-top:24px}
 .cgp h2{font-weight:800;font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin-bottom:8px}
 .cgp h3{font-weight:700;font-size:18px;line-height:1.3}
 .cgp .sub{color:var(--muted);margin:0 0 22px;max-width:66ch}
@@ -67,12 +69,16 @@
 /* plantes */
 .cgp .cal{overflow-x:auto;padding:16px}
 .cgp .cal table{border-collapse:separate;border-spacing:3px;width:100%;font-size:14px}
+.cgp .cal table,.cgp .cal tr,.cgp .cal th,.cgp .cal td{border:0;padding:0;margin:0;background-color:transparent;line-height:1.4}
+.cgp .cal thead th{padding-bottom:4px}
 .cgp .cal th{font-weight:500;color:var(--muted);text-align:center}
-.cgp .cal tbody th{text-align:left;color:var(--txt);white-space:nowrap;padding-right:10px}
-.cgp .cal td{height:22px;min-width:18px;border-radius:3px;background:var(--gris)}
-.cgp .cal td.fo{background:var(--brume)}
-.cgp .cal td.fl{background:var(--vert)}
-.cgp .calleg{display:flex;gap:18px;margin-top:12px}
+.cgp .cal tbody th{text-align:left;color:var(--txt);white-space:nowrap;padding:0 10px 0 0;font-weight:500}
+.cgp .cal td{height:22px;min-width:18px;border-radius:3px;background:var(--gris)!important}
+.cgp .cal td.fo{background:var(--brume)!important}
+.cgp .cal td.fl{background:var(--vert)!important}
+.cgp .cal td{position:relative}
+.cgp .cal td b{position:absolute;inset:0;margin:auto;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--txt)}
+.cgp .calleg{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px}.cgp .calleg li{white-space:nowrap}
 .cgp .pcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:22px}
 .cgp .pcard{overflow:hidden;display:grid;align-content:start}
 .cgp .pcard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
@@ -121,9 +127,8 @@
 </style>
 <div class="cgp">
 <div class="wrap" style="padding-bottom:0">
-  <div class="hero"><div class="eyebrow">{{VILLE}}</div><h1>Votre projet <span class="v">jardin</span><span class="pt">.</span></h1>
-    <p class="lead">Nous avons étudié votre jardin à partir de votre adresse et de votre photo. Voici ce qu'il a de bien, ce que nous vous proposons et les produits Cover Green pour le réaliser.</p>
-    <p class="ref">Projet {{ID}}, créé le {{DATE}}</p></div>
+  <div class="hero"><h1>Votre projet <span class="v">jardin</span><span class="pt">.</span></h1><p class="ref">{{VILLE}} · projet {{ID}} du {{DATE}}</p>
+    <p class="lead">Étudié à partir de votre adresse et de votre photo, avec les produits Cover Green pour le réaliser.</p></div>
 </div>
 <nav class="onglets" aria-label="Sections de votre projet"><div class="wrap" style="padding-bottom:0"><ul>
   <li><a href="#cgp-visuel">Votre jardin demain</a></li>
@@ -141,7 +146,7 @@
   <section id="cgp-plantes"><h2>Vos plantes, saison par <span class="v">saison</span></h2>
     <p class="sub">Choisies pour votre climat, votre exposition, votre style et un entretien minimal.</p>
     <div class="carte cal" role="region" aria-label="Calendrier des plantes"><table><thead><tr><th></th>{{MOIS}}</tr></thead><tbody>{{CAL}}</tbody></table>
-      <ul class="legend calleg"><li><span class="sw" style="background:var(--vert)"></span>En fleurs</li><li><span class="sw" style="background:var(--brume)"></span>En feuillage</li></ul></div>
+      <ul class="legend calleg"><li><span class="sw" style="background:var(--vert)"></span>En fleurs</li><li><span class="sw" style="background:var(--brume)"></span>En feuillage</li><li><span class="sw" style="background:#fff;border:2px solid var(--txt);border-radius:50%;width:12px;height:12px"></span>Bonne période pour planter</li></ul></div>
     <div class="pcards">{{CARTES}}</div></section>
   <section id="cgp-produits"><h2>Votre projet <span class="v">Cover Green</span></h2>
     <p class="sub">Chaque produit s'ouvre dans son configurateur : vous ajustez selon votre terrain et vous commandez.</p>
@@ -151,7 +156,22 @@
 </div>
 </div>
 <script>(()=>{const c=document.getElementById("cmp"),r=document.getElementById("cmp-range");if(c&&r)r.addEventListener("input",()=>c.style.setProperty("--p",r.value+"%"));
-const L=[...document.querySelectorAll(".cgp .onglets a")],S=L.map(a=>document.querySelector(a.getAttribute("href"))).filter(Boolean);
-const maj=()=>{let k=0;S.forEach((s,i)=>{if(s.getBoundingClientRect().top<160)k=i});L.forEach((a,i)=>a.classList.toggle("on",i===k))};addEventListener("scroll",maj,{passive:true});maj();})();</script>
+const cgp=document.querySelector(".cgp"),nav=document.querySelector(".cgp .onglets"),L=[...nav.querySelectorAll("a")],S=L.map(a=>document.querySelector(a.hash)).filter(Boolean);
+const barre=()=>document.querySelector("#cgh .cgh-fixed, .cgh-fixed");
+const admin=()=>parseInt(getComputedStyle(document.documentElement).getPropertyValue("--wp-admin--admin-bar--height"))||0;
+// hauteur de l'en-tête du site quand il est visible en haut de l'écran (0 s'il est caché ou pas collant)
+const haut=()=>{const b=barre();return admin()+(b&&!b.classList.contains("cgh-hide")?b.offsetHeight:0)};
+let h0=-1;const caler=()=>{const h=haut();if(h!==h0){h0=h;cgp.style.setProperty("--cgp-haut",h+"px")}};
+const actif=()=>{const lim=haut()+nav.offsetHeight+40;let k=0;S.forEach((s,i)=>{if(s.getBoundingClientRect().top<=lim)k=i});
+  L.forEach((a,i)=>{const on=i===k;if(on&&!a.classList.contains("on"))a.scrollIntoView({block:"nearest",inline:"nearest"});a.classList.toggle("on",on)})};
+addEventListener("scroll",()=>{caler();actif()},{passive:true});addEventListener("resize",caler);
+const b0=document.getElementById("cgh");if(b0)new MutationObserver(caler).observe(b0,{attributes:true,subtree:true,attributeFilter:["class"]});
+caler();actif();
+// clic sur un onglet : on vise la section en tenant compte de l'en-tête (caché si on descend, visible si on remonte)
+L.forEach(a=>a.addEventListener("click",ev=>{const t=document.querySelector(a.hash);if(!t)return;ev.preventDefault();
+  const y=t.getBoundingClientRect().top+scrollY,desc=y>scrollY,mob=matchMedia("(max-width:1024px)").matches,
+    b=document.getElementById(mob?"cgh-main":"cgh-nav"),hb=!b?0:(mob?b.offsetHeight:(desc?0:b.offsetHeight));
+  scrollTo({top:Math.max(0,y-admin()-hb-nav.offsetHeight-8),behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});try{history.replaceState(null,"",a.hash)}catch(e){}}));
+})();</script>
 <!--FIN-->
 </body></html>

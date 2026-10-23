@@ -42,11 +42,21 @@ for _ in range(sum(quota.values())):
         if best is None or sc > best[0]: best = (sc, p, s)
     if not best: break
     choix.append(best[1]); [couvert.__setitem__(k, couvert.get(k, 0) + 1) for k in best[2]]
+# mois de plantation : en automne pour les plantes rustiques (meilleure reprise), au printemps pour les plantes frileuses et les graminées
+FRILEUSES = ('Olea', 'Lagerstroemia', 'Trachycarpus', 'Cistus', 'Phlomis', 'Rosmarinus', 'Teucrium', 'Perovskia', 'Lavandula', 'Ceanothus', 'Gaura',
+             'Erigeron', 'Agapanthus', 'Euphorbia characias', 'Stipa', 'Pennisetum', 'Miscanthus', 'Muhlenbergia', 'Festuca', 'Trachelospermum',
+             'Fargesia', 'Abelia', 'Arbutus', 'Pittosporum', 'Calamagrostis', 'Hakonechloa', 'Carex', 'Ophiopogon')
+def plantation(p):
+    if p['latin'].startswith('Iris germanica'): return [7, 8, 9]
+    fri = p['latin'].startswith(FRILEUSES)
+    if clim == 'mediterraneen': return [3, 4, 10, 11]
+    if clim in ('continental', 'montagnard'): return [5, 6] if fri else [4, 5, 9, 10]
+    return [4, 5] if fri else [3, 4, 10, 11]
 plantes = []
 for p in choix:
     fl, s = profil(p)
     plantes.append({'latin': p['latin'], 'nom': p['nom'], 'role': p['role'], 'hauteur_m': p['hauteur_m'], 'floraison': p['floraison'],
-                    'hiver': p['hiver'], 'entretien': p['entretien'], 'mois_fleurs': fl, 'saisons': sorted(s), 'couleur': p.get('couleur', '')})
+                    'hiver': p['hiver'], 'entretien': p['entretien'], 'mois_fleurs': fl, 'mois_plantation': plantation(p), 'saisons': sorted(s), 'couleur': p.get('couleur', '')})
 json.dump({'climat': clim, 'expo': expo, 'style': style, 'plantes': plantes}, open(f'{OUT}/plantes.json', 'w'), ensure_ascii=False, indent=1)
 print(clim, expo, style, [p['nom'] for p in plantes])
 
