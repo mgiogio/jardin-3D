@@ -171,6 +171,17 @@ def fichier(pid: str, nom: str):
     return FileResponse(f, headers={'Cache-Control': 'public, max-age=86400'})
 
 
+DEMO = os.environ.get('DEMO_PROJET', '2610-KhiEGf_FqIbX')
+
+
+@app.get('/assets/demo/{nom}')
+def asset_demo(nom: str):
+    src = {'avant.jpg': 'photo.jpg', 'apres.jpg': 'visuel.jpg'}.get(nom)
+    f = os.path.join(DATA, DEMO, src or '')
+    if not src or not os.path.isfile(f): raise HTTPException(404)
+    return FileResponse(f, headers={'Cache-Control': 'public, max-age=86400'})
+
+
 @app.get('/assets/{genre}/{nom}')
 def asset(genre: str, nom: str):
     if genre not in ('plantes', 'refs'): raise HTTPException(404)
@@ -193,9 +204,18 @@ def soleil(f):
 
 
 # projet lancé sans photo : le client l'ajoute ici et reçoit son idée d'aménagement quelques minutes plus tard
-AJOUT_PHOTO = '''<div class="ajout-photo" style="margin-top:14px;padding:16px;border-radius:12px;background:#EAF7E5"><b style="display:block;font-size:17px;margin-bottom:4px">Voir nos produits chez vous</b>
-<p style="margin:0 0 12px">Ajoutez une photo de votre jardin : nous créons votre idée d'aménagement en 3 minutes.</p>
-<input type="file" accept="image/*" id="cgp-ajout" hidden><button type="button" class="cta" onclick="document.getElementById('cgp-ajout').click()">Ajouter une photo</button><p id="cgp-ajout-msg" style="margin:10px 0 0"></p>
+AJOUT_PHOTO = '''<style>.cgp .demo{display:grid;grid-template-columns:1fr 44px 1fr;align-items:center;gap:6px}.cgp .demo figure{margin:0;position:relative}
+.cgp .demo img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;display:block}.cgp .demo figcaption{position:absolute;left:8px;top:8px;background:rgba(255,255,255,.94);border-radius:6px;padding:4px 9px;font-size:13px;font-weight:700}
+.cgp .demo .fl{display:grid;place-items:center;color:#049E00}.cgp .demo .fl svg{width:36px;height:36px}
+.cgp .bloc li.sansbul{display:block;padding-left:24px}.cgp .bloc li.sansbul::before{display:none}.cgp .ajout-photo{margin-top:16px;padding:20px;border-radius:12px;background:#EAF7E5}.cgp .ajout-photo h3{margin:0 0 6px;font-size:20px}.cgp .ajout-photo p{margin:0 0 14px}
+@media (max-width:600px){.cgp .demo{grid-template-columns:1fr 28px 1fr}.cgp .demo .fl svg{width:24px;height:24px}}</style>
+<div class="demo"><figure><img src="/assets/demo/avant.jpg" alt="Photo d'un jardin avant"><figcaption>Avant</figcaption></figure>
+<span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span>
+<figure><img src="/assets/demo/apres.jpg" alt="Le même jardin aménagé avec nos produits"><figcaption>Après, avec nos produits</figcaption></figure></div>
+<p class="note">Un vrai diagnostic : la photo envoyée à gauche, l'idée d'aménagement reçue à droite.</p>
+<div class="ajout-photo" id="cgp-ajout-bloc"><h3>À vous : envoyez la photo de votre jardin</h3>
+<p>Prise depuis la maison ou la terrasse, de jour. Votre idée d'aménagement avec nos produits arrive ici et par email en 3 minutes.</p>
+<input type="file" accept="image/*" id="cgp-ajout" hidden><button type="button" class="cta" onclick="document.getElementById('cgp-ajout').click()">Envoyer ma photo</button><p id="cgp-ajout-msg" style="margin:10px 0 0"></p>
 <script>(function(){var i=document.getElementById("cgp-ajout"),m=document.getElementById("cgp-ajout-msg");i.onchange=function(){var f=i.files[0];if(!f)return;m.textContent="Envoi de la photo…";
 var r=document.querySelector(".cgp[data-api]"),api=r?r.getAttribute("data-api"):"",fd=new FormData();fd.append("photo",f);
 fetch(api+"/api/photo/PID",{method:"POST",body:fd}).then(function(x){if(!x.ok)throw 0;m.textContent="C'est parti : votre idée d'aménagement arrive dans 3 minutes, cette page se mettra à jour.";try{dataLayer.push({event:"cgp_ajout_photo",projet_jardin:"PID"})}catch(e){}setTimeout(function(){location.reload()},150000)}).catch(function(){m.textContent="L'envoi n'a pas marché, réessayez."})}})()</script></div>'''
@@ -209,17 +229,26 @@ def rendre(pid, d):
         faits += f'''<div class="fact"><span class="k">Soleil le 21 juin</span><span class="val">{str(g["soleil_ete_h_moyen"]).replace(".", ",")} h <small>par jour</small></span>
           <div class="sunbar">{''.join(f'<i style="background:{soleil(f)}"></i>' for f in (g.get("soleil_ete_profil_8h_21h") or []))}</div>
           <div class="hours"><span>8 h</span><span>14 h</span><span>21 h</span></div><div class="sunleg"><span>ombre</span><i></i><span>plein soleil</span></div><p>Dont {str(g["soleil_ete_apres14h_h"]).replace(".", ",")} h après 14 h, au moment le plus chaud.</p></div>'''
-        if v and v['hauteur_m'] >= 5:
-            faits += f'''<div class="fact"><span class="k">Vis-à-vis</span><span class="val">{v["hauteur_m"]:.0f} m <small>de haut, à {str(v["distance_m"]).replace(".", ",")} m</small></span>
-          <p>Une maison voisine côté {e(v["direction"])} a vue depuis son étage sur votre jardin.</p></div>'''
+        # l'œil est mesuré depuis le niveau de votre jardin (relief compris) : une maison en contrebas n'est plus comptée
+        if v and v.get('oeil_m', 0) >= 3 and ('denivele_m' in v or v['hauteur_m'] >= 5):
+            dist = 'en limite de terrain' if v['distance_m'] < 1 else f'à {str(v["distance_m"]).replace(".", ",")} m'
+            dz = v.get('denivele_m') or 0
+            relief = ' Elle est construite plus haut que votre terrain, ce qui renforce la vue.' if dz >= 1 else ''
+            faits += f'''<div class="fact"><span class="k">Vis-à-vis</span><span class="val">{v["oeil_m"]:.0f} m <small>de hauteur de vue, {dist}</small></span>
+          <p>Depuis son étage, une maison voisine côté {e(v["direction"])} voit votre jardin d'environ {v["oeil_m"]:.0f} m de haut.{relief}</p></div>'''
         faits += f'''<div class="fact"><span class="k">Votre terrain</span><span class="val">{g["surface_parcelle_m2"]} m² <small>dont {g["surface_jardin_m2"]} de jardin</small></span>
           <p>{g["part_jardin_plus_6h_ete"]} % du jardin a plus de 6 h de soleil en été.</p></div>'''
     atouts = ''.join(f'<li>{e(a)}</li>' for a in L.get('atouts') or []); pistes = ''.join(f'<li>{e(a)}</li>' for a in L.get('pistes') or [])
     visuel = (f'''<div class="cmp" id="cmp" style="--p:50%"><img src="/fichiers/{pid}/visuel.jpg" alt="Idée d'aménagement avec nos produits"><img class="av" src="/fichiers/{pid}/photo.jpg" alt="Votre photo">
           <span class="bar"></span><span class="tag l">Avant</span><span class="tag r">Idée Cover Green</span><input id="cmp-range" type="range" min="0" max="100" value="50" aria-label="Comparer avant et après"></div>
           <p class="note">Idée d'aménagement non contractuelle, réalisée avec nos produits.</p>''' if D.get('visuel') else
-              '<div class="refs">' + ''.join(f'<img src="/assets/refs/{p["photo"]}" alt="{e(p["nom"])} Cover Green">' for p in D['produits']) + '</div><p class="note">Des réalisations Cover Green proches de votre projet.</p>'
-              + ('' if os.path.exists(f'{d}/photo.jpg') else AJOUT_PHOTO.replace('PID', e(pid))))
+              (AJOUT_PHOTO.replace('PID', e(pid)) if not os.path.exists(f'{d}/photo.jpg') else
+               '<div class="refs">' + ''.join(f'<img src="/assets/refs/{p["photo"]}" alt="{e(p["nom"])} Cover Green">' for p in D['produits']) + '</div><p class="note">Des réalisations Cover Green proches de votre projet.</p>'))
+    if not os.path.exists(f'{d}/photo.jpg'):
+        # atouts et pistes viennent de la lecture de la photo : sans photo, on le dit et on renvoie vers l'envoi
+        lien = '<li class="sansbul"><a href="#cgp-ajout-bloc" onclick="document.getElementById(\'cgp-ajout\').click();return false" style="color:#049E00;font-weight:700">Envoyer ma photo</a></li>'
+        atouts = atouts or '<li>Avec une photo de votre jardin, nous repérons ses atouts : ce qu\'il faut garder et mettre en valeur.</li>' + lien
+        pistes = pistes or '<li>Avec une photo, nous vous donnons des pistes concrètes pour votre jardin, avec nos produits au bon endroit.</li>' + lien
     pl = (D.get('plantes') or {}).get('plantes') or []
     M = 'JFMAMJJASOND'
     NOMS_MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
@@ -268,7 +297,8 @@ def rendre(pid, d):
            'CAL': cal, 'MOIS': ''.join(f'<th scope="col">{m}</th>' for m in M), 'PRODUITS': prods, 'COMPLEMENTS': compl, 'BUDGET': budget}
     out = GABARIT
     for k, x in rep.items(): out = out.replace('{{' + k + '}}', x)
-    if not os.path.exists(f'{d}/photo.jpg'): out = out.replace('à partir de votre adresse et de votre photo', 'à partir de votre adresse')
+    if not os.path.exists(f'{d}/photo.jpg'):
+        out = out.replace('à partir de votre adresse et de votre photo', 'à partir de votre adresse').replace('<h2>Votre jardin, demain</h2>', '<h2>Votre jardin imaginé avec nos produits</h2>')
     return out
 
 

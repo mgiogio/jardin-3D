@@ -30,9 +30,18 @@ for f in get(url)['features']:
     for poly in polys:
         pg = Polygon([loc(x, y) for x, y, *_ in poly[0]])
         if pg.area < 4: continue
-        bats.append({'g': pg, 'h': f['properties'].get('hauteur') or 3.5, 'etages': f['properties'].get('nombre_d_etages'), 'usage': f['properties'].get('usage_1')})
+        pr = f['properties']; a0, a1 = pr.get('altitude_minimale_sol'), pr.get('altitude_maximale_sol')
+        bats.append({'g': pg, 'h': pr.get('hauteur') or 3.5, 'etages': pr.get('nombre_d_etages'), 'usage': pr.get('usage_1'),
+                     'sol': (a0 + a1) / 2 if a0 is not None and a1 is not None else a0})
 # la maison du client = bâtiment qui recouvre le plus son emprise
 for b in bats: b['client'] = b['g'].intersection(maison).area > 0.5 * min(b['g'].area, maison.area)
+# relief : le niveau du jardin est celui du sol de la maison du client ; une maison voisine en contrebas plonge moins, ou pas du tout
+_cl = [b['sol'] for b in bats if b['client'] and b['sol'] is not None]
+_tous = sorted(b['sol'] for b in bats if b['sol'] is not None)
+niveau_jardin = _cl[0] if _cl else (_tous[len(_tous) // 2] if _tous else None)
+for b in bats:
+    dz = (b['sol'] - niveau_jardin) if (niveau_jardin is not None and b['sol'] is not None and not b['client']) else 0.0
+    b['dz'] = max(-15.0, min(15.0, dz)); b['he'] = max(0.0, b['h'] + b['dz'])      # hauteur vue depuis le jardin
 jardin = parcelle.difference(unary_union([b['g'] for b in bats if b['client']] + [maison]).buffer(0.3))
 
 # ---- soleil (formule NOAA simplifiée), heure solaire locale ----
@@ -51,8 +60,10 @@ def ombres(el, az):
     L = 1 / math.tan(math.radians(el)); dx, dy = -math.sin(math.radians(az)), -math.cos(math.radians(az))
     out = []
     for b in bats:
-        t = affinity.translate(b['g'], dx * L * b['h'], dy * L * b['h'])
-        out.append(unary_union([b['g'], t]).convex_hull if b['g'].convex_hull.area / b['g'].area < 1.3 else unary_union([b['g'], t, b['g'].union(t).convex_hull.intersection(b['g'].buffer(L * b['h'] + 1))]))
+        if b['he'] <= 0.2: continue
+        t = affinity.translate(b['g'], dx * L * b['he'], dy * L * b['he'])
+        out.append(unary_union([b['g'], t]).convex_hull if b['g'].convex_hull.area / b['g'].area < 1.3 else unary_union([b['g'], t, b['g'].union(t).convex_hull.intersection(b['g'].buffer(L * b['he'] + 1))]))
+    if not out: return Polygon()
     return unary_union(out)
 # grille du jardin (0,5 m)
 minx, miny, maxx, maxy = jardin.bounds; pas = 0.5
@@ -74,17 +85,18 @@ mi, _ = heures_soleil(265)                  # 22 septembre
 # ---- vis-à-vis : étages voisins qui plongent sur le jardin ----
 vav = []
 for b in bats:
-    if b['client'] or b['h'] < 4.5: continue
+    # œil à l'étage, mesuré depuis le niveau du jardin (relief compris) ; sous 3 m il ne plonge pas vraiment sur le jardin
+    if b['client'] or b['h'] < 4.5 or b['he'] - 1.5 < 3: continue
     d = b['g'].distance(jardin)
     if d > 25: continue
     # œil à l'étage : hauteur du bâtiment - 1,5 m ; personne assise à 1,2 m au point du jardin le plus proche
     pj, pb = [np.array(p.coords[0]) for p in __import__('shapely.ops', fromlist=['x']).nearest_points(jardin, b['g'])]
-    oeil = b['h'] - 1.5
+    oeil = b['he'] - 1.5
     limite = parcelle.exterior.distance(Point(pb)) if not parcelle.contains(Point(pb)) else 0
     # hauteur d'écran nécessaire en limite de terrain pour couper la vue vers une personne assise à 2 m dans le jardin
     D = max(d + 2, 0.5); dl = min(max(d - 0.0, 0.1), D)
     besoin = 1.2 + (oeil - 1.2) * (D - dl) / D if D > 0 else oeil
-    vav.append({'distance_m': round(d, 1), 'hauteur_m': b['h'], 'oeil_m': round(oeil, 1), 'ecran_necessaire_m': round(besoin, 2),
+    vav.append({'distance_m': round(d, 1), 'hauteur_m': b['h'], 'denivele_m': round(b['dz'], 1), 'oeil_m': round(oeil, 1), 'ecran_necessaire_m': round(besoin, 2),
                 'direction': ['nord', 'nord-est', 'est', 'sud-est', 'sud', 'sud-ouest', 'ouest', 'nord-ouest'][int(((math.degrees(math.atan2(pb[0] - pj[0], pb[1] - pj[1])) + 360 + 22.5) % 360) // 45)],
                 'centre': list(b['g'].centroid.coords[0])})
 vav.sort(key=lambda v: v['distance_m'])

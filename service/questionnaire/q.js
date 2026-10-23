@@ -582,6 +582,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   function gaClient() { var m = document.cookie.match(/_ga=GA\d\.\d\.(\d+\.\d+)/); return m ? m[1] : ''; }
   function envoyer() {
     var dt = Math.round((maintenant() - tEtape) / 1000); S.temps[S.etape] = (S.temps[S.etape] || 0) + dt; tEtape = maintenant();
+    // nouveau projet : le prénom et les réponses d'un essai précédent ne sont pas repris
+    S.prenom = ''; S.infos = {};
     S.envoi = true; S.avecPhoto = !!S.photo; S.erreur = null; garder(); rendre();
     var T = S.terrain || {};
     var projet = {

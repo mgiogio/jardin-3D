@@ -59,7 +59,7 @@ d.polygon([T(*p) for p in mai], fill=C['house'])
 mc = T(np.mean(mai[:-1, 0]), np.mean(mai[:-1, 1])); d.text(mc, 'Votre\nmaison', font=font(10 * SS, True), fill='white', anchor='mm', align='center')
 d.line([T(*p) for p in par], fill=C['parcel'], width=3 * SS, joint='curve')
 # vis-à-vis : 2 voisins les plus proches et hauts
-for v in [v for v in dg['vis_a_vis'] if v['hauteur_m'] >= 6][:2]:
+for v in [v for v in dg['vis_a_vis'] if v.get('oeil_m', 0) >= (3 if 'denivele_m' in v else 4.5)][:2]:
     cx, cy = v['centre']
     tx = par[:, 0].min() + 1.5 if cx < par[:, 0].mean() else par[:, 0].max() - 1.5
     a, b_ = T(cx, cy), T(tx, cy)
