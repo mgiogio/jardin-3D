@@ -103,7 +103,7 @@ def rendre(pid, d):
         return ' ou '.join(NOMS_MOIS[a[0] - 1] + ('-' + NOMS_MOIS[a[-1] - 1] if len(a) > 1 else '') for a in g)
     def case(p, m):
         c = 'fl' if m in p['mois_fleurs'] else ('fo' if ('persistant' in p['hiver'] or 'marcescent' in p['hiver'] or 4 <= m <= 10) else '')
-        pl = '<b aria-label="à planter"></b>' if m in (p.get('mois_plantation') or []) else ''
+        pl = '<span class="pl" aria-label="à planter">●</span>' if m in (p.get('mois_plantation') or []) else ''
         return f'<td class="{c}">{pl}</td>'
     cal = ''.join(f'<tr><th scope="row">{e(p["nom"])}</th>' + ''.join(case(p, m + 1) for m in range(12)) + '</tr>' for p in pl)
     cartes = ''.join(f'''<article class="pcard"><img src="/assets/plantes/{e(p["photo"])}" alt="{e(p["nom"])}" loading="lazy"><div class="pc"><span class="role">{ROLE.get(p["role"], p["role"])}</span><h4>{e(p["nom"])}</h4><i>{e(p["latin"])}</i>
@@ -113,11 +113,21 @@ def rendre(pid, d):
     prods = ''.join(f'''<div class="prod"><img src="/assets/refs/{p["photo"]}" alt=""><div><h3>{e(p["nom"])}</h3><p class="why">{e(p.get("placement"))}</p>
         <dl class="spec">{''.join(f'<div><dt>{e(k)}</dt><dd>{e(x)}</dd></div>' for k, x in p["detail"].items())}</dl></div>
         <div class="est"><small>Estimation</small><b>{eur(p["prix"][0])} à {eur(p["prix"][1])}</b><a class="cta reduit{"" if i == 0 else " sec"}" href="{p["lien"]}" target="_blank" rel="noopener">{VERBE.get(p.get("cle"), "Configurer")}</a></div></div>''' for i, p in enumerate(D['produits']))
+    comp = D.get('complements') or []
+    compl = ('<h3 class="h-compl">Pour compléter votre projet</h3><div class="compl">' + ''.join(f'''<div class="carte cpl"><img src="/assets/refs/{c["photo"]}" alt="" loading="lazy"><div class="cplt"><h4>{e(c["nom"])}</h4><p>{e(c["pourquoi"])}</p>
+        <div class="cplp"><b>{eur(c["prix"][0])} à {eur(c["prix"][1])}</b><a class="cta gris reduit" href="{c["lien"]}" target="_blank" rel="noopener">{e(c["bouton"])}</a></div></div></div>''' for c in comp) + '</div>') if comp else ''
+    b0, b1 = D['budget']
+    budget = f'''<div class="r big"><span>Vos produits Cover Green</span><span>{eur(b0)} à {eur(b1)}</span></div>'''
+    if comp:
+        c0, c1 = b0 + sum(c['prix'][0] for c in comp), b1 + sum(c['prix'][1] for c in comp)
+        budget += f'''<div class="r"><span>Avec les compléments</span><span><b>{eur(c0)} à {eur(c1)}</b></span></div>'''
+    budget += '''<div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div><div class="r"><span>Paiement</span><span>en 1x à 4x sans frais</span></div>
+      <p class="note" style="margin:4px 0 0">Prix exact dans chaque configurateur, selon vos choix. Le mobilier, les plantes et le revêtement de sol du visuel sont là pour l'ambiance : ils ne sont pas compris.</p>'''
     planbloc = (f'''<div class="planrow"><div class="carte plan"><img src="/fichiers/{pid}/plan.png" alt="Votre parcelle vue du ciel"></div><div><h3>Votre parcelle vue du ciel</h3>
       <ul class="legend"><li><span class="sw" style="background:linear-gradient(90deg,#96acc4,#ffde8c,#e8742a)"></span>Heures de soleil le 21 juin, de l'ombre au plein soleil</li><li><span class="sw" style="background:#344239"></span>Votre maison</li><li><span class="sw" style="background:#d6dad2;border:1px solid #b0b6ac"></span>Maisons voisines, avec leur hauteur</li><li><span class="sw" style="background:#c43428;border-radius:50%"></span>Voisin qui a vue sur votre jardin</li></ul></div></div>''' if D.get('plan') else '')
     rep = {'ID': e(pid), 'VILLE': e(D.get('ville')), 'DATE': e(D.get('cree_le')), 'VISUEL': visuel, 'FAITS': faits, 'ATOUTS': atouts, 'PISTES': pistes,
            'PLANBLOC': planbloc, 'CARTES': cartes,
-           'CAL': cal, 'MOIS': ''.join(f'<th scope="col">{m}</th>' for m in M), 'PRODUITS': prods, 'BUDGET': f'{eur(D["budget"][0])} à {eur(D["budget"][1])}'}
+           'CAL': cal, 'MOIS': ''.join(f'<th scope="col">{m}</th>' for m in M), 'PRODUITS': prods, 'COMPLEMENTS': compl, 'BUDGET': budget}
     out = GABARIT
     for k, x in rep.items(): out = out.replace('{{' + k + '}}', x)
     return out

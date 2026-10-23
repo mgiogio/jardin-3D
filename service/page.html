@@ -23,6 +23,13 @@
 @media (prefers-reduced-motion:reduce){.cgp .onglets{transition:none}}
 .cgp .onglets ul{list-style:none;margin:0 auto;padding:8px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;max-width:1080px}
 .cgp .onglets ul::-webkit-scrollbar{display:none}
+.cgp .onglets .wrap{position:relative}
+.cgp .fl-g,.cgp .fl-d{position:absolute;top:0;bottom:1px;width:56px;border:0;padding:0;cursor:pointer;display:none;align-items:center;color:var(--txt);font:700 22px/1 inherit;z-index:2}
+.cgp .fl-g{left:0;justify-content:flex-start;padding-left:4px;background:linear-gradient(90deg,#fff 55%,rgba(255,255,255,0))}
+.cgp .fl-d{right:0;justify-content:flex-end;padding-right:4px;background:linear-gradient(270deg,#fff 55%,rgba(255,255,255,0))}
+.cgp .onglets.deb-g .fl-g,.cgp .onglets.deb-d .fl-d{display:flex}
+.cgp .fl-g .ch,.cgp .fl-d .ch{width:30px;height:30px;border-radius:50%;background:var(--txt);color:#fff;display:flex;align-items:center;justify-content:center}
+.cgp .fl-g:focus-visible,.cgp .fl-d:focus-visible{outline:2px solid var(--vert);outline-offset:-2px}
 .cgp .onglets a{display:block;white-space:nowrap;text-decoration:none;color:var(--txt);font-weight:500;font-size:15px;padding:9px 16px;border-radius:8px;background:var(--gris)}
 .cgp .onglets a:hover{background:var(--brume)}
 .cgp .onglets a.on{background:var(--vert);color:#fff;font-weight:700}
@@ -77,7 +84,8 @@
 .cgp .cal td.fo{background:var(--brume)!important}
 .cgp .cal td.fl{background:var(--vert)!important}
 .cgp .cal td{position:relative}
-.cgp .cal td b{position:absolute;inset:0;margin:auto;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--txt)}
+.cgp .cal td .pl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;color:var(--txt)}
+.cgp .cal td.fl .pl{color:#fff}
 .cgp .calleg{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px}.cgp .calleg li{white-space:nowrap}
 .cgp .pcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:22px}
 .cgp .pcard{overflow:hidden;display:grid;align-content:start}
@@ -101,7 +109,16 @@
 .cgp .est{display:grid;gap:8px;justify-items:end;text-align:right}
 .cgp .est small{color:var(--muted);font-size:13px}
 .cgp .est b{font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.cgp .tot{padding:20px;display:grid;gap:6px;background:var(--brume)}
+.cgp .tot{padding:20px;display:grid;gap:6px;background:var(--brume);border-color:var(--brume);margin-top:20px}
+.cgp .h-compl{margin:28px 0 12px}
+.cgp .compl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cgp .cpl{display:grid;grid-template-columns:120px minmax(0,1fr);overflow:hidden}
+.cgp .cpl img{width:120px;height:100%;min-height:150px;object-fit:cover}
+.cgp .cplt{padding:16px;display:grid;gap:6px;align-content:start}
+.cgp .cplt h4{font-weight:700;font-size:17px}
+.cgp .cplt p{margin:0;font-size:15px;color:var(--muted)}
+.cgp .cplp{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;margin-top:4px}
+.cgp .cplp b{font-weight:800;font-size:18px;white-space:nowrap}
 .cgp .tot .r{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
 .cgp .tot .big{font-weight:800;font-size:26px}
 /* boutons : modèle CTA Cover Green */
@@ -134,7 +151,7 @@
   .cgp .cal table{border-spacing:2px;font-size:13px}
   .cgp .cal tbody th{white-space:normal;max-width:96px;padding-right:6px;line-height:1.2}
   .cgp .cal td{min-width:0;height:20px}
-  .cgp .cal td b{width:8px;height:8px}
+  .cgp .cal td .pl{font-size:11px}
   /* plantes : fiches compactes, photo à gauche */
   .cgp .pcards{grid-template-columns:1fr;gap:10px}
   .cgp .pcard{grid-template-columns:104px minmax(0,1fr)}
@@ -148,6 +165,9 @@
   .cgp .est small{grid-column:1 / -1}
   .cgp .est .cta{grid-column:1 / -1;width:100%}
   .cgp .tot{padding:16px}
+  .cgp .compl{grid-template-columns:1fr;gap:10px}
+  .cgp .cpl{grid-template-columns:96px minmax(0,1fr)}.cgp .cpl img{width:96px}
+  .cgp .cplp .cta{width:100%}
   .cgp .tot .big{flex-direction:column;gap:2px;font-size:22px}
   .cgp .actions .cta{width:100%}
   .cgp .cta{min-width:160px}
@@ -163,7 +183,7 @@
   <li><a href="#cgp-terrain">Soleil et terrain</a></li>
   <li><a href="#cgp-plantes">Vos plantes</a></li>
   <li><a href="#cgp-produits">Vos produits et budget</a></li>
-</ul></div></nav>
+</ul><button class="fl-g" type="button" aria-label="Onglets précédents"><span class="ch"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2.5 4.5 7 9 11.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button><button class="fl-d" type="button" aria-label="Onglets suivants"><span class="ch"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 2.5 9.5 7 5 11.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button></div></nav>
 <div class="wrap">
   <section id="cgp-visuel"><h2>Votre jardin, demain</h2>
     <div class="visu"><div>{{VISUEL}}</div><aside><div class="carte bloc"><h3>Ses atouts</h3><ul>{{ATOUTS}}</ul></div><div class="carte bloc brume"><h3>Nos pistes</h3><ul>{{PISTES}}</ul></div></aside></div></section>
@@ -174,11 +194,13 @@
   <section id="cgp-plantes"><h2>Vos plantes, saison par saison</h2>
     <p class="sub">Choisies pour votre climat, votre exposition, votre style et un entretien minimal.</p>
     <div class="carte cal" role="region" aria-label="Calendrier des plantes"><table><thead><tr><th></th>{{MOIS}}</tr></thead><tbody>{{CAL}}</tbody></table>
-      <ul class="legend calleg"><li><span class="sw" style="background:var(--vert)"></span>En fleurs</li><li><span class="sw" style="background:var(--brume)"></span>En feuillage</li><li><span class="sw" style="background:#fff;border:2px solid var(--txt);border-radius:50%;width:12px;height:12px"></span>Bonne période pour planter</li></ul></div>
+      <ul class="legend calleg"><li><span class="sw" style="background:var(--vert)"></span>En fleurs</li><li><span class="sw" style="background:var(--brume)"></span>En feuillage</li><li><span class="sw" style="background:var(--txt);border-radius:50%;width:12px;height:12px"></span>Bonne période pour planter</li></ul></div>
     <div class="pcards">{{CARTES}}</div></section>
   <section id="cgp-produits"><h2>Votre projet Cover Green</h2>
     <p class="sub">Chaque produit s'ouvre dans son configurateur : vous ajustez selon votre terrain et vous commandez.</p>
-    <div class="carte bom">{{PRODUITS}}<div class="tot"><div class="r big"><span>Budget estimé</span><span>{{BUDGET}}</span></div><div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div><div class="r"><span>Paiement</span><span>en 1x à 4x sans frais</span></div><p class="note" style="margin:4px 0 0">Prix exact dans le configurateur, selon vos choix finaux.</p></div></div>
+    <div class="carte bom">{{PRODUITS}}</div>
+    {{COMPLEMENTS}}
+    <div class="carte tot">{{BUDGET}}</div>
     <div class="actions"><a class="cta gris" href="https://www.cover.green/contact/">Être rappelé par un conseiller</a></div></section>
   <p class="fin">Cette page est personnelle : gardez ce lien pour retrouver votre projet.</p>
 </div>
@@ -195,6 +217,11 @@ const actif=()=>{const lim=haut()+nav.offsetHeight+40;let k=0;S.forEach((s,i)=>{
 addEventListener("scroll",()=>{caler();actif()},{passive:true});addEventListener("resize",caler);
 const b0=document.getElementById("cgh");if(b0)new MutationObserver(caler).observe(b0,{attributes:true,subtree:true,attributeFilter:["class"]});
 caler();actif();
+// flèches gauche / droite quand les onglets dépassent de l'écran
+const ul=nav.querySelector("ul"),deb=()=>{nav.classList.toggle("deb-g",ul.scrollLeft>4);nav.classList.toggle("deb-d",ul.scrollLeft+ul.clientWidth<ul.scrollWidth-4)};
+ul.addEventListener("scroll",deb,{passive:true});addEventListener("resize",deb);deb();
+nav.querySelector(".fl-g").addEventListener("click",()=>ul.scrollBy({left:-ul.clientWidth*.7,behavior:"smooth"}));
+nav.querySelector(".fl-d").addEventListener("click",()=>ul.scrollBy({left:ul.clientWidth*.7,behavior:"smooth"}));
 // clic sur un onglet : on vise la section en tenant compte de l'en-tête (caché si on descend, visible si on remonte)
 L.forEach(a=>a.addEventListener("click",ev=>{const t=document.querySelector(a.hash);if(!t)return;ev.preventDefault();
   const y=t.getBoundingClientRect().top+scrollY,desc=y>scrollY,mob=matchMedia("(max-width:1024px)").matches,

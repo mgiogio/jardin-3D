@@ -61,6 +61,44 @@
   "pergola_connecteurs.jpg": "https://cover.green/wp-content/uploads/2026/08/devaux-1-1024x768.jpg",
   "cloture_ensemble.jpg": "https://cover.green/wp-content/uploads/2026/08/moiroux-2-1024x768.jpg",
   "cloture_angle.jpg": "https://cover.green/wp-content/uploads/2026/08/moiroux-1-1024x768.jpg",
-  "cloture_lames.jpg": "https://cover.green/wp-content/uploads/2026/08/dardonville-1-1024x768.jpg"
+  "cloture_lames.jpg": "https://cover.green/wp-content/uploads/2026/08/dardonville-1-1024x768.jpg",
+  "terrasse.webp": "https://cover.green/wp-content/uploads/2026/04/terrace_bois_piscine_3.webp",
+  "bardage.jpg": "https://cover.green/wp-content/uploads/2025/05/Plan-de-travail-13.jpg",
+  "recuperateur.jpg": "https://cover.green/wp-content/uploads/2025/10/recuperateur-eau-de-pluie-resistant.jpg"
+ },
+ "complements": {
+  "terrasse": {
+   "nom": "Terrasse bois",
+   "lien": "https://www.cover.green/configurateur-terrasse/",
+   "bouton": "Configurer ma terrasse",
+   "photo_url": "https://cover.green/wp-content/uploads/2026/04/terrace_bois_piscine_3.webp",
+   "photo": "terrasse.webp",
+   "prix_m2": [
+    60,
+    80
+   ]
+  },
+  "bardage": {
+   "nom": "Bardage bois",
+   "lien": "https://www.cover.green/bardage-bois/",
+   "bouton": "Voir nos bardages",
+   "photo_url": "https://cover.green/wp-content/uploads/2025/05/Plan-de-travail-13.jpg",
+   "photo": "bardage.jpg",
+   "prix_m2": [
+    45,
+    65
+   ]
+  },
+  "recuperateur": {
+   "nom": "Récupérateur d'eau bois 1000 L",
+   "lien": "https://www.cover.green/recuperateur-eau-de-pluie-1000l-bois/",
+   "bouton": "Voir le récupérateur",
+   "photo_url": "https://cover.green/wp-content/uploads/2025/10/recuperateur-eau-de-pluie-resistant.jpg",
+   "photo": "recuperateur.jpg",
+   "prix": [
+    450,
+    550
+   ]
+  }
  }
 }

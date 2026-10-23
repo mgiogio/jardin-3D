@@ -107,6 +107,9 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
 {{"atouts": ["2 ou 3 atouts réels visibles sur la photo"], "pistes": ["2 ou 3 améliorations concrètes, formulées positivement"],
  "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo, décollée de la façade si une fenêtre est derrière (ou null)"}},
  "cloture_longueur_m": nombre estimé (entre 4 et 30), "a_garder": ["seulement les éléments fixes ou plantés à conserver (maison, arbres, arbustes, murets, escaliers, accès) : le mobilier, les tapis et la déco peuvent être remplacés"], "a_retirer": ["encombrants ou objets à faire disparaître (poubelles, bâches, vieux mobilier)"],
+ "sol_actuel": "dalle_ou_terrasse" ou "pelouse" ou "terre_ou_gravier" ou "mixte" (le sol de la zone de vie visible),
+ "surface_sol_m2": surface estimée de la zone où l'on vivrait dehors (entre 8 et 40),
+ "mur_a_habiller": "un mur, un abri ou une façade visible qui gagnerait à être habillé de bois, en quelques mots (ou null)", "mur_surface_m2": surface estimée de ce mur (ou null),
  "photo_exploitable": true ou false (false si la photo ne montre pas un extérieur)}}""", [im])
     data['lecture'] = lecture; etat['etapes']['lecture'] = round(time.time() - t0); maj()
     # 4. visuel avec nos produits, contrôlé
@@ -147,6 +150,27 @@ Liste uniquement les "defauts" GRAVES (qui empêchent de montrer l'image au clie
             props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Format': c['format'], 'Toiture': 'brise-soleil'},
                           'placement': (lecture.get('placement') or {}).get(p), 'prix': c['prix']})
     data['produits'] = props; data['budget'] = [sum(p['prix'][0] for p in props), sum(p['prix'][1] for p in props)]
+    # 6. compléments Cover Green selon l'envie, la photo et le terrain (2 au plus)
+    C = PROD.get('complements', {}); comp = []
+    sol = lecture.get('sol_actuel') or ''
+    if 'terrasse' in C and (besoin == 'sol' or sol in ('pelouse', 'terre_ou_gravier', 'mixte')):
+        S = int(max(8, min(40, float(lecture.get('surface_sol_m2') or 15))))
+        comp.append({'cle': 'terrasse', 'm2': S, 'prix': [r100(S * C['terrasse']['prix_m2'][0]), r100(S * C['terrasse']['prix_m2'][1])],
+                     'pourquoi': f"Un sol en bois d'environ {S} m² pour installer le coin salon de plain-pied, propre en toute saison."})
+    if 'bardage' in C and lecture.get('mur_a_habiller'):
+        S = int(max(4, min(30, float(lecture.get('mur_surface_m2') or 10))))
+        comp.append({'cle': 'bardage', 'm2': S, 'prix': [r100(S * C['bardage']['prix_m2'][0]), r100(S * C['bardage']['prix_m2'][1])],
+                     'pourquoi': f"Habiller {lecture['mur_a_habiller']} (environ {S} m²) avec le même bois que le reste du projet."})
+    toit = d.get('surface_toit_m2') or 0
+    if 'recuperateur' in C and (d.get('surface_jardin_m2') or 0) >= 40 and toit:
+        pluie = {'mediterraneen': 0.6, 'continental': 0.7, 'montagnard': 1.0}.get((data.get('plantes') or {}).get('climat'), 0.75)
+        m3 = int(round(toit * pluie * 0.8))
+        comp.append({'cle': 'recuperateur', 'prix': C['recuperateur']['prix'],
+                     'pourquoi': f"Votre toit d'environ {toit} m² récolte près de {m3} m³ d'eau de pluie par an : de quoi arroser vos nouvelles plantations."})
+    ordre = {'sol': ['terrasse'], 'embellir': ['bardage']}.get(besoin, [])
+    comp.sort(key=lambda c: 0 if c['cle'] in ordre else 1)
+    for c in comp[:2]: c.update(nom=C[c['cle']]['nom'], lien=C[c['cle']]['lien'], photo=C[c['cle']]['photo'], bouton=C[c['cle']]['bouton'])
+    data['complements'] = comp[:2]
     data['duree_s'] = round(time.time() - t0)
     json.dump(data, open(f'{dossier}/data.json', 'w'), ensure_ascii=False, indent=1)
     maj(statut='pret')

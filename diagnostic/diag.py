@@ -100,7 +100,7 @@ try:
 except Exception as e: urba['erreur'] = str(e)
 # ---- linéaire de limites de terrain non bâties (clôture possible) ----
 lim = parcelle.exterior.difference(unary_union([b['g'] for b in bats]).buffer(0.4))
-diag = {'surface_parcelle_m2': round(parcelle.area), 'surface_jardin_m2': round(jardin.area), 'hauteur_maison_m': h_maison,
+diag = {'surface_parcelle_m2': round(parcelle.area), 'surface_jardin_m2': round(jardin.area), 'surface_toit_m2': round(maison.area), 'hauteur_maison_m': h_maison,
         'soleil_ete_h_moyen': round(float(ete.mean()), 1), 'soleil_ete_apres14h_h': round(float(ete_apm.mean()), 1),
         'part_jardin_plus_6h_ete': round(float((ete >= 6).mean()) * 100), 'soleil_equinoxe_h': round(float(mi.mean()), 1),
         'soleil_ete_profil_8h_21h': PROFILS.get(172), 'vis_a_vis': vav[:5], 'urbanisme': urba, 'lineaire_limites_libres_m': round(lim.length, 1)}
