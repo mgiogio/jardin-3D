@@ -19,9 +19,9 @@ C = dict(bg=(238, 240, 233), road=(222, 224, 218), nb=(214, 218, 210), nbl=(176,
          ink=(29, 42, 34), muted=(93, 107, 98), fence=(150, 96, 52), perg=(232, 116, 42), red=(196, 52, 40))
 im = Image.new('RGB', (W, H), C['bg']); d = ImageDraw.Draw(im)
 _txt = ImageDraw.ImageDraw.text
-def halo(self, xy, t, **k):
-    if k.get('fill') not in ('white',) and 'stroke_width' not in k: k.update(stroke_width=3 * SS, stroke_fill=(255, 255, 255))
-    return _txt(self, xy, t, **k)
+def halo(self, xy, t, *a, **k):
+    if not a and k.get('fill') not in ('white',) and 'stroke_width' not in k: k.update(stroke_width=3 * SS, stroke_fill=(255, 255, 255))
+    return _txt(self, xy, t, *a, **k)
 ImageDraw.ImageDraw.text = halo
 # rue au sud de la parcelle
 ys = par[:, 1].min()

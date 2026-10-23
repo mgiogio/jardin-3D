@@ -84,10 +84,15 @@ def run(dossier, log=print):
     if P.get('parcel') and P.get('building'):
         try:
             subprocess.run(['python3', f'{DIAG}/diag.py', f'{dossier}/projet.json', f'{dossier}/diag'], check=True, capture_output=True, timeout=240)
-            subprocess.run(['python3', f'{DIAG}/plan.py', f'{dossier}/diag', f'{dossier}/plan.png'], check=True, capture_output=True, timeout=120, env=dict(os.environ, PLAN_AUTO='1'))
-            data['diag'] = json.load(open(f'{dossier}/diag/diagnostic.json')); data['plan'] = 'plan.png'
+            data['diag'] = json.load(open(f'{dossier}/diag/diagnostic.json'))
         except Exception as e:
-            log('diagnostic adresse en échec', e); data['diag'] = None
+            log('diagnostic adresse en échec', e, getattr(e, 'stderr', b'')[-800:]); data['diag'] = None
+        if data.get('diag'):
+            try:
+                subprocess.run(['python3', f'{DIAG}/plan.py', f'{dossier}/diag', f'{dossier}/plan.png'], check=True, capture_output=True, timeout=120, env=dict(os.environ, PLAN_AUTO='1'))
+                data['plan'] = 'plan.png'
+            except Exception as e:
+                log('plan en échec', e, getattr(e, 'stderr', b'')[-800:])
     etat['etapes']['diagnostic'] = round(time.time() - t0); maj()
     # 2. plantes (banque, sans génération)
     subprocess.run(['python3', f'{DIAG}/saisons.py', f'{dossier}/projet.json', '-', f'{dossier}/plantes'], check=True, capture_output=True, timeout=60, env=dict(os.environ, SAISONS_VISUELS='0'))
