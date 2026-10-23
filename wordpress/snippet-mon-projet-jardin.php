@@ -4,7 +4,7 @@
  * Shortcode [cg_projet_jardin] : affiche le projet du client (lien /mon-projet-jardin/?projet=XXXX)
  * entre l'en-tête et le pied de page du site. Le contenu vient du service Diagnostic jardin (Cloud Run).
  */
-if (!defined('CG_DIAG_API')) define('CG_DIAG_API', 'https://diagnostic-jardin-473773825833.europe-west1.run.app');
+if (!defined('CG_DIAG_API')) define('CG_DIAG_API', 'https://diagnostic-jardin-349938922301.europe-west1.run.app');
 
 function cg_projet_jardin_id() {
     $id = isset($_GET['projet']) ? sanitize_text_field(wp_unslash($_GET['projet'])) : '';
