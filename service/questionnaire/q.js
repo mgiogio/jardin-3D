@@ -41,7 +41,7 @@ text-align:left;cursor:pointer;color:var(--txt);transition:border-color .15s,bac
 .cgq .c small{display:block;color:var(--muted);font-size:14px;line-height:1.35;margin-top:2px}\
 .cgq .pal{flex:none;display:grid;grid-template-columns:1fr 1fr;width:44px;height:44px;border-radius:10px;overflow:hidden}\
 .cgq .pal i{display:block}\
-.cgq-frise{width:100%;margin:24px 0 0;height:110px;overflow:hidden;pointer-events:none}\
+.cgq-frise{width:100%;margin:auto 0 0;padding-top:24px;box-sizing:content-box;height:110px;flex:none;overflow:hidden;pointer-events:none}\
 .cgq-frise svg{display:block;width:100%;height:100%}\
 @media (min-width:768px){.cgq-frise{height:160px}}\
 .cgq .cartes.mini{grid-template-columns:1fr 1fr}\
@@ -172,7 +172,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   var M = document.createElement('div'); M.className = 'cgq'; R.innerHTML = ''; R.appendChild(M);
   // bordure de jardin dessinée en bas du formulaire (motif original, généré : deux plans de végétation sur toute la largeur)
   function bordure() {
-    var W = 1600, H = 170, sol = 166, o = [], g = 7;
+    var W = 1600, H = 170, sol = 172, o = [], g = 7;
     function r() { g = (g * 16807) % 2147483647; return (g - 1) / 2147483646; }
     var V = ['#049E00', '#2E8B2A', '#5BAE4A'], C = ['#BFE3B0', '#9FD58A', '#D6EDCB'];
     function herbe(x, h, col, w) { var p = ''; for (var k = -2; k <= 2; k++) { var dx = k * (8 + r() * 8), hh = h * (0.65 + r() * 0.4); p += '<path d="M' + x + ' ' + sol + ' C' + (x + dx * 0.2) + ' ' + (sol - hh * 0.5) + ' ' + (x + dx * 0.7) + ' ' + (sol - hh * 0.8) + ' ' + (x + dx * 1.4) + ' ' + (sol - hh) + '"/>'; } return '<g fill="none" stroke="' + col + '" stroke-width="' + w + '" stroke-linecap="round">' + p + '</g>'; }
@@ -189,12 +189,17 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       else if (t < 0.75) o.push(lavande(x, 44 + r() * 30));
       else o.push(fleur(x, 40 + r() * 46, ['#E58FA6', '#E4C46A', '#FFFFFF', '#E9A0B4'][Math.floor(r() * 4)]));
     }
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">' + o.join('') + '<rect x="0" y="' + sol + '" width="' + W + '" height="' + (H - sol) + '" fill="#5BAE4A"/></svg>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">' + o.join('') + '</svg>';
   }
   var FRISE = document.createElement('div'); FRISE.className = 'cgq-frise'; FRISE.innerHTML = bordure();
   R.appendChild(FRISE);
   // pleine largeur sans barre de défilement horizontale (100vw compte la barre verticale)
-  function etirer() { try { var l = R.getBoundingClientRect().left, w = document.documentElement.clientWidth; FRISE.style.width = w + 'px'; FRISE.style.marginLeft = (-l) + 'px'; } catch (e) { } }
+  // les plantes partent du bas de l'écran : le bloc occupe au moins toute la hauteur visible sous son début
+  R.style.display = 'flex'; R.style.flexDirection = 'column';
+  function etirer() { try {
+    var l = R.getBoundingClientRect().left, w = document.documentElement.clientWidth; FRISE.style.width = w + 'px'; FRISE.style.marginLeft = (-l) + 'px';
+    var haut = R.getBoundingClientRect().top + window.scrollY; R.style.minHeight = Math.max(0, (window.innerHeight || 0) - haut) + 'px';
+  } catch (e) { } }
   etirer(); window.addEventListener('resize', etirer);
 
   /* ---------- calage sous l'en-tête collant du site ---------- */
@@ -327,7 +332,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (en && S.etape === 'envie') {
       S.envies = S.envies || []; var k = S.envies.indexOf(en);
       if (k >= 0) S.envies.splice(k, 1); else S.envies.push(en);
-      S.envie = S.envies[0] || null; garder(); rendre(); return;
+      S.envie = S.envies[0] || null; garder(); majEnvies(); return;
     }
     if (a === 'envie-ok') { if (!(S.envies || []).length) return; ev('cgp_q_envies', { envie: S.envies.join(','), nombre: S.envies.length }); return aller('adresse'); }
     if (a === 'geo') return geolocaliser(b);
@@ -348,6 +353,18 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (a === 'info-passer') return repondre(b.getAttribute('data-q'), null);
     if (a === 'rappel') return rappel(b);
   });
+
+  // choix des envies : on met à jour les cartes et le bouton sur place, sans redessiner l'écran (rien ne bouge)
+  function majEnvies() {
+    var L = S.envies || [];
+    [].forEach.call(M.querySelectorAll('[data-envie]'), function (c) {
+      var k = L.indexOf(c.getAttribute('data-envie')), ic = c.querySelector('.ic');
+      c.classList.toggle('on', k >= 0); c.setAttribute('aria-pressed', k >= 0);
+      ic.innerHTML = k >= 0 ? '<span class="rang">' + (k + 1) + '</span>' : ICO[c.getAttribute('data-envie')];
+    });
+    var b = M.querySelector('[data-a=envie-ok]');
+    if (b) { b.disabled = !L.length; b.textContent = L.length > 1 ? 'Continuer avec ces ' + L.length + ' envies' : 'Continuer'; }
+  }
 
   /* ---------- adresse ---------- */
   var minuteur, ctrl;
