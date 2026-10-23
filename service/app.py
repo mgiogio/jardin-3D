@@ -122,7 +122,16 @@ def rendre(pid, d):
         c0, c1 = b0 + sum(c['prix'][0] for c in comp), b1 + sum(c['prix'][1] for c in comp)
         budget += f'''<div class="r"><span>Avec les compléments</span><span><b>{eur(c0)} à {eur(c1)}</b></span></div>'''
     budget += '''<div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div><div class="r"><span>Paiement</span><span>en 1x à 4x sans frais</span></div>
-      <p class="note" style="margin:4px 0 0">Prix exact dans chaque configurateur, selon vos choix. Le mobilier, les plantes et le revêtement de sol du visuel sont là pour l'ambiance : ils ne sont pas compris.</p>'''
+      <p class="note" style="margin:4px 0 0">Prix exact dans chaque configurateur, selon vos choix.</p>'''
+    R = D.get('reste')
+    if R:
+        t0, t1 = R['total']; p0, p1 = (c0, c1) if comp else (b0, b1)
+        budget += ('<div class="reste"><div class="r big2"><span>Le reste du visuel</span><span>' + f'{eur(t0)} à {eur(t1)}</span></div>'
+                   + ''.join(f'<div class="r"><span>{e(k)}</span><span>{eur(v[0])} à {eur(v[1])}</span></div>' for k, v in R['lignes'].items())
+                   + f'<div class="r big2 tout"><span>Votre jardin comme sur le visuel</span><span>{eur(p0 + t0)} à {eur(p1 + t1)}</span></div>'
+                   + '<p class="note" style="margin:4px 0 0">Mobilier, plantes et finitions : estimation indicative aux prix moyens des jardineries et enseignes de mobilier, à choisir où vous voulez.</p></div>')
+    else:
+        budget += '<p class="note" style="margin:0">Le mobilier, les plantes et le sol du visuel sont là pour l\'ambiance : ils ne sont pas compris.</p>'
     planbloc = (f'''<div class="planrow"><div class="carte plan"><img src="/fichiers/{pid}/plan.png" alt="Votre parcelle vue du ciel"></div><div><h3>Votre parcelle vue du ciel</h3>
       <ul class="legend"><li><span class="sw" style="background:linear-gradient(90deg,#96acc4,#ffde8c,#e8742a)"></span>Heures de soleil le 21 juin, de l'ombre au plein soleil</li><li><span class="sw" style="background:#344239"></span>Votre maison</li><li><span class="sw" style="background:#d6dad2;border:1px solid #b0b6ac"></span>Maisons voisines, avec leur hauteur</li><li><span class="sw" style="background:#c43428;border-radius:50%"></span>Voisin qui a vue sur votre jardin</li></ul></div></div>''' if D.get('plan') else '')
     rep = {'ID': e(pid), 'VILLE': e(D.get('ville')), 'DATE': e(D.get('cree_le')), 'VISUEL': visuel, 'FAITS': faits, 'ATOUTS': atouts, 'PISTES': pistes,
