@@ -94,8 +94,13 @@ def run(dossier, log=print):
         except Exception as e:
             log('terrain introuvable', e)
     besoin = (P.get('project', {}).get('need') or P.get('need') or '_defaut'); style = (P.get('needs', {}).get('style') or P.get('style') or 'contemporain')
-    produits = PROD['besoins'].get(besoin, PROD['besoins']['_defaut'])
-    data = {'id': os.path.basename(dossier), 'cree_le': time.strftime('%Y-%m-%d'), 'ville': P.get('address', {}).get('city', ''), 'besoin': besoin, 'style': style}
+    # plusieurs envies possibles, dans l'ordre de priorité choisi par le client : la première décide, les suivantes complètent
+    envies = [x for x in (P.get('project', {}).get('needs') or [besoin]) if x in BESOINS] or [besoin]
+    produits = []
+    for x in envies:
+        for p in PROD['besoins'].get(x, PROD['besoins']['_defaut']):
+            if p not in produits: produits.append(p)
+    data = {'id': os.path.basename(dossier), 'cree_le': time.strftime('%Y-%m-%d'), 'ville': P.get('address', {}).get('city', ''), 'besoin': besoin, 'envies': envies, 'style': style}
     # 1. diagnostic depuis l'adresse (gratuit)
     if P.get('parcel') and P.get('building'):
         try:
@@ -117,7 +122,7 @@ def run(dossier, log=print):
     d = data.get('diag') or {}
     faits = {k: d.get(k) for k in ('surface_jardin_m2', 'soleil_ete_h_moyen', 'soleil_ete_apres14h_h')} | {'vis_a_vis_proche': (d.get('vis_a_vis') or [None])[0]}
     lecture = {} if im is None else gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, bardages en bois). Voici la photo du jardin d'un particulier.
-Son envie : {BESOINS.get(besoin, besoin)}. Style souhaité : {style}. Données calculées depuis son adresse : {json.dumps(faits, ensure_ascii=False)}.
+Son envie : {' ; puis '.join(BESOINS.get(x, x) for x in envies)}. Style souhaité : {style}. Données calculées depuis son adresse : {json.dumps(faits, ensure_ascii=False)}.
 Produits Cover Green à intégrer : {', '.join(PROD[p]['nom'] for p in produits)}.
 Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans tiret cadratin :
 {{"atouts": ["2 ou 3 atouts réels visibles sur la photo"], "pistes": ["2 ou 3 améliorations concrètes, formulées positivement"],
@@ -207,7 +212,7 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
     # 6. compléments Cover Green selon l'envie, la photo et le terrain (2 au plus)
     C = PROD.get('complements', {}); comp = []
     sol = lecture.get('sol_actuel') or ''
-    if 'terrasse' in C and (besoin == 'sol' or sol in ('pelouse', 'terre_ou_gravier', 'mixte')):
+    if 'terrasse' in C and ('sol' in envies or sol in ('pelouse', 'terre_ou_gravier', 'mixte')):
         S = int(max(8, min(40, float(lecture.get('surface_sol_m2') or 15))))
         comp.append({'cle': 'terrasse', 'm2': S, 'prix': [r100(S * C['terrasse']['prix_m2'][0]), r100(S * C['terrasse']['prix_m2'][1])],
                      'pourquoi': f"Un sol en bois d'environ {S} m² pour installer le coin salon de plain-pied, propre en toute saison."})
@@ -221,7 +226,7 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
         m3 = int(round(toit * pluie * 0.8))
         comp.append({'cle': 'recuperateur', 'prix': C['recuperateur']['prix'],
                      'pourquoi': f"Votre toit d'environ {toit} m² récolte près de {m3} m³ d'eau de pluie par an : de quoi arroser vos nouvelles plantations."})
-    ordre = {'sol': ['terrasse'], 'embellir': ['bardage']}.get(besoin, [])
+    ordre = [{'sol': 'terrasse', 'embellir': 'bardage'}[x] for x in envies if x in ('sol', 'embellir')]
     comp.sort(key=lambda c: 0 if c['cle'] in ordre else 1)
     for c in comp[:2]: c.update(nom=C[c['cle']]['nom'], lien=C[c['cle']]['lien'], photo=C[c['cle']]['photo'], bouton=C[c['cle']]['bouton'])
     data['complements'] = comp[:2]

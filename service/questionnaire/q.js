@@ -42,6 +42,8 @@ text-align:left;cursor:pointer;color:var(--txt);transition:border-color .15s,bac
 .cgq .pal{flex:none;display:grid;grid-template-columns:1fr 1fr;width:44px;height:44px;border-radius:10px;overflow:hidden}\
 .cgq .pal i{display:block}\
 .cgq .cartes.mini{grid-template-columns:1fr 1fr}\
+.cgq .c .rang{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--vert);color:#fff;font:800 16px/1 var(--f)}\
+.cgq .multi .c.on .ic{background:#fff}\
 .cgq .cartes.mini .c{min-height:56px;justify-content:center;text-align:center;padding:10px 12px}\
 .cgq .cartes.mini .c b{font-size:16px;font-weight:500}\
 .cgq .cta{appearance:none;display:flex;align-items:center;justify-content:center;width:100%;height:56px;padding:0 24px;border-radius:8px;border:1px solid var(--orange);\
@@ -213,8 +215,15 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   /* ---------- écrans ---------- */
   var E = {};
   E.envie = function () {
-    return '<h2>Qu\'est-ce qui vous ferait le plus plaisir dans votre jardin ?</h2><p class="sous">Votre diagnostic gratuit en 1 minute : soleil heure par heure, vis-à-vis, idée d\'aménagement avec nos produits.</p>'
-      + cartes(ENVIES, S.envie, 'deux');
+    var L = S.envies || [];
+    return '<h2>Qu\'est-ce qui vous ferait plaisir dans votre jardin ?</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
+      + '<div class="cartes deux multi">' + ENVIES.map(function (o) {
+        var k = L.indexOf(o[0]);
+        return '<button type="button" class="c' + (k >= 0 ? ' on' : '') + '" data-envie="' + o[0] + '" aria-pressed="' + (k >= 0) + '">'
+          + '<span class="ic" aria-hidden="true">' + (k >= 0 ? '<span class="rang">' + (k + 1) + '</span>' : ICO[o[0]]) + '</span>'
+          + '<span><b>' + h(o[1]) + '</b><small>' + h(o[2]) + '</small></span></button>';
+      }).join('') + '</div>'
+      + '<div class="pile"><button type="button" class="cta" data-a="envie-ok"' + (L.length ? '' : ' disabled') + '>' + (L.length > 1 ? 'Continuer avec ces ' + L.length + ' envies' : 'Continuer') + '</button></div>';
   };
   E.style = function () { return '<h2>Quel style vous ressemble ?</h2><p class="sous">Nous habillerons votre idée d\'aménagement dans ce style.</p>' + cartes(STYLES, S.style, 'deux'); };
   E.entretien = function () { return '<h2>Et côté entretien des plantes ?</h2><p class="sous">Nous choisirons des plantes adaptées à votre climat et à votre temps.</p>' + cartes(ENTRETIEN, S.entretien); };
@@ -243,8 +252,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   };
   E.contact = function () {
     return '<h2>Où vous envoyer votre diagnostic ?</h2><p class="sous">' + (S.photo || S.photoUrl ? 'Votre page projet arrive par email dans 2 à 3 minutes.' : 'Votre page projet arrive par email dans 2 minutes. Vous pourrez y ajouter une photo.') + '</p>'
-      + '<form id="cgq-form" novalidate><label class="ch" for="cgq-pre">Prénom</label><input id="cgq-pre" class="t" type="text" autocomplete="given-name" autocapitalize="words" value="' + h(S.prenom) + '" required>'
-      + '<label class="ch" for="cgq-mail">Email</label><input id="cgq-mail" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="' + h(S.email) + '" required><p class="msg" id="cgq-mmsg" role="status"></p>'
+      + '<form id="cgq-form" novalidate><label class="ch" for="cgq-mail">Votre email</label><input id="cgq-mail" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="' + h(S.email) + '" required><p class="msg" id="cgq-mmsg" role="status"></p>'
       + '<label class="case"><input type="checkbox" id="cgq-opt"' + (S.optin ? ' checked' : '') + '><span>Recevoir aussi nos idées et offres jardin, 2 emails par mois au plus</span></label>'
       + '<div class="pile"><button type="submit" class="cta">Recevoir mon diagnostic</button></div></form>'
       + '<p class="confiance"><b>Gratuit et sans engagement</b> · ★ 4,6/5 sur Trustpilot, plus de 300 avis</p>'
@@ -252,7 +260,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   };
   E.attente = function () {
     var pret = S.statut === 'pret';
-    return '<div class="ecran"><h2>' + (pret ? 'Votre diagnostic est prêt' : 'C\'est parti, ' + h(S.prenom || '') + ' !') + '</h2>'
+    return '<div class="ecran"><h2>' + (pret ? 'Votre diagnostic est prêt' : (S.prenom ? 'C\'est parti, ' + h(S.prenom) + ' !' : 'C\'est parti !')) + '</h2>'
       + '<p class="sous">' + (pret ? 'Retrouvez-le aussi dans l\'email envoyé à ' + h(S.email) + '.' : 'Nous préparons votre diagnostic. Il arrive par email à <b>' + h(S.email) + '</b> dans 2 à 3 minutes, vous pouvez aussi rester ici.') + '</p>'
       + (S.erreur ? '<div class="erreur">' + h(S.erreur) + '</div><div class="pile"><button type="button" class="cta" data-a="renvoyer">Réessayer</button><button type="button" class="lien" data-a="modifier">Modifier mes réponses</button></div>' : '')
       + (!S.erreur ? '<ul class="etapes" id="cgq-et">' + ['Le soleil de votre jardin, heure par heure', 'Les vis-à-vis des maisons voisines', 'Les plantes adaptées à votre climat', S.avecPhoto ? 'Votre idée d\'aménagement avec nos produits' : 'Les produits adaptés à votre envie'].map(function (t) { return '<li><i></i><span>' + t + '</span></li>'; }).join('') + '</ul>' : '')
@@ -283,6 +291,13 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       setTimeout(function () { aller(suite); }, 180);     // un toucher suffit : on passe tout seul à la suite
       return;
     }
+    var en = b.getAttribute('data-envie');
+    if (en && S.etape === 'envie') {
+      S.envies = S.envies || []; var k = S.envies.indexOf(en);
+      if (k >= 0) S.envies.splice(k, 1); else S.envies.push(en);
+      S.envie = S.envies[0] || null; garder(); rendre(); return;
+    }
+    if (a === 'envie-ok') { if (!(S.envies || []).length) return; ev('cgp_q_envies', { envie: S.envies.join(','), nombre: S.envies.length }); return aller('adresse'); }
     if (a === 'geo') return geolocaliser(b);
     if (a === 'adresse-ok') return aller('terrain');
     if (a === 'terrain-ok') return aller('style');
@@ -465,8 +480,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     return best ? p[0] + '@' + best : null;
   }
   function contact() {
-    var F = M.querySelector('#cgq-form'), pre = M.querySelector('#cgq-pre'), mail = M.querySelector('#cgq-mail'), msg = M.querySelector('#cgq-mmsg'), opt = M.querySelector('#cgq-opt');
-    setTimeout(function () { try { (S.prenom ? mail : pre).focus({ preventScroll: true }); } catch (e) { } }, 250);
+    var F = M.querySelector('#cgq-form'), mail = M.querySelector('#cgq-mail'), msg = M.querySelector('#cgq-mmsg'), opt = M.querySelector('#cgq-opt');
+    setTimeout(function () { try { mail.focus({ preventScroll: true }); } catch (e) { } }, 250);
     function verifier(final) {
       var v = mail.value.trim(), ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), sg = ok && suggestion(v);
       mail.classList.toggle('err', final && !ok);
@@ -476,12 +491,11 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       return ok;
     }
     mail.addEventListener('blur', function () { if (mail.value.trim()) verifier(false); });
-    [pre, mail].forEach(function (i) { i.addEventListener('input', function () { S.prenom = pre.value.trim(); S.email = mail.value.trim(); i.classList.remove('err'); garder(); }); });
+    mail.addEventListener('input', function () { S.email = mail.value.trim(); mail.classList.remove('err'); garder(); });
     opt.addEventListener('change', function () { S.optin = opt.checked; garder(); });
     F.addEventListener('submit', function (e) {
       e.preventDefault();
-      S.prenom = pre.value.trim().slice(0, 60); S.email = mail.value.trim().slice(0, 120); S.optin = opt.checked;
-      if (!S.prenom) { pre.classList.add('err'); pre.focus(); return; }
+      S.email = mail.value.trim().slice(0, 120); S.optin = opt.checked;
       if (!verifier(true)) { mail.focus(); return; }
       envoyer();
     });
@@ -496,21 +510,21 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var projet = {
       version: 2, createdAt: new Date().toISOString(), source: 'questionnaire',
       address: S.adresse, parcel: T.parcel || null, building: T.building || null, facades: T.facades || [],
-      project: { need: S.envie }, needs: { style: S.style || 'contemporain', upkeep: S.entretien || 'peu' },
-      contact: { firstName: S.prenom, email: S.email, optin: !!S.optin, consent: true },
+      project: { need: S.envie, needs: S.envies || [S.envie] }, needs: { style: S.style || 'contemporain', upkeep: S.entretien || 'peu' },
+      contact: { firstName: S.prenom || '', email: S.email, optin: !!S.optin, consent: true },
       suivi: Object.assign({}, S.suivi, {
         temps_s: S.temps, corrections_adresse: S.corrections || 0, terrain_trouve: !!S.terrain, sans_photo: !S.photo,
         appareil: (window.matchMedia && matchMedia('(pointer:coarse)').matches) ? 'mobile' : 'ordinateur', largeur: window.innerWidth, ga_client: gaClient()
       })
     };
     var fd = new FormData();
-    fd.append('projet', JSON.stringify(projet)); fd.append('prenom', S.prenom); fd.append('email', S.email);
+    fd.append('projet', JSON.stringify(projet)); fd.append('prenom', S.prenom || ''); fd.append('email', S.email);
     if (S.photo) fd.append('photo', S.photo, 'jardin.jpg');
     fetch(API + '/api/diagnostic', { method: 'POST', body: fd }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.detail || 'Envoi impossible pour le moment.'); return j; });
     }).then(function (j) {
       S.id = j.id; S.statut = 'en_cours'; garder();
-      ev('cgp_q_envoi', { projet_jardin: j.id, envie: S.envie, style: S.style, photo: S.photo ? 'oui' : 'non' });
+      ev('cgp_q_envoi', { projet_jardin: j.id, envie: (S.envies || [S.envie]).join(','), style: S.style, photo: S.photo ? 'oui' : 'non' });
       rendre();
     }).catch(function (e) {
       S.erreur = (e && e.message && !/fetch|network|Load failed/i.test(e.message)) ? e.message : 'La connexion a été interrompue. Vos réponses sont gardées, réessayez.';
@@ -564,9 +578,23 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   function bonus() {
     var B = M.querySelector('#cgq-bonus'); if (!B || S.erreur) { if (B) B.remove(); return; }
     if (!S.id) { B.innerHTML = ''; return; }
+    if (!('prenom' in S.infos)) {
+      // le prénom n'est plus demandé avant l'envoi : on le demande ici, pendant l'attente, pour personnaliser l'email et la page
+      B.innerHTML = '<h3>Comment vous appelle-t-on ?</h3><p class="sous" style="margin-bottom:12px">Pour personnaliser votre diagnostic et l\'email qui l\'accompagne.</p>'
+        + '<form id="cgq-fp" novalidate><label class="ch" for="cgq-pre">Prénom</label><input id="cgq-pre" class="t" type="text" autocomplete="given-name" autocapitalize="words" enterkeyhint="done">'
+        + '<div class="pile"><button type="submit" class="cta sec">Valider</button><button type="button" class="lien" data-a="info-passer" data-q="prenom">Passer</button></div></form>';
+      B.querySelector('#cgq-fp').onsubmit = function (e) {
+        e.preventDefault(); var I = B.querySelector('#cgq-pre'), v = I.value.trim().slice(0, 60);
+        if (!v) { I.classList.add('err'); I.focus(); return; }
+        S.prenom = v; S.infos.prenom = v; garder(); poster({ prenom: v }); ev('cgp_q_info', { question: 'prenom', reponse: 'oui' });
+        var t = M.querySelector('.ecran h2'); if (t && S.statut !== 'pret') t.textContent = 'C\'est parti, ' + v + ' !';
+        bonus();
+      };
+      return;
+    }
     var Q = questions(), i = Q.findIndex(function (q) { return !(q[0] in S.infos); });
     if (i < 0) {
-      if (S.infos.telephone || ('rappelFait' in S.infos)) { B.innerHTML = '<div class="merci"><b>Merci ' + h(S.prenom) + ', c\'est noté.</b><br>Vos réponses nous aident à vous conseiller au plus juste.</div>'; return; }
+      if (S.infos.telephone || ('rappelFait' in S.infos)) { B.innerHTML = '<div class="merci"><b>Merci' + (S.prenom ? ' ' + h(S.prenom) : '') + ', c\'est noté.</b><br>Vos réponses nous aident à vous conseiller au plus juste.</div>'; return; }
       B.innerHTML = '<h3>Un conseil gratuit par téléphone ?</h3><p class="sous" style="margin-bottom:12px">Un conseiller Cover Green vous rappelle pour affiner votre projet, sans engagement.</p>'
         + '<label class="ch" for="cgq-tel">Téléphone</label><input id="cgq-tel" class="t" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78">'
         + '<p class="qb" style="margin:14px 0 8px">Le meilleur moment pour vous appeler</p><div class="cartes mini" id="cgq-cr">' + [['matin', 'Le matin'], ['midi', 'Entre midi et 14 h'], ['soir', 'En fin de journée'], ['indifferent', 'Peu importe']].map(function (o) { return '<button type="button" class="c" data-v="' + o[0] + '"><b>' + o[1] + '</b></button>'; }).join('') + '</div>'
@@ -596,6 +624,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 
   /* ---------- départ ---------- */
   if (S.envoi && !S.id && !S.erreur) S.erreur = 'L\'envoi a été interrompu. Vos réponses sont gardées, réessayez.';
+  if (!S.envies && S.envie) S.envies = [S.envie];
   if (!S.id && !S.envoi) {
     if (ETAPES.indexOf(S.etape) < 0) S.etape = 'envie';
     if (S.etape === 'terrain' && !S.adresse) S.etape = 'adresse';

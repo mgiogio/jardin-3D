@@ -95,6 +95,11 @@ async def infos(pid: str, request: Request):
             if len(t) >= 9: I['telephone'] = t
         elif k == 'rappel' and v in ('matin', 'midi', 'soir', 'indifferent'): I['rappel'] = v
         elif k == 'reve' and isinstance(v, str): I['reve'] = v.strip()[:600]
+        elif k == 'prenom' and isinstance(v, str) and v.strip():
+            # prénom donné après l'envoi : il sert à l'email et au rappel
+            I['prenom'] = v.strip()[:60]
+            P = json.load(open(f'{d}/projet.json')); P.setdefault('contact', {})['firstName'] = I['prenom']
+            json.dump(P, open(f'{d}/projet.json', 'w'), ensure_ascii=False)
     I['maj'] = time.strftime('%Y-%m-%d %H:%M'); json.dump(I, open(f, 'w'), ensure_ascii=False, indent=1)
     return {'ok': True}
 
