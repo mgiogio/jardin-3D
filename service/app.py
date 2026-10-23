@@ -203,6 +203,9 @@ AJOUT_PHOTO = '''<style>.cgp .demo{display:grid;grid-template-columns:minmax(0,1
 .cgp .demo .apres span.t{font-size:15px;line-height:1.4}
 .cgp .demo .fl{display:grid;place-items:center;color:#049E00}.cgp .demo .fl svg{width:36px;height:36px}
 .cgp .bloc li.sansbul{display:block;padding-left:24px}.cgp .bloc li.sansbul::before{display:none}
+.cgp #cgp-ajout-msg:empty{display:none}
+@media (min-width:761px){.cgp .visu:has(#cgp-ajout-bloc){align-items:stretch}.cgp .visu:has(#cgp-ajout-bloc)>div{display:flex;flex-direction:column}
+.cgp .visu:has(#cgp-ajout-bloc) .demo{flex:1}.cgp .visu:has(#cgp-ajout-bloc) .demo .case{aspect-ratio:auto;height:100%;min-height:360px}}
 @media (max-width:600px){.cgp .demo{grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr)}.cgp .demo .fl svg{width:24px;height:24px}.cgp .demo .case{padding:10px}.cgp .demo .avant b{font-size:15px}.cgp .demo .avant small,.cgp .demo .apres span.t{font-size:13px}}</style>
 <div class="demo" id="cgp-ajout-bloc">
 <button type="button" class="case avant" onclick="document.getElementById('cgp-ajout').click()"><span class="tag">Avant</span>
