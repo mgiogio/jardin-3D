@@ -334,7 +334,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       if (k >= 0) S.envies.splice(k, 1); else S.envies.push(en);
       S.envie = S.envies[0] || null; garder(); majEnvies(); return;
     }
-    if (a === 'envie-ok') { if (!(S.envies || []).length) return; ev('cgp_q_envies', { envie: S.envies.join(','), nombre: S.envies.length }); return aller('adresse'); }
+    if (a === 'envie-ok') { if (!(S.envies || []).length) return; ev('cgp_q_envies', { envie: S.envies.join(','), reponse: String(S.envies.length) }); return aller('adresse'); }
     if (a === 'geo') return geolocaliser(b);
     if (a === 'adresse-ok') return aller('terrain');
     if (a === 'terrain-ok') return aller('style');
@@ -415,7 +415,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (!a) return;
     S.adresse = { label: a.label, city: a.city, postcode: a.postcode, citycode: a.citycode, lat: a.lat, lon: a.lon, score: a.score };
     S.terrain = null; S.corrections = 0;
-    ev('cgp_q_adresse', { type: a.type || '' });
+    ev('cgp_q_adresse', { reponse: a.type || '' });
     aller('terrain');
   }
   function geolocaliser(b) {
@@ -445,7 +445,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
         if (sous) sous.textContent = 'Nous n\'avons pas trouvé le plan de ce terrain. Ce n\'est pas grave : nous continuerons avec votre photo.';
         var c = M.querySelector('#cgq-carte'); if (c) c.remove();
         var act = M.querySelector('#cgq-tact'); if (act) { act.hidden = false; act.innerHTML = '<button type="button" class="cta" data-a="terrain-continuer">Continuer</button><button type="button" class="cta sec" data-a="terrain-viser">Montrer ma maison sur la carte</button>'; }
-        ev('cgp_q_terrain', { trouve: 'non' });
+        ev('cgp_q_terrain', { reponse: 'non' });
       });
   }
   function dessiner() {
@@ -470,7 +470,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (sous) sous.textContent = 'Nous avons trouvé votre terrain sur le cadastre.';
     if (info) info.innerHTML = a.parcelle_m2 ? '<div class="chiffres"><div><b>' + a.parcelle_m2 + ' m²</b><span>de terrain</span></div><div><b>' + (a.jardin_m2 || '?') + ' m²</b><span>de jardin' + (a.jardin_cote ? ', surtout côté ' + h(a.jardin_cote) : '') + '</span></div></div>' : '';
     var act = M.querySelector('#cgq-tact'); if (act) act.hidden = false;
-    ev('cgp_q_terrain', { trouve: 'oui' });
+    ev('cgp_q_terrain', { reponse: 'oui' });
   }
   // carte déplaçable (photo aérienne IGN) avec un repère fixe au centre : on amène sa maison sous le repère, même si elle était hors du cadre
   var LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
@@ -525,7 +525,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       compresser(file).then(function (blob) {
         S.photo = blob; S.sansPhoto = false;
         try { if (S.photoUrl) URL.revokeObjectURL(S.photoUrl); S.photoUrl = URL.createObjectURL(blob); } catch (e) { S.photoUrl = null; }
-        ev('cgp_q_photo', { taille_ko: Math.round(blob.size / 1024) });
+        ev('cgp_q_photo', { photo: 'oui' });
         if (!S.photoUrl) return aller('contact');
         rendre();
       });
@@ -607,7 +607,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       rendre();
     }).catch(function (e) {
       S.erreur = (e && e.message && !/fetch|network|Load failed/i.test(e.message)) ? e.message : 'La connexion a été interrompue. Vos réponses sont gardées, réessayez.';
-      ev('cgp_q_erreur', { message: String(S.erreur).slice(0, 80) }); rendre();
+      ev('cgp_q_erreur', { reponse: String(S.erreur).slice(0, 80) }); rendre();
     });
   }
   function lienProjet() { return PROJET + encodeURIComponent(S.id || ''); }
@@ -711,5 +711,5 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   }
   try { history.replaceState({ cgq: S.etape }, '', location.href); } catch (e) { }
   rendre();
-  ev('cgp_q_vue', { etape: S.id ? 'attente' : S.etape, reprise: S.etape !== 'envie' && !S.id ? 'oui' : 'non' });
+  ev('cgp_q_vue', { etape: S.id ? 'attente' : S.etape, reponse: S.etape !== 'envie' && !S.id ? 'reprise' : 'nouveau' });
 })();
