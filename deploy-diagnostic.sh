@@ -4,7 +4,7 @@
 set -euo pipefail
 PROJET=${1:?Indiquez le projet Google Cloud}; REGION=europe-west1; SERVICE=diagnostic-jardin
 BUCKET=${PROJET}-diagnostic-jardin; IMAGE=$REGION-docker.pkg.dev/$PROJET/cover-green/$SERVICE:latest
-gcloud config set project "$PROJET"
+export CLOUDSDK_CORE_PROJECT="$PROJET"   # sans toucher au projet par défaut de Cloud Shell (Alfred)
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com storage.googleapis.com
 gcloud artifacts repositories describe cover-green --location=$REGION >/dev/null 2>&1 || gcloud artifacts repositories create cover-green --repository-format=docker --location=$REGION
 gcloud storage buckets describe gs://$BUCKET >/dev/null 2>&1 || gcloud storage buckets create gs://$BUCKET --location=$REGION --uniform-bucket-level-access --public-access-prevention

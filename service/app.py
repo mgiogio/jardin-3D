@@ -30,7 +30,8 @@ _vus = collections.defaultdict(list); _jour = {'d': '', 'n': 0}; _verrou = threa
 
 
 def limiter(request):
-    ip = (request.headers.get('x-forwarded-for') or (request.client.host if request.client else '')).split(',')[0].strip()
+    # Cloud Run ajoute la vraie adresse en dernier : on ignore ce que le navigateur aurait pu écrire avant
+    ip = (request.headers.get('x-forwarded-for') or (request.client.host if request.client else '')).split(',')[-1].strip()
     t = time.time(); j = time.strftime('%Y-%m-%d')
     with _verrou:
         if _jour['d'] != j: _jour.update(d=j, n=0)

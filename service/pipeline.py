@@ -123,9 +123,9 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
                     + f"Aménage autour dans un style {STYLES.get(style, style)}, très peu d'entretien, crédible pour un particulier : remplace le mobilier, les tapis et la déco existants par un aménagement neuf dans ce style, ajoute des plantations généreuses. "
                     + (f"Retire : {', '.join(lecture.get('a_retirer') or [])}. " if lecture.get('a_retirer') else '')
                     + (f"Conserve : {', '.join(lecture.get('a_garder') or [])}. " if lecture.get('a_garder') else '')
-                    + "Les passages et l'accès à la maison restent libres, aucune fenêtre n'est masquée. Photo réaliste de smartphone, aucun texte.")
+                    + "Les passages et l'accès à la maison restent libres : aucun poteau, aucune poutre ni clôture ne passe devant une fenêtre ou une porte, les poteaux se posent à côté des ouvertures. Photo réaliste de smartphone, aucun texte.")
         retour = ''
-        for essai in range(2):
+        for essai in range(3):
             editer(consigne + retour, [im] + refs, f'{dossier}/visuel.jpg')
             ctl = claude("""Contrôle qualité d'un visuel d'aménagement pour un client. Image 1 : photo d'origine. Image 2 : visuel proposé. Images suivantes : nos vrais produits (références).
 Note de 0 à 10 : "ressemblance" (les produits du visuel ressemblent-ils à nos références : sections, lames, connecteurs, teinte ?), "maison" (la maison est-elle préservée : mêmes fenêtres, portes, façade ?), "credibilite" (le visuel est-il réaliste, sans objet fondu, meuble qui flotte, produit qui traverse un objet ?).
