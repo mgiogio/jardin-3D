@@ -102,4 +102,4 @@ for k in range(lw):
     v = 4 + 9 * k / lw; d.line([(bx + k, ly), (bx + k, ly + 8 * SS)], fill=tuple(int(c) for c in cm(np.array([v]))[0]))
 d.text((bx, ly + 11 * SS), '4 h', font=font(9 * SS), fill=C['muted'], anchor='lt')
 d.text((bx + lw, ly + 11 * SS), '13 h de soleil le 21 juin', font=font(9 * SS), fill=C['muted'], anchor='rt')
-im = im.resize((W // SS, H // SS), Image.LANCZOS); im.save(out); print('ok', im.size)
+im = im.resize((W * 2 // SS, H * 2 // SS), Image.LANCZOS); im.save(out, optimize=True)   # 2x pour les écrans haute définition; print('ok', im.size)

@@ -61,7 +61,7 @@
 .cgp .sunbar i{flex:1;border-radius:2px;background:#fff}
 .cgp .sunbar i.on{background:var(--vert)}
 .cgp .hours{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.cgp .planrow{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:28px;margin-top:22px;align-items:start}
+.cgp .planrow{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:28px;margin-top:22px;align-items:start}
 .cgp .plan{padding:10px}.cgp .plan img{display:block;width:100%;border-radius:4px}
 .cgp .legend{display:grid;gap:8px;font-size:15px;margin:12px 0 0;padding:0;list-style:none}
 .cgp .legend li{display:flex;gap:10px;align-items:center}
@@ -117,17 +117,45 @@
 .cgp .fin{margin-top:48px;font-size:14px;color:var(--muted);border-top:1px solid var(--ligne);padding-top:18px}
 @media (max-width:760px){
   .cgp .visu,.cgp .planrow{grid-template-columns:1fr}
-  .cgp .facts{grid-template-columns:1fr}
-  .cgp .pcards{grid-template-columns:1fr 1fr}
-  .cgp .prod{grid-template-columns:72px minmax(0,1fr);align-items:start}.cgp .prod img{width:72px;height:72px}
-  .cgp .est{grid-column:1 / -1;justify-items:start;text-align:left}
+  .cgp .visu{gap:16px}
+  .cgp .hero{padding-top:16px}
+  .cgp h1{font-size:28px}
+  .cgp .pid{display:none}
+  .cgp section{padding-top:36px}
+  .cgp h2{font-size:24px}
+  .cgp .sub{margin-bottom:16px}
+  .cgp .bloc{padding:16px}
+  .cgp .facts{grid-template-columns:1fr;gap:10px}
+  .cgp .fact{padding:16px}
+  .cgp .fact .val{font-size:28px}
+  .cgp .planrow{gap:14px}
+  /* calendrier : les 12 mois tiennent dans l'écran */
+  .cgp .cal{padding:12px 10px}
+  .cgp .cal table{border-spacing:2px;font-size:13px}
+  .cgp .cal tbody th{white-space:normal;max-width:96px;padding-right:6px;line-height:1.2}
+  .cgp .cal td{min-width:0;height:20px}
+  .cgp .cal td b{width:8px;height:8px}
+  /* plantes : fiches compactes, photo à gauche */
+  .cgp .pcards{grid-template-columns:1fr;gap:10px}
+  .cgp .pcard{grid-template-columns:104px minmax(0,1fr)}
+  .cgp .pcard img{width:104px;height:100%;min-height:150px;aspect-ratio:auto}
+  .cgp .pc{padding:12px 14px}
+  .cgp .pc h4{font-size:17px}
+  .cgp .pc dl div{grid-template-columns:72px 1fr}
+  /* produits et budget */
+  .cgp .prod{grid-template-columns:72px minmax(0,1fr);align-items:start;padding:16px;gap:14px}.cgp .prod img{width:72px;height:72px}
+  .cgp .est{grid-column:1 / -1;justify-items:stretch;text-align:left;grid-template-columns:1fr auto;align-items:center}
+  .cgp .est small{grid-column:1 / -1}
+  .cgp .est .cta{grid-column:1 / -1;width:100%}
+  .cgp .tot{padding:16px}
+  .cgp .tot .big{flex-direction:column;gap:2px;font-size:22px}
+  .cgp .actions .cta{width:100%}
   .cgp .cta{min-width:160px}
 }
-@media (max-width:460px){.cgp .pcards{grid-template-columns:1fr}}
 </style>
 <div class="cgp">
 <div class="wrap" style="padding-bottom:0">
-  <div class="hero"><h1>Votre projet <span class="v">jardin</span><span class="pt">.</span></h1><p class="ref">{{VILLE}} · projet {{ID}} du {{DATE}}</p>
+  <div class="hero"><h1>Le diagnostic de votre <span class="v">jardin</span><span class="pt">.</span></h1><p class="ref">{{VILLE}}<span class="pid"> · projet {{ID}} du {{DATE}}</span></p>
     <p class="lead">Étudié à partir de votre adresse et de votre photo, avec les produits Cover Green pour le réaliser.</p></div>
 </div>
 <nav class="onglets" aria-label="Sections de votre projet"><div class="wrap" style="padding-bottom:0"><ul>
@@ -137,18 +165,18 @@
   <li><a href="#cgp-produits">Vos produits et budget</a></li>
 </ul></div></nav>
 <div class="wrap">
-  <section id="cgp-visuel"><h2>Votre jardin, <span class="v">demain</span></h2>
+  <section id="cgp-visuel"><h2>Votre jardin, demain</h2>
     <div class="visu"><div>{{VISUEL}}</div><aside><div class="carte bloc"><h3>Ses atouts</h3><ul>{{ATOUTS}}</ul></div><div class="carte bloc brume"><h3>Nos pistes</h3><ul>{{PISTES}}</ul></div></aside></div></section>
-  <section id="cgp-terrain"><h2>Ce que votre adresse dit de votre <span class="v">jardin</span></h2>
+  <section id="cgp-terrain"><h2>Ce que votre adresse dit de votre jardin</h2>
     <p class="sub">Calculé à partir du cadastre et des bâtiments de l'IGN : la vraie position du soleil heure par heure et la hauteur réelle des maisons voisines.</p>
     <div class="facts">{{FAITS}}</div>
     {{PLANBLOC}}</section>
-  <section id="cgp-plantes"><h2>Vos plantes, saison par <span class="v">saison</span></h2>
+  <section id="cgp-plantes"><h2>Vos plantes, saison par saison</h2>
     <p class="sub">Choisies pour votre climat, votre exposition, votre style et un entretien minimal.</p>
     <div class="carte cal" role="region" aria-label="Calendrier des plantes"><table><thead><tr><th></th>{{MOIS}}</tr></thead><tbody>{{CAL}}</tbody></table>
       <ul class="legend calleg"><li><span class="sw" style="background:var(--vert)"></span>En fleurs</li><li><span class="sw" style="background:var(--brume)"></span>En feuillage</li><li><span class="sw" style="background:#fff;border:2px solid var(--txt);border-radius:50%;width:12px;height:12px"></span>Bonne période pour planter</li></ul></div>
     <div class="pcards">{{CARTES}}</div></section>
-  <section id="cgp-produits"><h2>Votre projet <span class="v">Cover Green</span></h2>
+  <section id="cgp-produits"><h2>Votre projet Cover Green</h2>
     <p class="sub">Chaque produit s'ouvre dans son configurateur : vous ajustez selon votre terrain et vous commandez.</p>
     <div class="carte bom">{{PRODUITS}}<div class="tot"><div class="r big"><span>Budget estimé</span><span>{{BUDGET}}</span></div><div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div><div class="r"><span>Paiement</span><span>en 1x à 4x sans frais</span></div><p class="note" style="margin:4px 0 0">Prix exact dans le configurateur, selon vos choix finaux.</p></div></div>
     <div class="actions"><a class="cta gris" href="https://www.cover.green/contact/">Être rappelé par un conseiller</a></div></section>
