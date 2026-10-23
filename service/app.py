@@ -171,17 +171,6 @@ def fichier(pid: str, nom: str):
     return FileResponse(f, headers={'Cache-Control': 'public, max-age=86400'})
 
 
-DEMO = os.environ.get('DEMO_PROJET', '2610-KhiEGf_FqIbX')
-
-
-@app.get('/assets/demo/{nom}')
-def asset_demo(nom: str):
-    src = {'avant.jpg': 'photo.jpg', 'apres.jpg': 'visuel.jpg'}.get(nom)
-    f = os.path.join(DATA, DEMO, src or '')
-    if not src or not os.path.isfile(f): raise HTTPException(404)
-    return FileResponse(f, headers={'Cache-Control': 'public, max-age=86400'})
-
-
 @app.get('/assets/{genre}/{nom}')
 def asset(genre: str, nom: str):
     if genre not in ('plantes', 'refs'): raise HTTPException(404)
@@ -204,21 +193,30 @@ def soleil(f):
 
 
 # projet lancé sans photo : le client l'ajoute ici et reçoit son idée d'aménagement quelques minutes plus tard
-AJOUT_PHOTO = '''<style>.cgp .demo{display:grid;grid-template-columns:1fr 44px 1fr;align-items:center;gap:6px}.cgp .demo figure{margin:0;position:relative}
-.cgp .demo img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;display:block}.cgp .demo figcaption{position:absolute;left:8px;top:8px;background:rgba(255,255,255,.94);border-radius:6px;padding:4px 9px;font-size:13px;font-weight:700}
+AJOUT_PHOTO = '''<style>.cgp .demo{display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);align-items:stretch;gap:6px}
+.cgp .demo .case{position:relative;aspect-ratio:3/4;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center;box-sizing:border-box}
+.cgp .demo .case .tag{position:absolute;left:8px;top:8px;background:#fff;border-radius:6px;padding:4px 9px;font-size:13px;font-weight:700}
+.cgp .demo .avant{white-space:normal;min-width:0;height:auto;border:2px dashed #049E00;background:#EAF7E5;cursor:pointer;font:inherit;color:#1E211F;width:100%}
+.cgp .demo .avant:hover{background:#DDF1D4}.cgp .demo .avant svg{width:44px;height:44px;color:#049E00}
+.cgp .demo .avant b{font-size:17px}.cgp .demo .avant small{color:#5B625E;font-size:14px;line-height:1.35}
+.cgp .demo .apres{background:#F4F6F7;border:1px solid #E1E5E3;color:#5B625E}.cgp .demo .apres svg{width:44px;height:44px;color:#9AA29E}
+.cgp .demo .apres span.t{font-size:15px;line-height:1.4}
 .cgp .demo .fl{display:grid;place-items:center;color:#049E00}.cgp .demo .fl svg{width:36px;height:36px}
-.cgp .bloc li.sansbul{display:block;padding-left:24px}.cgp .bloc li.sansbul::before{display:none}.cgp .ajout-photo{margin-top:16px;padding:20px;border-radius:12px;background:#EAF7E5}.cgp .ajout-photo h3{margin:0 0 6px;font-size:20px}.cgp .ajout-photo p{margin:0 0 14px}
-@media (max-width:600px){.cgp .demo{grid-template-columns:1fr 28px 1fr}.cgp .demo .fl svg{width:24px;height:24px}}</style>
-<div class="demo"><figure><img src="/assets/demo/avant.jpg" alt="Photo d'un jardin avant"><figcaption>Avant</figcaption></figure>
+.cgp .bloc li.sansbul{display:block;padding-left:24px}.cgp .bloc li.sansbul::before{display:none}
+@media (max-width:600px){.cgp .demo{grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr)}.cgp .demo .fl svg{width:24px;height:24px}.cgp .demo .case{padding:10px}.cgp .demo .avant b{font-size:15px}.cgp .demo .avant small,.cgp .demo .apres span.t{font-size:13px}}</style>
+<div class="demo" id="cgp-ajout-bloc">
+<button type="button" class="case avant" onclick="document.getElementById('cgp-ajout').click()"><span class="tag">Avant</span>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+<b>Envoyer la photo de mon jardin</b><small>Prise depuis la maison ou la terrasse, de jour</small></button>
 <span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span>
-<figure><img src="/assets/demo/apres.jpg" alt="Le même jardin aménagé avec nos produits"><figcaption>Après, avec nos produits</figcaption></figure></div>
-<p class="note">Un vrai diagnostic : la photo envoyée à gauche, l'idée d'aménagement reçue à droite.</p>
-<div class="ajout-photo" id="cgp-ajout-bloc"><h3>À vous : envoyez la photo de votre jardin</h3>
-<p>Prise depuis la maison ou la terrasse, de jour. Votre idée d'aménagement avec nos produits arrive ici et par email en 3 minutes.</p>
-<input type="file" accept="image/*" id="cgp-ajout" hidden><button type="button" class="cta" onclick="document.getElementById('cgp-ajout').click()">Envoyer ma photo</button><p id="cgp-ajout-msg" style="margin:10px 0 0"></p>
+<div class="case apres"><span class="tag">Après</span>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18M5 9l2-4h10l2 4M6 9v11M18 9v11M9 9v3M12 9v3M15 9v3M3 20h18"/></svg>
+<span class="t">Votre jardin aménagé avec nos produits apparaîtra ici, 3 minutes après votre photo</span></div></div>
+<input type="file" accept="image/*" id="cgp-ajout" hidden><p id="cgp-ajout-msg" class="note" role="status" style="margin:10px 0 0"></p>
 <script>(function(){var i=document.getElementById("cgp-ajout"),m=document.getElementById("cgp-ajout-msg");i.onchange=function(){var f=i.files[0];if(!f)return;m.textContent="Envoi de la photo…";
 var r=document.querySelector(".cgp[data-api]"),api=r?r.getAttribute("data-api"):"",fd=new FormData();fd.append("photo",f);
-fetch(api+"/api/photo/PID",{method:"POST",body:fd}).then(function(x){if(!x.ok)throw 0;m.textContent="C'est parti : votre idée d'aménagement arrive dans 3 minutes, cette page se mettra à jour.";try{dataLayer.push({event:"cgp_ajout_photo",projet_jardin:"PID"})}catch(e){}setTimeout(function(){location.reload()},150000)}).catch(function(){m.textContent="L'envoi n'a pas marché, réessayez."})}})()</script></div>'''
+try{var a=document.querySelector("#cgp-ajout-bloc .avant"),u=URL.createObjectURL(f);a.style.background="center/cover url("+u+")";a.style.borderStyle="solid";[].forEach.call(a.querySelectorAll("svg,b,small"),function(x){x.style.visibility="hidden"})}catch(e){}
+fetch(api+"/api/photo/PID",{method:"POST",body:fd}).then(function(x){if(!x.ok)throw 0;m.textContent="C'est parti : votre jardin aménagé arrive dans 3 minutes, cette page se mettra à jour.";var t=document.querySelector("#cgp-ajout-bloc .apres .t");if(t)t.textContent="En préparation…";try{dataLayer.push({event:"cgp_ajout_photo",projet_jardin:"PID"})}catch(e){}setTimeout(function(){location.reload()},150000)}).catch(function(){m.textContent="L'envoi n'a pas marché, réessayez."})}})()</script>'''
 
 
 def rendre(pid, d):
