@@ -3,14 +3,14 @@
 #   GET  /api/diagnostic/{id}          état et données
 #   GET  /projet/{id}                  page personnelle « Mon projet jardin »
 #   GET  /fichiers/{id}/{nom}          images du projet ; /assets/... images communes (plantes, réalisations)
-import os, json, secrets, threading, html, time
+import os, json, secrets, threading, html, time, collections
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pipeline
 
 DATA = os.environ.get('DATA_DIR', '/data')            # sur Cloud Run : bucket Cloud Storage monté ici
-ORIGINES = os.environ.get('ORIGINES', 'https://www.cover.green,https://dhxx19tchw-staging.onrocket.site,https://mgiogio.github.io').split(',')
+ORIGINES = os.environ.get('ORIGINES', 'https://www.cover.green,https://cover.green,https://dhxx19tchw-staging.onrocket.site,https://mgiogio.github.io').split(',')
 app = FastAPI(title='Diagnostic jardin Cover Green')
 app.add_middleware(CORSMiddleware, allow_origins=ORIGINES, allow_methods=['GET', 'POST'], allow_headers=['*'])
 ICI = os.path.dirname(os.path.abspath(__file__))
@@ -24,8 +24,25 @@ def lancer(dossier):
         json.dump({'statut': 'erreur', 'erreur': str(e)[:500]}, open(f'{dossier}/etat.json', 'w'))
 
 
+# garde-fou contre les abus (chaque diagnostic coûte de l'IA) : par adresse IP et par jour, sur chaque instance
+LIM_IP, LIM_JOUR = int(os.environ.get('LIMITE_IP_HEURE', '5')), int(os.environ.get('LIMITE_JOUR', '400'))
+_vus = collections.defaultdict(list); _jour = {'d': '', 'n': 0}; _verrou = threading.Lock()
+
+
+def limiter(request):
+    ip = (request.headers.get('x-forwarded-for') or (request.client.host if request.client else '')).split(',')[0].strip()
+    t = time.time(); j = time.strftime('%Y-%m-%d')
+    with _verrou:
+        if _jour['d'] != j: _jour.update(d=j, n=0)
+        _vus[ip] = [x for x in _vus[ip] if t - x < 3600]
+        if len(_vus[ip]) >= LIM_IP: raise HTTPException(429, 'Vous avez déjà lancé plusieurs diagnostics. Réessayez dans une heure.')
+        if _jour['n'] >= LIM_JOUR: raise HTTPException(429, 'Le service est très demandé aujourd\'hui. Réessayez demain.')
+        _vus[ip].append(t); _jour['n'] += 1
+
+
 @app.post('/api/diagnostic')
-async def creer(projet: str = Form(...), photo: UploadFile = File(...), prenom: str = Form(''), email: str = Form('')):
+async def creer(request: Request, projet: str = Form(...), photo: UploadFile = File(...), prenom: str = Form(''), email: str = Form('')):
+    limiter(request)
     if photo.content_type and not photo.content_type.startswith('image/'): raise HTTPException(400, 'La photo doit être une image.')
     contenu = await photo.read()
     if len(contenu) > 20_000_000: raise HTTPException(400, 'Photo trop lourde (20 Mo maximum).')
@@ -43,6 +60,20 @@ def dossier(pid):
     d = os.path.join(DATA, os.path.basename(pid))
     if not os.path.isdir(d): raise HTTPException(404, 'Projet introuvable.')
     return d
+
+
+@app.post('/api/avis/{pid}')
+async def avis(pid: str, request: Request):
+    d = dossier(pid)
+    try: A = await request.json()
+    except Exception: raise HTTPException(400, 'Avis illisible.')
+    note = A.get('note') if A.get('note') in ('haut', 'bas') else None
+    if not note: raise HTTPException(400, 'Note manquante.')
+    MOTIFS = {'visuel', 'produits', 'budget', 'plantes', 'soleil', 'autre'}
+    ligne = {'le': time.strftime('%Y-%m-%d %H:%M'), 'note': note, 'motifs': [m for m in (A.get('motifs') or []) if m in MOTIFS][:6], 'texte': str(A.get('texte') or '')[:1500]}
+    f = f'{d}/avis.json'; L = json.load(open(f)) if os.path.exists(f) else []
+    L.append(ligne); json.dump(L, open(f, 'w'), ensure_ascii=False, indent=1)
+    return {'ok': True}
 
 
 @app.get('/api/diagnostic/{pid}')
@@ -119,10 +150,10 @@ def rendre(pid, d):
     VERBE = {'cloture': 'Configurer ma clôture', 'pergola': 'Configurer ma pergola'}
     prods = ''.join(f'''<div class="prod"><img src="/assets/refs/{p["photo"]}" alt=""><div><h3>{e(p["nom"])}</h3><p class="why">{e(p.get("placement"))}</p>
         <dl class="spec">{''.join(f'<div><dt>{e(k)}</dt><dd>{e(x)}</dd></div>' for k, x in p["detail"].items())}</dl></div>
-        <div class="est"><small>Estimation</small><b>{eur(p["prix"][0])} à {eur(p["prix"][1])}</b><a class="cta reduit{"" if i == 0 else " sec"}" href="{p["lien"]}" target="_blank" rel="noopener">{VERBE.get(p.get("cle"), "Configurer")}</a></div></div>''' for i, p in enumerate(D['produits']))
+        <div class="est"><small>Estimation</small><b>{eur(p["prix"][0])} à {eur(p["prix"][1])}</b><a class="cta reduit{"" if i == 0 else " sec"}" data-ev="cgp_configurer" data-produit="{p.get("cle", "")}" href="{p["lien"]}" target="_blank" rel="noopener">{VERBE.get(p.get("cle"), "Configurer")}</a></div></div>''' for i, p in enumerate(D['produits']))
     comp = D.get('complements') or []
     compl = ('<h3 class="h-compl">Pour compléter votre projet</h3><div class="compl">' + ''.join(f'''<div class="carte cpl"><img src="/assets/refs/{c["photo"]}" alt="" loading="lazy"><div class="cplt"><h4>{e(c["nom"])}</h4><p>{e(c["pourquoi"])}</p>
-        <div class="cplp"><b>{eur(c["prix"][0])} à {eur(c["prix"][1])}</b><a class="cta gris reduit" href="{c["lien"]}" target="_blank" rel="noopener">{e(c["bouton"])}</a></div></div></div>''' for c in comp) + '</div>') if comp else ''
+        <div class="cplp"><b>{eur(c["prix"][0])} à {eur(c["prix"][1])}</b><a class="cta gris reduit" data-ev="cgp_complement" data-produit="{c["cle"]}" href="{c["lien"]}" target="_blank" rel="noopener">{e(c["bouton"])}</a></div></div></div>''' for c in comp) + '</div>') if comp else ''
     b0, b1 = D['budget']
     budget = f'''<div class="r big"><span>Vos produits Cover Green</span><span>{eur(b0)} à {eur(b1)}</span></div>'''
     if comp:
@@ -139,6 +170,7 @@ def rendre(pid, d):
                    + '<p class="note" style="margin:4px 0 0">Mobilier, plantes et finitions : estimation indicative aux prix moyens des jardineries et enseignes de mobilier, à choisir où vous voulez.</p></div>')
     else:
         budget += '<p class="note" style="margin:0">Le mobilier, les plantes et le sol du visuel sont là pour l\'ambiance : ils ne sont pas compris.</p>'
+    budget += '<p class="confiance"><b>★ 4,6/5</b> sur Trustpilot, plus de 300 avis · plus de 3 000 clients équipés en kit</p>'
     planbloc = (f'''<div class="planrow"><div class="carte plan"><img src="/fichiers/{pid}/plan.png" alt="Votre parcelle vue du ciel"></div><div><h3>Votre parcelle vue du ciel</h3>
       <ul class="legend"><li><span class="sw" style="background:linear-gradient(90deg,#96acc4,#ffde8c,#e8742a)"></span>Heures de soleil le 21 juin, de l'ombre au plein soleil</li><li><span class="sw" style="background:#344239"></span>Votre maison</li><li><span class="sw" style="background:#d6dad2;border:1px solid #b0b6ac"></span>Maisons voisines, avec leur hauteur</li><li><span class="sw" style="background:#c43428;border-radius:50%"></span>Voisin qui a vue sur votre jardin</li></ul></div></div>''' if D.get('plan') else '')
     rep = {'ID': e(pid), 'VILLE': e(D.get('ville')), 'DATE': e(D.get('cree_le')), 'VISUEL': visuel, 'FAITS': faits, 'ATOUTS': atouts, 'PISTES': pistes,
@@ -170,7 +202,7 @@ def fragment(pid: str, request: Request):
     d = dossier(pid); etat = json.load(open(f'{d}/etat.json')) if os.path.exists(f'{d}/etat.json') else {}
     if etat.get('statut') != 'pret': return HTMLResponse('', status_code=202)
     h = rendre(pid, d); base = str(request.base_url).rstrip('/').replace('http://', 'https://')
-    return HTMLResponse(h[h.index('<!--DEBUT-->'):h.index('<!--FIN-->')].replace('src="/', f'src="{base}/'))
+    return HTMLResponse(h[h.index('<!--DEBUT-->'):h.index('<!--FIN-->')].replace('src="/', f'src="{base}/').replace('data-api=""', f'data-api="{base}"'))
 
 
 @app.get('/sante')

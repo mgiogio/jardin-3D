@@ -8,6 +8,8 @@ gcloud config set project "$PROJET"
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com storage.googleapis.com
 gcloud artifacts repositories describe cover-green --location=$REGION >/dev/null 2>&1 || gcloud artifacts repositories create cover-green --repository-format=docker --location=$REGION
 gcloud storage buckets describe gs://$BUCKET >/dev/null 2>&1 || gcloud storage buckets create gs://$BUCKET --location=$REGION --uniform-bucket-level-access --public-access-prevention
+# RGPD : les projets (photos, adresses) sont supprimés automatiquement au bout de 12 mois
+printf '{"rule":[{"action":{"type":"Delete"},"condition":{"age":365}}]}' > /tmp/cycle.json && gcloud storage buckets update gs://$BUCKET --lifecycle-file=/tmp/cycle.json >/dev/null
 for S in openai-key anthropic-key; do
   if ! gcloud secrets describe $S >/dev/null 2>&1; then
     read -rsp "Collez la clé pour $S puis Entrée : " K; echo

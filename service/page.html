@@ -6,7 +6,7 @@
 <style>
 /* Page « Mon projet jardin » - charte Cover Green v1.1. Tout est préfixé .cgp pour cohabiter avec le thème du site. */
 .cgp{--vert:#049E00;--orange:#EB5A00;--orange-survol:#C84800;--orange-pale:#FDEBE0;--brume:#EAF7E5;--gris:#F4F6F7;--txt:#1E211F;--muted:#5B625E;--ligne:#E1E5E3;
-  color:var(--txt);font:400 16px/1.6 "Roboto","Roboto Secours",Arial,sans-serif;font-variant-ligatures:none;-webkit-font-smoothing:antialiased}
+  --f:"Roboto","Roboto Secours",Arial,sans-serif;color:var(--txt);font:400 16px/1.6 var(--f);font-variant-ligatures:none;-webkit-font-smoothing:antialiased}
 .cgp *{box-sizing:border-box}
 .cgp .wrap{max-width:1080px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px)) 64px}
 .cgp h1,.cgp h2,.cgp h3,.cgp h4{font-family:inherit;color:var(--txt);margin:0}
@@ -24,7 +24,7 @@
 .cgp .onglets ul{list-style:none;margin:0 auto;padding:8px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;max-width:1080px}
 .cgp .onglets ul::-webkit-scrollbar{display:none}
 .cgp .onglets .wrap{position:relative}
-.cgp .fl-g,.cgp .fl-d{position:absolute;top:0;bottom:1px;width:56px;border:0;padding:0;cursor:pointer;display:none;align-items:center;color:var(--txt);font:700 22px/1 inherit;z-index:2}
+.cgp .fl-g,.cgp .fl-d{position:absolute;top:0;bottom:1px;width:56px;border:0;padding:0;cursor:pointer;display:none;align-items:center;color:var(--txt);font:700 22px/1 var(--f);z-index:2}
 .cgp .fl-g{left:0;justify-content:flex-start;padding-left:4px;background:linear-gradient(90deg,#fff 55%,rgba(255,255,255,0))}
 .cgp .fl-d{right:0;justify-content:flex-end;padding-right:4px;background:linear-gradient(270deg,#fff 55%,rgba(255,255,255,0))}
 .cgp .onglets.deb-g .fl-g,.cgp .onglets.deb-d .fl-d{display:flex}
@@ -46,7 +46,7 @@
 .cgp .cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .cgp .cmp .av{clip-path:inset(0 calc(100% - var(--p,50%)) 0 0)}
 .cgp .cmp .bar{position:absolute;top:0;bottom:0;left:var(--p,50%);width:3px;background:#fff;transform:translateX(-50%)}
-.cgp .cmp .tag{position:absolute;top:12px;font:700 13px/1 inherit;background:#fff;color:var(--txt);padding:7px 10px;border-radius:8px}
+.cgp .cmp .tag{position:absolute;top:12px;font:700 13px/1 var(--f);background:#fff;color:var(--txt);padding:7px 10px;border-radius:8px}
 .cgp .cmp .tag.l{left:12px}.cgp .cmp .tag.r{right:12px;background:var(--vert);color:#fff}
 .cgp .cmp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
 .cgp .note{font-size:13px;color:var(--muted);margin:10px 0 0}
@@ -112,6 +112,23 @@
 .cgp .est b{font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cgp .tot{padding:20px;display:grid;gap:6px;background:var(--brume);border-color:var(--brume);margin-top:20px}
 .cgp .h-compl{margin:28px 0 12px}
+.cgp .confiance{margin:8px 0 0;font-size:14px}
+.cgp .avis-zone .bloc{margin-top:0}
+.cgp .avis-zone{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.cgp .avis-zone p{margin:0;font-size:15px;color:var(--muted)}
+.cgp .avis-zone .actions{margin-top:6px}
+.cgp .pouces{display:flex;gap:12px}
+.cgp .pouce{width:64px;height:56px;border-radius:8px;border:1px solid var(--txt);background:#fff;color:var(--txt);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background-color .15s,color .15s}
+.cgp .pouce:hover{background:var(--gris)}
+.cgp .pouce.on{background:var(--txt);border-color:var(--txt);color:#fff}
+.cgp .motifs{display:flex;flex-wrap:wrap;gap:8px}
+.cgp .motifs button{border:1px solid var(--ligne);background:#fff;color:var(--txt);border-radius:999px;padding:8px 14px;font:500 14px var(--f);cursor:pointer}
+.cgp .motifs button.on{background:var(--txt);border-color:var(--txt);color:#fff}
+.cgp .avis textarea{width:100%;border:1px solid var(--txt);border-radius:8px;padding:12px;font:400 16px var(--f);resize:vertical;background:#fff;color:var(--txt)}
+.cgp .avis .suite{display:grid;gap:10px}
+.cgp .avis .q{color:var(--txt)!important;font-weight:500}
+.cgp .avis .merci{color:var(--txt)!important;font-weight:700}
+.cgp .pouce:focus-visible,.cgp .motifs button:focus-visible{outline:2px solid var(--vert);outline-offset:2px}
 .cgp .reste{display:grid;gap:6px;margin-top:10px;padding-top:14px;border-top:1px solid #C4E6B8}
 .cgp .tot .big2{font-weight:700;font-size:18px}
 .cgp .tot .tout{margin-top:6px;padding-top:10px;border-top:1px solid #C4E6B8;font-weight:800;font-size:20px}
@@ -126,7 +143,7 @@
 .cgp .tot .r{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
 .cgp .tot .big{font-weight:800;font-size:26px}
 /* boutons : modèle CTA Cover Green */
-.cgp .cta{display:inline-flex;align-items:center;justify-content:center;height:56px;min-width:200px;padding:0 24px;border-radius:8px;border:1px solid var(--orange);font:600 16px/1 inherit;text-decoration:none;cursor:pointer;background:var(--orange);color:#fff;transition:background-color .15s,color .15s,border-color .15s}
+.cgp .cta{display:inline-flex;align-items:center;justify-content:center;height:56px;min-width:200px;padding:0 24px;border-radius:8px;border:1px solid var(--orange);font:600 16px/1 var(--f);text-decoration:none;cursor:pointer;background:var(--orange);color:#fff;transition:background-color .15s,color .15s,border-color .15s}
 .cgp .cta:hover{background:var(--orange-survol);border-color:var(--orange-survol);color:#fff}
 .cgp .cta.sec{background:#fff;color:var(--orange)}
 .cgp .cta.sec:hover{background:var(--orange-pale);color:var(--orange-survol);border-color:var(--orange-survol)}
@@ -169,6 +186,8 @@
   .cgp .est small{grid-column:1 / -1}
   .cgp .est .cta{grid-column:1 / -1;width:100%}
   .cgp .tot{padding:16px}
+  .cgp .avis-zone{grid-template-columns:1fr}
+  .cgp .partage .cta{width:100%}
   .cgp .compl{grid-template-columns:1fr;gap:10px}
   .cgp .cpl{grid-template-columns:96px minmax(0,1fr)}.cgp .cpl img{width:96px}
   .cgp .cplp .cta{width:100%}
@@ -177,7 +196,7 @@
   .cgp .cta{min-width:160px}
 }
 </style>
-<div class="cgp">
+<div class="cgp" data-api="" data-projet="{{ID}}">
 <div class="wrap" style="padding-bottom:0">
   <div class="hero"><h1>Le diagnostic de votre <span class="v">jardin</span><span class="pt">.</span></h1><p class="ref">{{VILLE}}<span class="pid"> · projet {{ID}} du {{DATE}}</span></p>
     <p class="lead">Étudié à partir de votre adresse et de votre photo, avec les produits Cover Green pour le réaliser.</p></div>
@@ -205,7 +224,19 @@
     <div class="carte bom">{{PRODUITS}}</div>
     {{COMPLEMENTS}}
     <div class="carte tot">{{BUDGET}}</div>
-    <div class="actions"><a class="cta gris" href="https://www.cover.green/contact/">Être rappelé par un conseiller</a></div></section>
+    <div class="actions"><a class="cta gris" data-ev="cgp_rappel" href="https://www.cover.green/contact/">Être rappelé par un conseiller</a></div></section>
+  <section id="cgp-avis" class="avis-zone">
+    <div class="carte bloc partage"><h3>Partagez votre projet</h3><p>Montrez-le à la personne avec qui vous décidez : le lien ouvre cette page telle quelle.</p>
+      <div class="actions"><a class="cta gris reduit" data-partage="whatsapp" href="#">Envoyer par WhatsApp</a><a class="cta gris reduit" data-partage="email" href="#">Envoyer par email</a><button class="cta gris reduit" type="button" data-partage="copie">Copier le lien</button></div></div>
+    <div class="carte bloc brume avis" id="cgp-note"><h3>Ce diagnostic vous a plu ?</h3>
+      <div class="pouces"><button type="button" class="pouce" data-note="haut" aria-label="Oui, il m'a plu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M7 22H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3m0 11V11m0 11h10.3a2 2 0 0 0 2-1.7l1.4-7A2 2 0 0 0 18.7 11H14V6a3 3 0 0 0-3-3l-4 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" class="pouce" data-note="bas" aria-label="Non, pas vraiment"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" style="transform:rotate(180deg)"><path d="M7 22H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3m0 11V11m0 11h10.3a2 2 0 0 0 2-1.7l1.4-7A2 2 0 0 0 18.7 11H14V6a3 3 0 0 0-3-3l-4 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      <div class="suite" hidden><p class="q"></p>
+        <div class="motifs"><button type="button" data-m="visuel">Le visuel</button><button type="button" data-m="produits">Les produits proposés</button><button type="button" data-m="budget">Le budget</button><button type="button" data-m="plantes">Les plantes</button><button type="button" data-m="soleil">Le soleil et le terrain</button><button type="button" data-m="autre">Autre chose</button></div>
+        <textarea rows="3" placeholder="Dites-nous en deux mots (facultatif)"></textarea>
+        <div class="actions"><button type="button" class="cta reduit envoyer">Envoyer mon avis</button></div></div>
+      <p class="merci" hidden>Merci, votre avis nous aide à améliorer le diagnostic.</p></div>
+  </section>
   <p class="fin">Cette page est personnelle : gardez ce lien pour retrouver votre projet.</p>
 </div>
 </div>
@@ -221,6 +252,26 @@ const actif=()=>{const lim=haut()+nav.offsetHeight+40;let k=0;S.forEach((s,i)=>{
 addEventListener("scroll",()=>{caler();actif()},{passive:true});addEventListener("resize",caler);
 const b0=document.getElementById("cgh");if(b0)new MutationObserver(caler).observe(b0,{attributes:true,subtree:true,attributeFilter:["class"]});
 caler();actif();
+// suivi (GA4 via le dataLayer de Google Tag Manager du site)
+const P=cgp.dataset.projet,API=cgp.dataset.api||"";window.dataLayer=window.dataLayer||[];
+const ev=(e,o)=>{try{window.dataLayer.push(Object.assign({event:e,projet_jardin:P},o||{}))}catch(x){}};
+ev("cgp_vue");L.forEach(a=>a.addEventListener("click",()=>ev("cgp_onglet",{onglet:a.hash.slice(5)})));
+cgp.querySelectorAll("[data-ev]").forEach(a=>a.addEventListener("click",()=>ev(a.dataset.ev,{produit:a.dataset.produit||""})));
+// partage
+const url=location.href.split("#")[0],txt="Regarde notre projet de jardin Cover Green : ";
+cgp.querySelectorAll("[data-partage]").forEach(b=>b.addEventListener("click",async e=>{e.preventDefault();const c=b.dataset.partage;ev("cgp_partage",{canal:c});
+  if(c==="whatsapp")window.open("https://wa.me/?text="+encodeURIComponent(txt+url),"_blank","noopener");
+  else if(c==="email")location.href="mailto:?subject="+encodeURIComponent("Notre projet de jardin")+"&body="+encodeURIComponent(txt+url);
+  else{try{await navigator.clipboard.writeText(url);b.textContent="Lien copié"}catch(x){prompt("Copiez ce lien :",url)}}}));
+// avis : pouce en l'air ou pouce en bas, puis ce qui a plu ou non
+const Z=document.getElementById("cgp-note");let note=null;
+Z.querySelectorAll(".pouce").forEach(b=>b.addEventListener("click",()=>{note=b.dataset.note;Z.querySelectorAll(".pouce").forEach(x=>x.classList.toggle("on",x===b));
+  Z.querySelector(".q").textContent=note==="haut"?"Qu'est-ce qui vous a le plus plu ?":"Qu'est-ce qui ne vous a pas plu ?";Z.querySelector(".suite").hidden=false;ev("cgp_avis",{note});
+  fetch(API+"/api/avis/"+P,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({note})}).catch(()=>{})}));
+Z.querySelectorAll(".motifs button").forEach(b=>b.addEventListener("click",()=>b.classList.toggle("on")));
+Z.querySelector(".envoyer").addEventListener("click",async()=>{const m=[...Z.querySelectorAll(".motifs .on")].map(b=>b.dataset.m),t=Z.querySelector("textarea").value;
+  try{await fetch(API+"/api/avis/"+P,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({note,motifs:m,texte:t})})}catch(x){}
+  ev("cgp_avis_detail",{note,motifs:m.join(",")});Z.querySelector(".suite").hidden=true;Z.querySelector(".pouces").hidden=true;Z.querySelector(".merci").hidden=false});
 // flèches gauche / droite quand les onglets dépassent de l'écran
 const ul=nav.querySelector("ul"),deb=()=>{nav.classList.toggle("deb-g",ul.scrollLeft>4);nav.classList.toggle("deb-d",ul.scrollLeft+ul.clientWidth<ul.scrollWidth-4)};
 ul.addEventListener("scroll",deb,{passive:true});addEventListener("resize",deb);deb();
