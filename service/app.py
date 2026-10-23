@@ -5,7 +5,7 @@
 #   GET  /fichiers/{id}/{nom}          images du projet ; /assets/... images communes (plantes, réalisations)
 import os, json, secrets, threading, html, time, collections
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pipeline
 
@@ -204,6 +204,51 @@ def fragment(pid: str, request: Request):
     if etat.get('statut') != 'pret': return HTMLResponse('', status_code=202)
     h = rendre(pid, d); base = str(request.base_url).rstrip('/').replace('http://', 'https://')
     return HTMLResponse(h[h.index('<!--DEBUT-->'):h.index('<!--FIN-->')].replace('src="/', f'src="{base}/').replace('data-api=""', f'data-api="{base}"'))
+
+
+CLE_ADMIN = os.environ.get('CLE_ADMIN', '')
+MOTIF_LAB = {'visuel': 'Le visuel', 'produits': 'Les produits proposés', 'budget': 'Le budget', 'plantes': 'Les plantes', 'soleil': 'Le soleil et le terrain', 'autre': 'Autre chose'}
+
+
+@app.get('/admin/avis', response_class=HTMLResponse)
+def admin_avis(cle: str = ''):
+    # récapitulatif des diagnostics et des avis clients (accès par clé privée)
+    if not CLE_ADMIN or not secrets.compare_digest(cle, CLE_ADMIN): raise HTTPException(404)
+    lignes, n, prets, visuels, haut, bas, motifs_b, motifs_h, durees = [], 0, 0, 0, 0, 0, collections.Counter(), collections.Counter(), []
+    for pid in sorted(os.listdir(DATA), reverse=True):
+        d = os.path.join(DATA, pid)
+        if not os.path.isfile(f'{d}/projet.json'): continue
+        n += 1
+        D = json.load(open(f'{d}/data.json')) if os.path.exists(f'{d}/data.json') else {}
+        if D: prets += 1; visuels += bool(D.get('visuel')); durees.append(D.get('duree_s') or 0)
+        A = json.load(open(f'{d}/avis.json')) if os.path.exists(f'{d}/avis.json') else []
+        dernier = A[-1] if A else None
+        if dernier:
+            haut += dernier['note'] == 'haut'; bas += dernier['note'] == 'bas'
+            for x in A:
+                for m in x.get('motifs') or []: (motifs_h if x['note'] == 'haut' else motifs_b)[m] += 1
+        textes = ' / '.join(e(x['texte']) for x in A if x.get('texte'))
+        lignes.append(f'''<tr><td>{e(D.get('cree_le', pid[:4]))}</td><td><a href="/projet/{e(pid)}" target="_blank">{e(pid)}</a></td><td>{e(D.get('ville'))}</td>
+          <td>{'oui' if D.get('visuel') else ('non' if D else 'en cours')}</td><td>{eur(D['budget'][0]) + ' à ' + eur(D['budget'][1]) if D.get('budget') else ''}</td>
+          <td class="n">{'👍' if dernier and dernier['note'] == 'haut' else ('👎' if dernier else '')}</td>
+          <td>{', '.join(MOTIF_LAB.get(m, m) for x in A for m in (x.get('motifs') or []))}</td><td>{textes}</td></tr>''')
+    pc = lambda a, b: f'{round(100 * a / b)} %' if b else '-'
+    mot = lambda C: ''.join(f'<li>{MOTIF_LAB.get(k, k)} : <b>{v}</b></li>' for k, v in C.most_common()) or '<li>aucun</li>'
+    return HTMLResponse(f'''<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Avis diagnostic jardin</title>
+<style>body{{font:15px/1.5 Roboto,Arial,sans-serif;color:#1E211F;margin:0;padding:24px 16px;background:#fff}}h1{{font-weight:800;margin:0 0 16px}}.k{{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px}}
+.k div{{background:#F4F6F7;border-radius:8px;padding:14px}}.k b{{display:block;font-size:26px;font-weight:800}}.m{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}}.m div{{background:#EAF7E5;border-radius:8px;padding:14px}}
+table{{border-collapse:collapse;width:100%;font-size:14px}}th,td{{text-align:left;padding:8px;border-bottom:1px solid #E1E5E3;vertical-align:top}}th{{background:#F4F6F7}}a{{color:#049E00}}.w{{overflow-x:auto}}</style>
+<h1>Diagnostic jardin : avis clients</h1>
+<div class="k"><div><b>{n}</b>diagnostics lancés</div><div><b>{pc(visuels, prets)}</b>avec un visuel validé</div><div><b>{round(sum(durees) / len(durees)) if durees else '-'} s</b>temps moyen</div>
+<div><b>{haut} 👍 / {bas} 👎</b>avis donnés ({pc(haut + bas, prets)} des diagnostics)</div><div><b>{pc(haut, haut + bas)}</b>de satisfaits</div></div>
+<div class="m"><div><h3>Ce qui a plu</h3><ul>{mot(motifs_h)}</ul></div><div><h3>Ce qui n'a pas plu</h3><ul>{mot(motifs_b)}</ul></div></div>
+<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th></tr>{''.join(lignes)}</table></div>''')
+
+
+@app.get('/')
+def accueil():
+    # l'adresse technique du service ne sert à rien seule : on renvoie vers le site
+    return RedirectResponse('https://www.cover.green/', status_code=302)
 
 
 @app.get('/sante')
