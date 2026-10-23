@@ -41,20 +41,94 @@ def limiter(request):
         _vus[ip].append(t); _jour['n'] += 1
 
 
-@app.post('/api/diagnostic')
-async def creer(request: Request, projet: str = Form(...), photo: UploadFile = File(...), prenom: str = Form(''), email: str = Form('')):
-    limiter(request)
-    if photo.content_type and not photo.content_type.startswith('image/'): raise HTTPException(400, 'La photo doit être une image.')
+async def lire_photo(photo):
+    if photo is None: return None
+    if photo.content_type and not (photo.content_type.startswith('image/') or photo.content_type == 'application/octet-stream'): raise HTTPException(400, 'La photo doit être une image.')
     contenu = await photo.read()
     if len(contenu) > 20_000_000: raise HTTPException(400, 'Photo trop lourde (20 Mo maximum).')
+    return contenu or None
+
+
+@app.post('/api/diagnostic')
+async def creer(request: Request, projet: str = Form(...), photo: UploadFile | None = File(None), prenom: str = Form(''), email: str = Form('')):
+    limiter(request)
+    contenu = await lire_photo(photo)
     try: P = json.loads(projet)
     except Exception: raise HTTPException(400, 'Questionnaire illisible.')
     pid = time.strftime('%y%m') + '-' + secrets.token_urlsafe(9)      # lien personnel non devinable
     d = os.path.join(DATA, pid); os.makedirs(d)
     P['contact'] = dict(P.get('contact') or {}, firstName=prenom or (P.get('contact') or {}).get('firstName', ''), email=email or (P.get('contact') or {}).get('email', ''))
-    json.dump(P, open(f'{d}/projet.json', 'w'), ensure_ascii=False); open(f'{d}/photo_brute', 'wb').write(contenu)
+    json.dump(P, open(f'{d}/projet.json', 'w'), ensure_ascii=False)
+    if contenu: open(f'{d}/photo_brute', 'wb').write(contenu)
     threading.Thread(target=lancer, args=(d,), daemon=True).start()
     return {'id': pid, 'page': f'/projet/{pid}'}
+
+
+@app.post('/api/photo/{pid}')
+async def ajouter_photo(pid: str, request: Request, photo: UploadFile = File(...)):
+    # le client n'avait pas de photo sous la main : il l'ajoute depuis sa page, on refait le visuel
+    d = dossier(pid); limiter(request)
+    contenu = await lire_photo(photo)
+    if not contenu: raise HTTPException(400, 'Photo manquante.')
+    open(f'{d}/photo_brute', 'wb').write(contenu)
+    json.dump({'statut': 'en_cours', 'etapes': {}}, open(f'{d}/etat.json', 'w'))
+    threading.Thread(target=lancer, args=(d,), daemon=True).start()
+    return {'ok': True}
+
+
+# réponses facultatives données pendant la préparation du diagnostic (connaissance client), une par une
+INFOS = {'delai': {'saison', '3mois', 'annee', 'reve'}, 'budget': {'moins3', '3a6', '6a12', 'plus12', 'nsp'},
+         'pose': {'moi', 'proche', 'poseur', 'nsp'}, 'frein': {'budget', 'montage', 'choix', 'temps', 'rien'},
+         'statut': {'proprietaire', 'locataire', 'achat'}, 'source': {'google', 'social', 'pinterest', 'bouche', 'client', 'autre'}}
+
+
+@app.post('/api/infos/{pid}')
+async def infos(pid: str, request: Request):
+    d = dossier(pid)
+    try: A = await request.json()
+    except Exception: raise HTTPException(400, 'Réponse illisible.')
+    f = f'{d}/infos.json'; I = json.load(open(f)) if os.path.exists(f) else {}
+    for k, v in (A or {}).items():
+        if k in INFOS and v in INFOS[k]: I[k] = v
+        elif k == 'telephone' and isinstance(v, str):
+            t = ''.join(c for c in v if c.isdigit() or c == '+')[:16]
+            if len(t) >= 9: I['telephone'] = t
+        elif k == 'rappel' and v in ('matin', 'midi', 'soir', 'indifferent'): I['rappel'] = v
+        elif k == 'reve' and isinstance(v, str): I['reve'] = v.strip()[:600]
+    I['maj'] = time.strftime('%Y-%m-%d %H:%M'); json.dump(I, open(f, 'w'), ensure_ascii=False, indent=1)
+    return {'ok': True}
+
+
+_vus_t = collections.defaultdict(list)
+
+
+@app.get('/api/terrain')
+def api_terrain(lat: float, lon: float, request: Request):
+    # aperçu « c'est bien chez vous ? » : parcelle, maison, surfaces (données publiques IGN)
+    if not (41 < lat < 51.5 and -5.5 < lon < 10): raise HTTPException(400, 'Adresse hors de France métropolitaine.')
+    ip = (request.headers.get('x-forwarded-for') or '').split(',')[-1].strip(); t = time.time()
+    with _verrou:
+        _vus_t[ip] = [x for x in _vus_t[ip] if t - x < 3600]
+        if len(_vus_t[ip]) >= 60: raise HTTPException(429, 'Trop de recherches, réessayez dans un moment.')
+        _vus_t[ip].append(t)
+    import terrain
+    try: return terrain.terrain(lat, lon)
+    except Exception: raise HTTPException(404, 'Terrain introuvable.')
+
+
+@app.get('/q/{nom}')
+def questionnaire_fichier(nom: str):
+    f = os.path.join(ICI, 'questionnaire', os.path.basename(nom))
+    if not os.path.isfile(f): raise HTTPException(404)
+    return FileResponse(f, headers={'Cache-Control': 'public, max-age=300', 'Access-Control-Allow-Origin': '*'})
+
+
+@app.get('/questionnaire', response_class=HTMLResponse)
+def questionnaire_page():
+    # page de test autonome ; sur le site, le questionnaire est intégré par le shortcode [cg_diagnostic_jardin]
+    return HTMLResponse('''<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Diagnostic jardin</title><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+<body style="margin:0;background:#fff"><div id="cg-diag" data-api="" data-projet="/projet/"></div><script src="/q/q.js"></script></body></html>''')
 
 
 def dossier(pid):
@@ -113,6 +187,15 @@ def soleil(f):
     return '#%02x%02x%02x' % tuple(round(ca[i] + (cb[i] - ca[i]) * t) for i in range(3))
 
 
+# projet lancé sans photo : le client l'ajoute ici et reçoit son idée d'aménagement quelques minutes plus tard
+AJOUT_PHOTO = '''<div class="ajout-photo" style="margin-top:14px;padding:16px;border-radius:12px;background:#EAF7E5"><b style="display:block;font-size:17px;margin-bottom:4px">Voir nos produits chez vous</b>
+<p style="margin:0 0 12px">Ajoutez une photo de votre jardin : nous créons votre idée d'aménagement en 3 minutes.</p>
+<input type="file" accept="image/*" id="cgp-ajout" hidden><button type="button" class="cta" onclick="document.getElementById('cgp-ajout').click()">Ajouter une photo</button><p id="cgp-ajout-msg" style="margin:10px 0 0"></p>
+<script>(function(){var i=document.getElementById("cgp-ajout"),m=document.getElementById("cgp-ajout-msg");i.onchange=function(){var f=i.files[0];if(!f)return;m.textContent="Envoi de la photo…";
+var r=document.querySelector(".cgp[data-api]"),api=r?r.getAttribute("data-api"):"",fd=new FormData();fd.append("photo",f);
+fetch(api+"/api/photo/PID",{method:"POST",body:fd}).then(function(x){if(!x.ok)throw 0;m.textContent="C'est parti : votre idée d'aménagement arrive dans 3 minutes, cette page se mettra à jour.";try{dataLayer.push({event:"cgp_ajout_photo",projet_jardin:"PID"})}catch(e){}setTimeout(function(){location.reload()},150000)}).catch(function(){m.textContent="L'envoi n'a pas marché, réessayez."})}})()</script></div>'''
+
+
 def rendre(pid, d):
     D = json.load(open(f'{d}/data.json')); g = D.get('diag') or {}; L = D.get('lecture') or {}
     v = (g.get('vis_a_vis') or [None])[0]
@@ -130,7 +213,8 @@ def rendre(pid, d):
     visuel = (f'''<div class="cmp" id="cmp" style="--p:50%"><img src="/fichiers/{pid}/visuel.jpg" alt="Idée d'aménagement avec nos produits"><img class="av" src="/fichiers/{pid}/photo.jpg" alt="Votre photo">
           <span class="bar"></span><span class="tag l">Avant</span><span class="tag r">Idée Cover Green</span><input id="cmp-range" type="range" min="0" max="100" value="50" aria-label="Comparer avant et après"></div>
           <p class="note">Idée d'aménagement non contractuelle, réalisée avec nos produits.</p>''' if D.get('visuel') else
-              '<div class="refs">' + ''.join(f'<img src="/assets/refs/{p["photo"]}" alt="{e(p["nom"])} Cover Green">' for p in D['produits']) + '</div><p class="note">Des réalisations Cover Green proches de votre projet.</p>')
+              '<div class="refs">' + ''.join(f'<img src="/assets/refs/{p["photo"]}" alt="{e(p["nom"])} Cover Green">' for p in D['produits']) + '</div><p class="note">Des réalisations Cover Green proches de votre projet.</p>'
+              + ('' if os.path.exists(f'{d}/photo.jpg') else AJOUT_PHOTO.replace('PID', e(pid))))
     pl = (D.get('plantes') or {}).get('plantes') or []
     M = 'JFMAMJJASOND'
     NOMS_MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
@@ -179,6 +263,7 @@ def rendre(pid, d):
            'CAL': cal, 'MOIS': ''.join(f'<th scope="col">{m}</th>' for m in M), 'PRODUITS': prods, 'COMPLEMENTS': compl, 'BUDGET': budget}
     out = GABARIT
     for k, x in rep.items(): out = out.replace('{{' + k + '}}', x)
+    if not os.path.exists(f'{d}/photo.jpg'): out = out.replace('à partir de votre adresse et de votre photo', 'à partir de votre adresse')
     return out
 
 
@@ -207,6 +292,12 @@ def fragment(pid: str, request: Request):
 
 
 CLE_ADMIN = os.environ.get('CLE_ADMIN', '')
+INFO_LAB = {'saison': 'Cette saison', '3mois': 'Dans les 3 mois', 'annee': "Dans l'année", 'reve': 'Se renseigne', 'moins3': 'Moins de 3 000 €', '3a6': '3 000 à 6 000 €',
+            '6a12': '6 000 à 12 000 €', 'plus12': 'Plus de 12 000 €', 'nsp': 'Ne sait pas', 'moi': 'Lui-même', 'proche': 'Avec un proche', 'poseur': 'Cherche un poseur',
+            'montage': 'Le montage', 'choix': 'Choisir les produits', 'temps': 'Le temps', 'rien': 'Rien', 'budget': 'Le budget', 'proprietaire': 'Propriétaire',
+            'locataire': 'Locataire', 'achat': 'Achat en cours', 'google': 'Google', 'social': 'Instagram ou Facebook', 'pinterest': 'Pinterest', 'bouche': 'Bouche-à-oreille',
+            'client': 'Déjà client', 'autre': 'Autre'}
+QLAB = {'delai': 'Délai', 'budget': 'Enveloppe', 'pose': 'Montage', 'frein': 'Frein', 'statut': 'Statut', 'canal': 'Canal'}
 MOTIF_LAB = {'visuel': 'Le visuel', 'produits': 'Les produits proposés', 'budget': 'Le budget', 'plantes': 'Les plantes', 'soleil': 'Le soleil et le terrain', 'autre': 'Autre chose'}
 
 
@@ -214,6 +305,7 @@ MOTIF_LAB = {'visuel': 'Le visuel', 'produits': 'Les produits proposés', 'budge
 def admin_avis(cle: str = ''):
     # récapitulatif des diagnostics et des avis clients (accès par clé privée)
     if not CLE_ADMIN or not secrets.compare_digest(cle, CLE_ADMIN): raise HTTPException(404)
+    reponses = collections.defaultdict(collections.Counter)
     lignes, n, prets, visuels, haut, bas, motifs_b, motifs_h, durees = [], 0, 0, 0, 0, 0, collections.Counter(), collections.Counter(), []
     for pid in sorted(os.listdir(DATA), reverse=True):
         d = os.path.join(DATA, pid)
@@ -228,10 +320,18 @@ def admin_avis(cle: str = ''):
             for x in A:
                 for m in x.get('motifs') or []: (motifs_h if x['note'] == 'haut' else motifs_b)[m] += 1
         textes = ' / '.join(e(x['texte']) for x in A if x.get('texte'))
+        I = json.load(open(f'{d}/infos.json')) if os.path.exists(f'{d}/infos.json') else {}
+        Pj = json.load(open(f'{d}/projet.json')); sv = Pj.get('suivi') or {}
+        src = sv.get('utm_source') or ('google ads' if sv.get('gclid') else '') or ('meta' if sv.get('fbclid') else '') or INFO_LAB.get(I.get('source'), '')
+        for k in INFOS: 
+            if I.get(k): reponses[k][I[k]] += 1
+        if src: reponses['canal'][src] += 1
         lignes.append(f'''<tr><td>{e(D.get('cree_le', pid[:4]))}</td><td><a href="/projet/{e(pid)}" target="_blank">{e(pid)}</a></td><td>{e(D.get('ville'))}</td>
           <td>{'oui' if D.get('visuel') else ('non' if D else 'en cours')}</td><td>{eur(D['budget'][0]) + ' à ' + eur(D['budget'][1]) if D.get('budget') else ''}</td>
           <td class="n">{'👍' if dernier and dernier['note'] == 'haut' else ('👎' if dernier else '')}</td>
-          <td>{', '.join(MOTIF_LAB.get(m, m) for x in A for m in (x.get('motifs') or []))}</td><td>{textes}</td></tr>''')
+          <td>{', '.join(MOTIF_LAB.get(m, m) for x in A for m in (x.get('motifs') or []))}</td><td>{textes}</td>
+          <td>{e(INFO_LAB.get(I.get('delai'), ''))}</td><td>{e(INFO_LAB.get(I.get('budget'), ''))}</td><td>{e(INFO_LAB.get(I.get('pose'), ''))}</td><td>{e(INFO_LAB.get(I.get('frein'), ''))}</td>
+          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td></tr>''')
     pc = lambda a, b: f'{round(100 * a / b)} %' if b else '-'
     mot = lambda C: ''.join(f'<li>{MOTIF_LAB.get(k, k)} : <b>{v}</b></li>' for k, v in C.most_common()) or '<li>aucun</li>'
     return HTMLResponse(f'''<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Avis diagnostic jardin</title>
@@ -242,7 +342,8 @@ table{{border-collapse:collapse;width:100%;font-size:14px}}th,td{{text-align:lef
 <div class="k"><div><b>{n}</b>diagnostics lancés</div><div><b>{pc(visuels, prets)}</b>avec un visuel validé</div><div><b>{round(sum(durees) / len(durees)) if durees else '-'} s</b>temps moyen</div>
 <div><b>{haut} 👍 / {bas} 👎</b>avis donnés ({pc(haut + bas, prets)} des diagnostics)</div><div><b>{pc(haut, haut + bas)}</b>de satisfaits</div></div>
 <div class="m"><div><h3>Ce qui a plu</h3><ul>{mot(motifs_h)}</ul></div><div><h3>Ce qui n'a pas plu</h3><ul>{mot(motifs_b)}</ul></div></div>
-<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th></tr>{''.join(lignes)}</table></div>''')
+<div class="m">{''.join(f'<div><h3>{QLAB[k]}</h3><ul>' + ''.join(f'<li>{e(INFO_LAB.get(a, a))} : <b>{v}</b></li>' for a, v in reponses[k].most_common()) + '</ul></div>' for k in QLAB if reponses[k])}</div>
+<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Délai</th><th>Enveloppe</th><th>Montage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th></tr>{''.join(lignes)}</table></div>''')
 
 
 @app.get('/')

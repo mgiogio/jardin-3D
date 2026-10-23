@@ -4,6 +4,10 @@
 # Usage local : python3 pipeline.py dossier   (dossier contenant projet.json et photo.jpg)
 import os, sys, io, json, time, base64, subprocess, urllib.request, urllib.error, traceback
 from PIL import Image, ImageOps
+try:
+    import pillow_heif; pillow_heif.register_heif_opener()      # photos iPhone (HEIC)
+except Exception:
+    pass
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 DIAG = os.environ.get('DIAG_DIR', os.path.join(ICI, '..', 'diagnostic'))
@@ -76,7 +80,19 @@ def run(dossier, log=print):
         etat.update(k); json.dump(etat, open(f'{dossier}/etat.json', 'w'), ensure_ascii=False)
     maj()
     # photo : orientation EXIF, taille raisonnable
-    im = ImageOps.exif_transpose(Image.open(f'{dossier}/photo_brute')).convert('RGB'); im.thumbnail((1600, 1600)); im.save(f'{dossier}/photo.jpg', quality=90)
+    im = None
+    if os.path.exists(f'{dossier}/photo_brute'):
+        im = ImageOps.exif_transpose(Image.open(f'{dossier}/photo_brute')).convert('RGB'); im.thumbnail((1600, 1600)); im.save(f'{dossier}/photo.jpg', quality=90)
+    # terrain : si le questionnaire n'a pas pu récupérer la parcelle et la maison, on les cherche ici
+    a_ = P.get('address') or {}
+    if a_.get('lat') and not (P.get('parcel') and P.get('building')):
+        try:
+            import terrain; T_ = terrain.terrain(a_['lat'], a_['lon'])
+            for k in ('parcel', 'building', 'facades'):
+                if T_.get(k) and not P.get(k): P[k] = T_[k]
+            json.dump(P, open(f'{dossier}/projet.json', 'w'), ensure_ascii=False)
+        except Exception as e:
+            log('terrain introuvable', e)
     besoin = (P.get('project', {}).get('need') or P.get('need') or '_defaut'); style = (P.get('needs', {}).get('style') or P.get('style') or 'contemporain')
     produits = PROD['besoins'].get(besoin, PROD['besoins']['_defaut'])
     data = {'id': os.path.basename(dossier), 'cree_le': time.strftime('%Y-%m-%d'), 'ville': P.get('address', {}).get('city', ''), 'besoin': besoin, 'style': style}
@@ -100,7 +116,7 @@ def run(dossier, log=print):
     # 3. lecture de la photo par l'IA : atouts, pistes, placement des produits (texte)
     d = data.get('diag') or {}
     faits = {k: d.get(k) for k in ('surface_jardin_m2', 'soleil_ete_h_moyen', 'soleil_ete_apres14h_h')} | {'vis_a_vis_proche': (d.get('vis_a_vis') or [None])[0]}
-    lecture = gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, bardages en bois). Voici la photo du jardin d'un particulier.
+    lecture = {} if im is None else gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, bardages en bois). Voici la photo du jardin d'un particulier.
 Son envie : {BESOINS.get(besoin, besoin)}. Style souhaité : {style}. Données calculées depuis son adresse : {json.dumps(faits, ensure_ascii=False)}.
 Produits Cover Green à intégrer : {', '.join(PROD[p]['nom'] for p in produits)}.
 Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans tiret cadratin :
@@ -114,7 +130,7 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
     data['lecture'] = lecture; etat['etapes']['lecture'] = round(time.time() - t0); maj()
     # 4. visuel avec nos produits, contrôlé
     data['visuel'] = None
-    if lecture.get('photo_exploitable', True):
+    if im is not None and lecture.get('photo_exploitable', True):
         refs = [Image.open(f'{ASSETS}/refs/{r}').convert('RGB') for p in produits for r in PROD[p]['refs']]
         noms = [p for p in produits if (lecture.get('placement') or {}).get(p)]
         consigne = (f"La première image est la photo du jardin d'un client : garde exactement la même maison, le même cadrage, la même perspective et la même lumière. "
@@ -181,7 +197,7 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
     for p in produits:
         c = PROD[p]
         if p == 'cloture':
-            L = max(4, min(30, round(float(lecture.get('cloture_longueur_m') or 10) / 2) * 2))
+            L = max(4, min(30, round(float(lecture.get('cloture_longueur_m') or min(d.get('lineaire_limites_libres_m') or 10, 20)) / 2) * 2))
             props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Hauteur': c['hauteur'], 'Longueur': f'environ {L} m'},
                           'placement': (lecture.get('placement') or {}).get(p), 'prix': [r100(L * c['prix_m'][0]), r100(L * c['prix_m'][1])], 'longueur': L})
         else:

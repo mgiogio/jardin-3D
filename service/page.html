@@ -112,6 +112,7 @@
 .cgp .est b{font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cgp .tot{padding:20px;display:grid;gap:6px;background:var(--brume);border-color:var(--brume);margin-top:20px}
 .cgp .h-compl{margin:28px 0 12px}
+.cgp .lien-copie{width:100%;height:48px;border:1px solid var(--txt);border-radius:8px;padding:0 12px;font:400 15px var(--f)}
 .cgp .confiance{margin:8px 0 0;font-size:14px}
 .cgp .avis-zone .bloc{margin-top:0}
 .cgp .avis-zone{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
@@ -262,7 +263,7 @@ const url=location.href.split("#")[0],txt="Regarde notre projet de jardin Cover 
 cgp.querySelectorAll("[data-partage]").forEach(b=>b.addEventListener("click",async e=>{e.preventDefault();const c=b.dataset.partage;ev("cgp_partage",{canal:c});
   if(c==="whatsapp")window.open("https://wa.me/?text="+encodeURIComponent(txt+url),"_blank","noopener");
   else if(c==="email")location.href="mailto:?subject="+encodeURIComponent("Notre projet de jardin")+"&body="+encodeURIComponent(txt+url);
-  else{try{await navigator.clipboard.writeText(url);b.textContent="Lien copié"}catch(x){prompt("Copiez ce lien :",url)}}}));
+  else{try{await navigator.clipboard.writeText(url);b.textContent="Lien copié"}catch(x){const i=document.createElement("input");i.value=url;i.readOnly=true;i.className="lien-copie";b.after(i);i.select()}}}));
 // avis : pouce en l'air ou pouce en bas, puis ce qui a plu ou non
 const Z=document.getElementById("cgp-note");let note=null;
 Z.querySelectorAll(".pouce").forEach(b=>b.addEventListener("click",()=>{note=b.dataset.note;Z.querySelectorAll(".pouce").forEach(x=>x.classList.toggle("on",x===b));
