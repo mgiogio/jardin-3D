@@ -72,7 +72,10 @@ font:600 17px/1 var(--f);cursor:pointer;background:var(--orange);color:#fff;text
 .cgq .geo{appearance:none;background:none;border:0;padding:12px 0 0;font:500 15px var(--f);color:var(--vert);cursor:pointer;text-decoration:underline}\
 .cgq .carte{position:relative;border-radius:12px;overflow:hidden;background:var(--gris);aspect-ratio:4/3;margin:4px 0 14px}\
 .cgq .carte img,.cgq .carte svg{position:absolute;inset:0;width:100%;height:100%;display:block}\
-.cgq .carte.vise{cursor:crosshair}\
+.cgq .carte.vise{cursor:grab}\
+.cgq .carte .repere{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-34px 0 0 -17px;z-index:500;pointer-events:none;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M12 23s8-7.6 8-13.5A8 8 0 0 0 4 9.5C4 15.4 12 23 12 23z%27 fill=%27%23EB5A00%27 stroke=%27%23fff%27 stroke-width=%271.6%27/%3E%3Ccircle cx=%2712%27 cy=%279.5%27 r=%273%27 fill=%27%23fff%27/%3E%3C/svg%3E")}\
+.cgq .carte .leaflet-container{background:var(--gris);font:inherit}\
+.cgq .carte .bulle{z-index:500}\
 .cgq .carte .bulle{position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.94);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:500}\
 .cgq .chiffres{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 6px}\
 .cgq .chiffres div{background:var(--brume);border-radius:10px;padding:12px 14px}\
@@ -243,7 +246,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     return '<h2>C\'est bien votre maison ?</h2><p class="sous" id="cgq-tsous">Nous cherchons votre terrain sur le cadastre…</p>'
       + '<div class="carte squelette" id="cgq-carte"></div><div id="cgq-tinfo"></div>'
       + '<div class="pile" id="cgq-tact" hidden><button type="button" class="cta" data-a="terrain-ok">Oui, c\'est bien ça</button>'
-      + '<button type="button" class="cta sec" data-a="terrain-viser">Non, je la montre sur la photo</button></div>';
+      + '<button type="button" class="cta sec" data-a="terrain-viser">Non, je la cherche sur la carte</button></div>';
   };
   E.photo = function () {
     var a = S.photoUrl;
@@ -307,6 +310,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (a === 'adresse-ok') return aller('terrain');
     if (a === 'terrain-ok') return aller('style');
     if (a === 'terrain-viser') return viser();
+    if (a === 'terrain-ici') return confirmerRepere();
+    if (a === 'terrain-adresse') { if (carteL) { carteL.remove(); carteL = null; } return aller('adresse'); }
     if (a === 'terrain-continuer') return aller('style');
     if (a === 'photo-choisir') { var f = M.querySelector('#cgq-f'); if (f) f.click(); return; }
     if (a === 'photo-ok') return aller('contact');
@@ -398,7 +403,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
         S.terrain = null;
         if (sous) sous.textContent = 'Nous n\'avons pas trouvé le plan de ce terrain. Ce n\'est pas grave : nous continuerons avec votre photo.';
         var c = M.querySelector('#cgq-carte'); if (c) c.remove();
-        var act = M.querySelector('#cgq-tact'); if (act) { act.hidden = false; act.innerHTML = '<button type="button" class="cta" data-a="terrain-continuer">Continuer</button>'; }
+        var act = M.querySelector('#cgq-tact'); if (act) { act.hidden = false; act.innerHTML = '<button type="button" class="cta" data-a="terrain-continuer">Continuer</button><button type="button" class="cta sec" data-a="terrain-viser">Montrer ma maison sur la carte</button>'; }
         ev('cgp_q_terrain', { trouve: 'non' });
       });
   }
@@ -426,22 +431,48 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var act = M.querySelector('#cgq-tact'); if (act) act.hidden = false;
     ev('cgp_q_terrain', { trouve: 'oui' });
   }
+  // carte déplaçable (photo aérienne IGN) avec un repère fixe au centre : on amène sa maison sous le repère, même si elle était hors du cadre
+  var LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
+  function chargerLeaflet() {
+    if (window.L && window.L.map) return Promise.resolve(window.L);
+    return new Promise(function (ok, ko) {
+      var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = LEAFLET + 'leaflet.min.css'; document.head.appendChild(l);
+      var sc = document.createElement('script'); sc.src = LEAFLET + 'leaflet.min.js'; sc.onload = function () { ok(window.L); }; sc.onerror = ko; document.head.appendChild(sc);
+    });
+  }
+  var carteL = null;
   function viser() {
-    var c = M.querySelector('#cgq-carte'), sous = M.querySelector('#cgq-tsous'), act = M.querySelector('#cgq-tact');
-    if (!c || !vue) return;
-    c.classList.add('vise'); if (sous) sous.innerHTML = '<b>Touchez votre maison sur la photo.</b>';
-    var bl = c.querySelector('.bulle'); if (bl) bl.textContent = 'Touchez votre maison';
-    if (act) act.hidden = true;
+    var c = M.querySelector('#cgq-carte'), sous = M.querySelector('#cgq-tsous'), act = M.querySelector('#cgq-tact'), info = M.querySelector('#cgq-tinfo');
+    if (!c) { c = document.createElement('div'); c.id = 'cgq-carte'; (info || act).before(c); }
+    var t = S.terrain;
+    c.className = 'carte squelette'; c.innerHTML = '';
+    if (sous) sous.innerHTML = '<b>Déplacez la carte pour mettre le repère sur votre maison.</b> Zoomez ou dézoomez si besoin.';
+    if (info) info.innerHTML = '';
+    if (act) { act.hidden = false; act.innerHTML = '<button type="button" class="cta" data-a="terrain-ici" disabled>Ma maison est sous le repère</button><button type="button" class="lien" data-a="terrain-adresse">Changer l\'adresse</button>'; }
     c.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    c.onclick = function (e) {
-      var r = c.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
-      var x = vue.x0 + fx * vue.w, y = vue.y0 + (1 - fy) * vue.h;
-      var lat = vue.lat0 + y / vue.ky, lon = vue.lon0 + x / vue.kx;
-      c.onclick = null; c.className = 'carte squelette'; c.innerHTML = '';
-      S.terrain = null; S.corrections = (S.corrections || 0) + 1;
-      ev('cgp_q_correction', {});
-      chercherTerrain(lat, lon);
-    };
+    ev('cgp_q_correction', { etape: 'carte' });
+    chargerLeaflet().then(function (L) {
+      c.className = 'carte vise'; c.innerHTML = '<div id="cgq-lf" style="position:absolute;inset:0"></div><span class="repere" aria-hidden="true"></span><span class="bulle">Glissez la carte</span>';
+      var centre = t && t.building ? anneauCentre(t.building.ring) : [S.adresse.lat, S.adresse.lon];
+      carteL = L.map(c.querySelector('#cgq-lf'), { zoomControl: true, attributionControl: true, maxZoom: 21, minZoom: 15 }).setView(centre, 19); carteL.attributionControl.setPrefix(false);
+      L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+        { maxNativeZoom: 19, maxZoom: 21, attribution: 'IGN' }).addTo(carteL);
+      if (t && t.parcel) L.polygon(t.parcel.ring.map(function (p) { return [p[1], p[0]]; }), { color: VERT, weight: 3, fillOpacity: 0.08, interactive: false }).addTo(carteL);
+      var b = M.querySelector('[data-a=terrain-ici]'); if (b) b.disabled = false;
+      carteL.on('movestart', function () { var bl = c.querySelector('.bulle'); if (bl) bl.remove(); });
+    }).catch(function () {
+      if (sous) sous.textContent = 'La carte ne s\'affiche pas. Vérifiez l\'adresse ou continuez avec votre photo.';
+      if (act) act.innerHTML = '<button type="button" class="cta" data-a="terrain-continuer">Continuer</button><button type="button" class="lien" data-a="terrain-adresse">Changer l\'adresse</button>';
+    });
+  }
+  function anneauCentre(r) { var la = 0, lo = 0, n = r.length - 1 || 1; for (var i = 0; i < n; i++) { lo += r[i][0]; la += r[i][1]; } return [la / n, lo / n]; }
+  function confirmerRepere() {
+    if (!carteL) return;
+    var p = carteL.getCenter(); carteL.remove(); carteL = null;
+    var c = M.querySelector('#cgq-carte'); c.className = 'carte squelette'; c.innerHTML = '';
+    var act = M.querySelector('#cgq-tact'); if (act) { act.hidden = true; act.innerHTML = '<button type="button" class="cta" data-a="terrain-ok">Oui, c\'est bien ça</button><button type="button" class="cta sec" data-a="terrain-viser">Non, je la cherche sur la carte</button>'; }
+    S.terrain = null; S.corrections = (S.corrections || 0) + 1;
+    chercherTerrain(p.lat, p.lng);
   }
 
   /* ---------- photo ---------- */
