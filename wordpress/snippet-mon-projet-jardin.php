@@ -28,13 +28,25 @@ add_filter('wp_robots', function ($r) {
     return $r;
 });
 
+add_filter('rank_math/frontend/robots', function ($r) {
+    if (cg_projet_jardin_est_la_page()) { $r['index'] = 'noindex'; $r['follow'] = 'nofollow'; }
+    return $r;
+});
+
+// La page est en gabarit Elementor Canvas, comme les autres pages du site : on y met l'en-tête charte v2 et le pied de page (modèle 1545)
+function cg_projet_jardin_cadre($html) {
+    $hdr = (function_exists('cg_hdr_enabled') && cg_hdr_enabled() && function_exists('cg_hdr_render')) ? cg_hdr_render() : '';
+    return $hdr . $html . do_shortcode('[elementor-template id="1545"]');
+}
+
 add_shortcode('cg_projet_jardin', function () {
     $id = cg_projet_jardin_id();
     $boite = function ($titre, $texte, $rafraichir = false) {
-        return '<div style="max-width:640px;margin:48px auto;padding:0 16px;font-family:Roboto,Arial,sans-serif;color:#1E211F">'
+        $b = '<div style="max-width:640px;margin:48px auto;padding:0 16px;font-family:Roboto,Arial,sans-serif;color:#1E211F">'
             . '<h1 style="font-weight:800;font-size:32px;line-height:1.15;margin:0 0 12px">' . esc_html($titre) . '<span style="color:#EB5A00">.</span></h1>'
             . '<p style="font-size:16px;line-height:1.6;color:#5B625E;margin:0">' . esc_html($texte) . '</p>'
             . ($rafraichir ? '<script>setTimeout(function(){location.reload()},8000)</script>' : '') . '</div>';
+        return cg_projet_jardin_cadre($b);
     };
     if (!$id) return $boite('Votre projet jardin', "Ce lien n'est pas complet. Ouvrez le lien reçu par email pour retrouver votre projet.");
     $r = wp_remote_get(CG_DIAG_API . '/fragment/' . rawurlencode($id), array('timeout' => 20));
@@ -42,5 +54,5 @@ add_shortcode('cg_projet_jardin', function () {
     $code = wp_remote_retrieve_response_code($r);
     if ($code === 202) return $boite('Votre projet se prépare', 'Nous calculons le soleil de votre jardin et préparons votre idée d\'aménagement avec nos produits. Cela prend environ deux minutes, cette page se met à jour toute seule.', true);
     if ($code !== 200) return $boite('Projet introuvable', "Ce projet n'existe pas ou a expiré. Vous pouvez refaire votre diagnostic en deux minutes.");
-    return wp_remote_retrieve_body($r);   // contenu produit par notre service (styles préfixés .cgp)
+    return cg_projet_jardin_cadre(wp_remote_retrieve_body($r));   // contenu produit par notre service (styles préfixés .cgp)
 });
