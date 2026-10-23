@@ -15,7 +15,7 @@
   /* ---------- styles ---------- */
   var css = '\
 .cgq{--vert:#049E00;--orange:#EB5A00;--orange-survol:#C84800;--orange-pale:#FDEBE0;--brume:#EAF7E5;--gris:#F4F6F7;--ligne:#E1E5E3;--txt:#1E211F;--muted:#5B625E;\
---f:"Roboto","Roboto Secours",Arial,sans-serif;font:400 16px/1.5 var(--f);color:var(--txt);max-width:640px;margin:0 auto;padding:0 16px 40px;box-sizing:border-box}\
+--f:"Roboto","Roboto Secours",Arial,sans-serif;font:400 16px/1.5 var(--f);color:var(--txt);max-width:640px;margin:0 auto;padding:0 16px 28px;box-sizing:border-box}\
 .cgq *,.cgq *:before,.cgq *:after{box-sizing:border-box}\
 .cgq button,.cgq input{font-family:var(--f)}\
 .cgq .haut{position:sticky;top:var(--cgq-haut,0px);z-index:5;background:#fff;padding:12px 0 10px;display:flex;align-items:center;gap:12px}\
@@ -41,6 +41,8 @@ text-align:left;cursor:pointer;color:var(--txt);transition:border-color .15s,bac
 .cgq .c small{display:block;color:var(--muted);font-size:14px;line-height:1.35;margin-top:2px}\
 .cgq .pal{flex:none;display:grid;grid-template-columns:1fr 1fr;width:44px;height:44px;border-radius:10px;overflow:hidden}\
 .cgq .pal i{display:block}\
+.cgq-frise{max-width:640px;margin:0 auto;padding:0 16px 24px;box-sizing:border-box;opacity:.95}\
+.cgq-frise svg{display:block;width:100%;height:auto;max-height:84px}\
 .cgq .cartes.mini{grid-template-columns:1fr 1fr}\
 .cgq .c .rang{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--vert);color:#fff;font:800 16px/1 var(--f)}\
 .cgq .multi .c.on .ic{background:#fff}\
@@ -164,6 +166,9 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   }
   var tEtape = maintenant();
   var M = document.createElement('div'); M.className = 'cgq'; R.innerHTML = ''; R.appendChild(M);
+  var FRISE = document.createElement('div'); FRISE.className = 'cgq-frise';
+  FRISE.innerHTML = '<svg viewBox="0 0 640 84" preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false"><g fill="none" stroke-linecap="round"><g stroke="#049E00" stroke-width="2.2"><path d="M40 80 C38 60 30 44 18 34"/><path d="M42 80 C42 56 44 40 50 24"/><path d="M44 80 C48 62 58 50 70 44"/><path d="M41 80 C36 66 26 58 12 54"/></g><g stroke="#7FBF6A" stroke-width="2"><path d="M110 80 V44"/><path d="M122 80 V36"/><path d="M134 80 V46"/></g><g fill="#9C8BC0" stroke="none"><ellipse cx="110" cy="40" rx="3.2" ry="7"/><ellipse cx="122" cy="31" rx="3.2" ry="7.5"/><ellipse cx="134" cy="42" rx="3.2" ry="7"/></g><g stroke="none"><circle cx="206" cy="58" r="22" fill="#EAF7E5"/><circle cx="194" cy="62" r="14" fill="#BFE3B0"/><circle cx="216" cy="54" r="13" fill="#9FD58A"/><circle cx="206" cy="66" r="12" fill="#7FBF6A"/></g><g stroke="#049E00" stroke-width="2"><path d="M282 80 C282 66 286 56 290 46"/><path d="M284 68 C276 64 272 58 272 52"/></g><g stroke="none"><circle cx="290" cy="42" r="7" fill="#E58FA6"/><circle cx="290" cy="42" r="2.6" fill="#FFF4D6"/></g><g stroke="#049E00" stroke-width="1.8"><path d="M360 80 C356 60 346 46 330 38"/><path d="M352 62 l-10 -2 M348 54 l-9 -4 M342 47 l-8 -5 M356 70 l-10 0"/><path d="M364 80 C370 60 382 48 398 42"/><path d="M372 62 l9 -4 M378 55 l8 -5 M385 49 l7 -5 M368 70 l10 -2"/></g><g stroke="none"><path d="M440 62 h34 l-4 18 h-26 z" fill="#C2693E"/><rect x="437" y="58" width="40" height="6" rx="2" fill="#A0562F"/></g><g stroke="#049E00" stroke-width="2"><path d="M457 58 C455 46 448 38 440 34"/><path d="M457 58 C459 44 466 36 476 32"/><path d="M457 58 V36"/></g><g stroke="#7FBF6A" stroke-width="2"><path d="M530 80 C528 62 520 50 508 42"/><path d="M533 80 C534 60 538 46 544 34"/><path d="M536 80 C542 64 552 56 566 52"/></g><g stroke="#049E00" stroke-width="1.8"><path d="M604 80 V56"/><path d="M604 68 C612 66 616 60 616 56"/></g><g stroke="none"><circle cx="604" cy="52" r="5" fill="#E4C46A"/><circle cx="618" cy="52" r="3.5" fill="#E4C46A"/></g></g><path d="M0 81 H640" stroke="#E1E5E3" stroke-width="2"/></svg>';
+  R.appendChild(FRISE);
 
   /* ---------- calage sous l'en-tête collant du site ---------- */
   function caler() {

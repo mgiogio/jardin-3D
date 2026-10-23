@@ -25,7 +25,7 @@ add_filter('rocket_exclude_js', function ($l) { $l[] = '(.*)run.app/q/q.js'; ret
 add_shortcode('cg_diagnostic_jardin', function () {
     $html = '<div class="cgq-hero" style="max-width:640px;margin:0 auto;padding:32px 16px 0;font-family:Roboto,Arial,sans-serif;color:#1E211F">'
         . '<h1 style="font-weight:800;font-size:clamp(30px,6vw,44px);line-height:1.12;margin:0;letter-spacing:-.01em">Le diagnostic gratuit de votre <span style="color:#049E00">jardin</span><span style="color:#EB5A00">.</span></h1></div>'
-        . '<div id="cg-diag" data-api="' . esc_attr(CG_DIAG_API) . '" data-projet="' . esc_attr(CG_DIAG_PAGE_PROJET) . '" style="min-height:560px"></div>'
+        . '<div id="cg-diag" data-api="' . esc_attr(CG_DIAG_API) . '" data-projet="' . esc_attr(CG_DIAG_PAGE_PROJET) . '"></div>'
         . '<script src="' . esc_url(CG_DIAG_API . '/q/q.js') . '" defer data-no-optimize="1" data-cfasync="false"></script>';
     $hdr = (function_exists('cg_hdr_enabled') && cg_hdr_enabled() && function_exists('cg_hdr_render')) ? cg_hdr_render() : '';
     return $hdr . $html . do_shortcode('[elementor-template id="1545"]');
