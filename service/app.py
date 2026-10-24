@@ -141,7 +141,7 @@ def questionnaire_page():
     # page de test autonome ; sur le site, le questionnaire est intégré par le shortcode [cg_diagnostic_jardin]
     return HTMLResponse('''<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>Diagnostic jardin</title><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
-<body style="margin:0;background:#fff"><div id="cg-diag" data-api="" data-projet="/projet/"></div><script src="/q/q.js"></script>''' + __import__('lp').rendre('') + '</body></html>')
+<body style="margin:0;background:#fff"><div style="background:#F4F6F7">''' + __import__('lp').rendre('') + '''</div><div id="cg-diag" data-api="" data-projet="/projet/"></div><script src="/q/q.js"></script></body></html>''')
 
 
 def dossier(pid):

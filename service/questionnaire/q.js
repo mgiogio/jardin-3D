@@ -10,6 +10,7 @@
   var API = (R.dataset.api || '').replace(/\/$/, '');
   var PROJET = R.dataset.projet || '/projet/';
   var CLE = 'cg_diag_v1';
+  var ACC = null;
   var VERT = '#049E00';
 
   /* ---------- styles ---------- */
@@ -231,13 +232,15 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   window.addEventListener('popstate', function (e) {
     var et = e.state && e.state.cgq;
     if (S.id) return;                         // déjà envoyé : on reste sur l'écran d'attente
+    if (et === 'accueil' && ACC) { accueil(true); window.scrollTo({ top: 0 }); return; }
+    if (ACC) accueil(false);
     if (et && ETAPES.indexOf(et) >= 0) aller(et, true);
     else if (S.etape !== 'envie') aller(precedente() || 'envie', true);
   });
 
   function entete() {
     var p = AVANCE[S.etape] || 100, prev = precedente();
-    return '<div class="haut"><button type="button" class="ret" data-a="retour"' + (prev ? '' : ' hidden') + '>Retour</button>'
+    return '<div class="haut"><button type="button" class="ret" data-a="retour"' + (prev || (S.etape === 'envie' && ACC) ? '' : ' hidden') + '>Retour</button>'
       + '<div class="barre" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div>'
       + '<span class="reste">' + (RESTE[S.etape] || '') + '</span></div>';
   }
@@ -320,7 +323,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   M.addEventListener('click', function (e) {
     var b = e.target.closest('button,a'); if (!b || !M.contains(b)) return;
     var a = b.getAttribute('data-a'), v = b.getAttribute('data-v');
-    if (a === 'retour') { var p = precedente(); if (p) aller(p); return; }
+    if (a === 'retour') { var p = precedente(); if (p) aller(p); else if (ACC) { accueil(true); try { history.pushState({ cgq: 'accueil' }, '', location.href); } catch (x) { } window.scrollTo({ top: 0, behavior: 'smooth' }); } return; }
     if (v && ['envie', 'style', 'entretien'].indexOf(S.etape) >= 0 && !S.id && !S.envoi) {
       S[S.etape] = v; b.classList.add('on');
       [].forEach.call(b.parentNode.children, function (x) { if (x !== b) x.classList.remove('on'); });
@@ -709,7 +712,23 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (S.etape === 'terrain' && !S.adresse) S.etape = 'adresse';
     if (S.etape === 'contact' && !S.sansPhoto) S.etape = 'photo';      // la photo n'est pas gardée d'une visite à l'autre
   }
-  try { history.replaceState({ cgq: S.etape }, '', location.href); } catch (e) { }
+  // page d'entrée (encadré « Je commence ») : le questionnaire reste caché jusqu'au clic, sauf si le client reprend un parcours entamé
+  ACC = document.getElementById('cglp-accueil');
+  var entame = S.id || S.envoi || S.etape !== 'envie' || (S.envies || []).length;
+  function accueil(voir) {
+    if (!ACC) return;
+    ACC.hidden = !voir; M.hidden = !!voir;
+    R.style.background = voir ? '#F4F6F7' : '';        // même fond gris que la page d'entrée, jusqu'aux plantes du bas
+    setTimeout(etirer, 0);
+  }
+  function commencer() {
+    accueil(false); try { history.pushState({ cgq: 'envie' }, '', location.href); } catch (e) { }
+    rendre(); ev('cgp_q_commencer', {});
+    var top = R.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-cgq-commencer]'); if (b) { e.preventDefault(); commencer(); } });
+  if (ACC && !entame) { accueil(true); try { history.replaceState({ cgq: 'accueil' }, '', location.href); } catch (e) { } }
+  else { accueil(false); try { history.replaceState({ cgq: S.etape }, '', location.href); } catch (e) { } }
   rendre();
   ev('cgp_q_vue', { etape: S.id ? 'attente' : S.etape, reponse: S.etape !== 'envie' && !S.id ? 'reprise' : 'nouveau' });
 })();
