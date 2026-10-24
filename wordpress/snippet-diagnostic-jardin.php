@@ -18,15 +18,23 @@ function cg_diag_page_projet() {
     return $u;
 }
 
-// Contenu sous le questionnaire (ce que l'on reçoit, plantes, FAQ) : rendu par le service, gardé 10 minutes
+// Contenu sous le questionnaire (ce que l'on reçoit, plantes, FAQ) : rendu par le service.
+// Copie fraîche 10 minutes, et une copie de secours gardée sans limite : si le service met du temps à répondre (démarrage à froid),
+// la page affiche la dernière copie ; s'il n'y en a aucune, le navigateur va la chercher lui-même.
 function cg_diag_contenu() {
     $h = get_transient('cg_diag_lp');
-    if ($h !== false) return $h;
-    $r = wp_remote_get(CG_DIAG_API . '/lp', array('timeout' => 15));
-    if (is_wp_error($r) || wp_remote_retrieve_response_code($r) !== 200) return '';
-    $h = wp_remote_retrieve_body($r);
-    set_transient('cg_diag_lp', $h, 10 * MINUTE_IN_SECONDS);
-    return $h;
+    if ($h !== false && $h !== '') return $h;
+    $r = wp_remote_get(CG_DIAG_API . '/lp', array('timeout' => 25));
+    if (!is_wp_error($r) && wp_remote_retrieve_response_code($r) === 200 && strpos(wp_remote_retrieve_body($r), 'cglp') !== false) {
+        $h = wp_remote_retrieve_body($r);
+        set_transient('cg_diag_lp', $h, 10 * MINUTE_IN_SECONDS);
+        update_option('cg_diag_lp_secours', $h, false);
+        return $h;
+    }
+    $h = get_option('cg_diag_lp_secours');
+    if ($h) return $h;
+    return '<div id="cglp-auto"></div><script>(function(){var d=document.getElementById("cglp-auto");fetch(' . wp_json_encode(CG_DIAG_API . '/lp') . ').then(function(r){return r.text()}).then(function(t){d.innerHTML=t;'
+        . '[].forEach.call(d.querySelectorAll("script"),function(o){var n=document.createElement("script");n.textContent=o.textContent;o.replaceWith(n)})}).catch(function(){})})()</script>';
 }
 
 function cg_diag_est_la_page() {
