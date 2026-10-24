@@ -36,8 +36,11 @@ background:var(--orange);color:#fff;font:600 17px/1 var(--f);cursor:pointer;marg
 
 SOLEIL = '<svg viewBox="0 0 24 24" fill="none" stroke="#EB5A00" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
 OEIL = '<svg viewBox="0 0 24 24" fill="none" stroke="#1E211F" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+FEUILLE_V = '<svg viewBox="0 0 24 24" fill="none" stroke="#049E00" stroke-width="2" stroke-linecap="round"><path d="M12 21v-8M12 13c-4 0-6-3-6-7 4 0 6 3 6 7zM12 13c4 0 6-3 6-7-4 0-6 3-6 7z"/></svg>'
 FEUILLE = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15M5 19l7-7"/></svg>'
-ICO = {'cadeau': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/></svg>',
+ICO = {'plante': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21v-8M12 13c-4 0-6-3-6-7 4 0 6 3 6 7zM12 13c4 0 6-3 6-7-4 0-6 3-6 7zM7 21h10"/></svg>',
+       'soleil': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+       'cadeau': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/></svg>',
        'mail': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/></svg>',
        'plan': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9h18M5 9l2-4h10l2 4M6 9v11M18 9v11M3 20h18"/></svg>'}
 
@@ -47,17 +50,17 @@ def rendre(base=''):
     return CSS + f'''<div class="cglp" id="cglp-accueil">
 <div class="entree">
 <div class="visuel" style="background-image:url('{e(fond)}')" role="img" aria-label="Une pergola Cover Green posée chez un client">
-<span class="bulle b1">{SOLEIL}9 h de soleil en été</span>
-<span class="bulle b2">{OEIL}Vis-à-vis côté nord</span>
-<span class="bulle b3">{FEUILLE}Votre jardin imaginé avec nos produits</span></div>
+<span class="bulle b1">{SOLEIL}Le soleil heure par heure</span>
+<span class="bulle b2">{FEUILLE_V}Quoi planter, et quand</span>
+<span class="bulle b3">{FEUILLE}Le potentiel de votre jardin</span></div>
 <div class="boite">
 <h1>Le diagnostic gratuit de votre <span class="v">jardin</span><span class="o">.</span></h1>
-<p>Le soleil heure par heure, les vis-à-vis, les plantes faites pour chez vous et votre jardin imaginé avec nos produits.</p>
+<p>Découvrez ce que votre jardin peut devenir : quoi planter et quand, où créer de l'ombre et de l'intimité, et votre jardin imaginé avec nos produits.</p>
 <button type="button" class="cta" data-cgq-commencer>Je commence mon diagnostic</button>
-<span class="petit"><b>1 minute</b> · gratuit et sans engagement · ★ 4,6/5 sur Trustpilot</span>
+<span class="petit"><b>Gratuit</b> · dans votre boîte mail en 3 minutes · ★ 4,6/5 sur Trustpilot</span>
 </div></div>
 <div class="atouts">
-<div><i>{ICO['cadeau']}</i><b>Diagnostic gratuit</b><p>Calculé à partir de votre adresse, de votre photo et des données de l'IGN.</p></div>
-<div><i>{ICO['mail']}</i><b>Résultat en 3 minutes</b><p>Votre page projet arrive dans votre boîte mail, à garder et à partager.</p></div>
-<div><i>{ICO['plan']}</i><b>Des conseils concrets</b><p>Les bons produits au bon endroit, des plantes adaptées à votre région et un budget clair.</p></div>
+<div><i>{ICO['plante']}</i><b>Quoi planter, et quand</b><p>Des plantes choisies pour votre région, votre soleil et votre temps, avec le bon mois pour les planter.</p></div>
+<div><i>{ICO['soleil']}</i><b>Le potentiel de votre jardin</b><p>Le soleil heure par heure, les vis-à-vis, les coins à valoriser : ce que votre jardin peut devenir.</p></div>
+<div><i>{ICO['plan']}</i><b>Votre jardin imaginé</b><p>À partir de votre photo, nos produits posés chez vous, au bon endroit, avec un budget clair.</p></div>
 </div></div>'''
