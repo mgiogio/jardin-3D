@@ -20,6 +20,10 @@ function cg_diag_lien($shortcode) {
     set_transient($cle, $u, HOUR_IN_SECONDS);
     return $u;
 }
+// Un changement de page (adresse, publication) remet ces liens à jour tout de suite
+add_action('save_post_page', function () {
+    foreach (array('cg_projet_jardin', 'cg_diagnostic_jardin', 'cg_diagnostic_accueil') as $c) delete_transient('cg_diag_lien_' . $c);
+});
 function cg_diag_page_projet() {
     $u = cg_diag_lien('cg_projet_jardin');
     return $u . (strpos($u, '?') === false ? '?' : '&') . 'projet=';
