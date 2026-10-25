@@ -240,7 +240,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 
   function entete() {
     var p = AVANCE[S.etape] || 100, prev = precedente();
-    return '<div class="haut"><button type="button" class="ret" data-a="retour"' + (prev || (S.etape === 'envie' && ACC) ? '' : ' hidden') + '>Retour</button>'
+    return '<div class="haut"><button type="button" class="ret" data-a="retour"' + (prev || (S.etape === 'envie' && (ACC || R.dataset.accueil)) ? '' : ' hidden') + '>Retour</button>'
       + '<div class="barre" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div>'
       + '<span class="reste">' + (RESTE[S.etape] || '') + '</span></div>';
   }
@@ -323,7 +323,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   M.addEventListener('click', function (e) {
     var b = e.target.closest('button,a'); if (!b || !M.contains(b)) return;
     var a = b.getAttribute('data-a'), v = b.getAttribute('data-v');
-    if (a === 'retour') { var p = precedente(); if (p) aller(p); else if (ACC) { accueil(true); try { history.pushState({ cgq: 'accueil' }, '', location.href); } catch (x) { } window.scrollTo({ top: 0, behavior: 'smooth' }); } return; }
+    if (a === 'retour') { var p = precedente(); if (p) aller(p); else if (R.dataset.accueil) { location.href = R.dataset.accueil; } else if (ACC) { accueil(true); try { history.pushState({ cgq: 'accueil' }, '', location.href); } catch (x) { } window.scrollTo({ top: 0, behavior: 'smooth' }); } return; }
     if (v && ['envie', 'style', 'entretien'].indexOf(S.etape) >= 0 && !S.id && !S.envoi) {
       S[S.etape] = v; b.classList.add('on');
       [].forEach.call(b.parentNode.children, function (x) { if (x !== b) x.classList.remove('on'); });
