@@ -24,7 +24,11 @@
 .cgq .ret[hidden]{visibility:hidden;display:block}\
 .cgq .barre{flex:1;height:6px;border-radius:3px;background:var(--gris);overflow:hidden}\
 .cgq .barre i{display:block;height:100%;background:var(--vert);border-radius:3px;transition:width .5s ease}\
-.cgq .reste{font-size:13px;color:var(--muted);min-width:72px;text-align:right;white-space:nowrap}\
+.cgq .reste{font-size:13px;color:var(--muted);min-width:72px;text-align:right;white-space:nowrap;margin-left:auto}\
+.cgq .bas{margin-top:28px}.cgq .bas .barre{height:5px}\
+.cgq .recap{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-wrap:wrap;gap:8px}\
+.cgq .recap li{background:var(--brume);border-radius:999px;padding:6px 12px 6px 30px;font-size:14px;font-weight:500;position:relative}\
+.cgq .recap li:before{content:"";position:absolute;left:12px;top:50%;width:6px;height:10px;border:solid var(--vert);border-width:0 2px 2px 0;transform:translateY(-65%) rotate(45deg)}\
 .cgq .ecran{animation:cgqIn .28s ease both;padding-top:8px}\
 @keyframes cgqIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}\
 .cgq h2{font:800 26px/1.2 var(--f);margin:8px 0 8px;letter-spacing:-.01em;color:var(--txt)}\
@@ -154,14 +158,15 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     ['moyen', 'Un peu le week-end', 'Tailler une ou deux fois par an, ça me va'],
     ['passion', 'J\'adore jardiner', 'Plus il y a de fleurs, plus je suis content']
   ];
-  var ETAPES = ['envie', 'adresse', 'terrain', 'style', 'entretien', 'photo', 'contact'];
-  var AVANCE = { envie: 6, adresse: 22, terrain: 38, style: 52, entretien: 64, photo: 76, contact: 92 };
-  var RESTE = { envie: 'Environ 1 min', adresse: 'Environ 1 min', terrain: 'Moins d\'1 min', style: 'Moins d\'1 min', entretien: '30 secondes', photo: '20 secondes', contact: 'Dernière étape' };
+  // l'adresse d'abord (souvent saisie sur la page d'accueil) : la récompense arrive tout de suite, avec la vue de son terrain
+  var ETAPES = ['adresse', 'terrain', 'envie', 'style', 'entretien', 'photo', 'contact'];
+  var AVANCE = { adresse: 12, terrain: 30, envie: 46, style: 60, entretien: 70, photo: 80, contact: 92 };   // progression rapide au début
+  var RESTE = { adresse: 'Environ 1 min', terrain: 'Environ 1 min', envie: 'Moins d\'1 min', style: 'Moins d\'1 min', entretien: '30 secondes', photo: '20 secondes', contact: 'Dernière étape' };
 
   /* ---------- état ---------- */
   var S = lire();
   if (!S || !S.v || (S.cree && maintenant() - S.cree > 7 * 864e5)) S = null;
-  if (!S) S = { v: 1, cree: maintenant(), etape: 'envie', temps: {}, infos: {}, suivi: null };
+  if (!S) S = { v: 1, cree: maintenant(), etape: 'adresse', temps: {}, infos: {}, suivi: null };
   // provenance (premier contact) : sert à savoir quels canaux amènent des projets, sans rien demander au client
   if (!S.suivi) {
     var q = new URLSearchParams(location.search), sv = {};
@@ -226,7 +231,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   }
   function precedente() {
     var i = ETAPES.indexOf(S.etape);
-    if (S.etape === 'style' && !S.terrain) return 'adresse';
+    if (S.etape === 'envie' && !S.terrain) return 'adresse';
     return i > 0 ? ETAPES[i - 1] : null;
   }
   window.addEventListener('popstate', function (e) {
@@ -235,13 +240,12 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (et === 'accueil' && ACC) { accueil(true); window.scrollTo({ top: 0 }); return; }
     if (ACC) accueil(false);
     if (et && ETAPES.indexOf(et) >= 0) aller(et, true);
-    else if (S.etape !== 'envie') aller(precedente() || 'envie', true);
+    else if (S.etape !== 'adresse') aller(precedente() || 'adresse', true);
   });
 
   function entete() {
     var p = AVANCE[S.etape] || 100, prev = precedente();
-    return '<div class="haut"><button type="button" class="ret" data-a="retour"' + (prev || (S.etape === 'envie' && (ACC || R.dataset.accueil)) ? '' : ' hidden') + '>Retour</button>'
-      + '<div class="barre" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div>'
+    return '<div class="haut"><button type="button" class="ret" data-a="retour"' + (prev || (S.etape === 'adresse' && (ACC || R.dataset.accueil)) ? '' : ' hidden') + '>Retour</button>'
       + '<span class="reste">' + (RESTE[S.etape] || '') + '</span></div>';
   }
   function cartes(liste, choisi, cls) {
@@ -256,7 +260,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   var E = {};
   E.envie = function () {
     var L = S.envies || [];
-    return '<h2>Qu\'est-ce qui vous ferait plaisir dans votre jardin ?</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
+    return '<h2>Qu\'est-ce qui vous ferait plaisir dans ce jardin ?</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
       + '<div class="cartes deux multi">' + ENVIES.map(function (o) {
         var k = L.indexOf(o[0]);
         return '<button type="button" class="c' + (k >= 0 ? ' on' : '') + '" data-envie="' + o[0] + '" aria-pressed="' + (k >= 0) + '">'
@@ -291,7 +295,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       + '<button type="button" class="lien" data-a="photo-sans">Je n\'ai pas de photo sous la main</button></div>';
   };
   E.contact = function () {
-    return '<h2>Où vous envoyer votre diagnostic ?</h2><p class="sous">' + (S.photo || S.photoUrl ? 'Votre page projet arrive par email dans 2 à 3 minutes.' : 'Votre page projet arrive par email dans 2 minutes. Vous pourrez y ajouter une photo.') + '</p>'
+    var rec = [S.adresse && S.adresse.city ? 'Votre terrain à ' + S.adresse.city : 'Votre terrain', (S.envies || []).length > 1 ? 'Vos ' + S.envies.length + ' envies' : 'Votre envie', 'Votre style', S.photo || S.photoUrl ? 'Votre photo' : null].filter(Boolean);
+    return '<h2>Dernière étape : où vous envoyer votre diagnostic ?</h2><ul class="recap">' + rec.map(function (t) { return '<li>' + h(t) + '</li>'; }).join('') + '</ul><p class="sous">' + (S.photo || S.photoUrl ? 'Tout est prêt. Votre page projet arrive par email dans 2 à 3 minutes.' : 'Tout est prêt. Votre page projet arrive par email dans 2 minutes, vous pourrez y ajouter une photo.') + '</p>'
       + '<form id="cgq-form" novalidate><label class="ch" for="cgq-mail">Votre email</label><input id="cgq-mail" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="' + h(S.email) + '" required><p class="msg" id="cgq-mmsg" role="status"></p>'
       + '<label class="case"><input type="checkbox" id="cgq-opt"' + (S.optin ? ' checked' : '') + '><span>Recevoir aussi nos idées et offres jardin, 2 emails par mois au plus</span></label>'
       + '<div class="pile"><button type="submit" class="cta">Recevoir mon diagnostic</button></div></form>'
@@ -311,7 +316,9 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 
   function rendre() {
     if (S.id || S.envoi) { M.innerHTML = E.attente(); attente(); bonus(); return; }
-    M.innerHTML = entete() + '<div class="ecran">' + E[S.etape]() + '</div>';
+    var p = AVANCE[S.etape] || 100;
+    M.innerHTML = entete() + '<div class="ecran">' + E[S.etape]() + '</div>'
+      + '<div class="bas"><div class="barre" role="progressbar" aria-label="Avancement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div></div>';
     caler();
     if (S.etape === 'adresse') adresse();
     if (S.etape === 'terrain') terrain();
@@ -327,7 +334,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (v && ['envie', 'style', 'entretien'].indexOf(S.etape) >= 0 && !S.id && !S.envoi) {
       S[S.etape] = v; b.classList.add('on');
       [].forEach.call(b.parentNode.children, function (x) { if (x !== b) x.classList.remove('on'); });
-      var suite = { envie: 'adresse', style: 'entretien', entretien: 'photo' }[S.etape];
+      var suite = { style: 'entretien', entretien: 'photo' }[S.etape];
       setTimeout(function () { aller(suite); }, 180);     // un toucher suffit : on passe tout seul à la suite
       return;
     }
@@ -337,20 +344,20 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       if (k >= 0) S.envies.splice(k, 1); else S.envies.push(en);
       S.envie = S.envies[0] || null; garder(); majEnvies(); return;
     }
-    if (a === 'envie-ok') { if (!(S.envies || []).length) return; ev('cgp_q_envies', { envie: S.envies.join(','), reponse: String(S.envies.length) }); return aller('adresse'); }
+    if (a === 'envie-ok') { if (!(S.envies || []).length) return; ev('cgp_q_envies', { envie: S.envies.join(','), reponse: String(S.envies.length) }); return aller('style'); }
     if (a === 'geo') return geolocaliser(b);
     if (a === 'adresse-ok') return aller('terrain');
-    if (a === 'terrain-ok') return aller('style');
+    if (a === 'terrain-ok') return aller('envie');
     if (a === 'terrain-viser') return viser();
     if (a === 'terrain-ici') return confirmerRepere();
     if (a === 'terrain-adresse') { if (carteL) { carteL.remove(); carteL = null; } return aller('adresse'); }
-    if (a === 'terrain-continuer') return aller('style');
+    if (a === 'terrain-continuer') return aller('envie');
     if (a === 'photo-choisir') { var f = M.querySelector('#cgq-f'); if (f) f.click(); return; }
     if (a === 'photo-ok') return aller('contact');
     if (a === 'photo-sans') { S.photo = null; S.photoUrl = null; S.sansPhoto = true; ev('cgp_q_sans_photo', {}); return aller('contact'); }
     if (a === 'modifier') { S.envoi = false; S.erreur = null; return aller('contact'); }
     if (a === 'renvoyer') { S.erreur = null; return envoyer(); }
-    if (a === 'nouveau') { try { localStorage.removeItem(CLE); } catch (x) { } S = { v: 1, cree: maintenant(), etape: 'envie', temps: {}, infos: {}, suivi: S.suivi }; tEtape = maintenant(); rendre(); return; }
+    if (a === 'nouveau') { try { localStorage.removeItem(CLE); } catch (x) { } if (R.dataset.accueil) { location.href = R.dataset.accueil; return; } S = { v: 1, cree: maintenant(), etape: 'adresse', temps: {}, infos: {}, suivi: S.suivi }; tEtape = maintenant(); rendre(); return; }
     if (a === 'voir') ev('cgp_q_voir', { projet_jardin: S.id });
     if (a === 'info') return repondre(b.getAttribute('data-q'), v);
     if (a === 'info-passer') return repondre(b.getAttribute('data-q'), null);
@@ -708,13 +715,13 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   if (S.envoi && !S.id && !S.erreur) S.erreur = 'L\'envoi a été interrompu. Vos réponses sont gardées, réessayez.';
   if (!S.envies && S.envie) S.envies = [S.envie];
   if (!S.id && !S.envoi) {
-    if (ETAPES.indexOf(S.etape) < 0) S.etape = 'envie';
+    if (ETAPES.indexOf(S.etape) < 0) S.etape = 'adresse';
     if (S.etape === 'terrain' && !S.adresse) S.etape = 'adresse';
     if (S.etape === 'contact' && !S.sansPhoto) S.etape = 'photo';      // la photo n'est pas gardée d'une visite à l'autre
   }
   // page d'entrée (encadré « Je commence ») : le questionnaire reste caché jusqu'au clic, sauf si le client reprend un parcours entamé
   ACC = document.getElementById('cglp-accueil');
-  var entame = S.id || S.envoi || S.etape !== 'envie' || (S.envies || []).length;
+  var entame = S.id || S.envoi || S.etape !== 'adresse' || !!S.adresse;
   function accueil(voir) {
     if (!ACC) return;
     ACC.hidden = !voir; M.hidden = !!voir;
@@ -722,7 +729,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     setTimeout(etirer, 0);
   }
   function commencer() {
-    accueil(false); try { history.pushState({ cgq: 'envie' }, '', location.href); } catch (e) { }
+    accueil(false); try { history.pushState({ cgq: 'adresse' }, '', location.href); } catch (e) { }
     rendre(); ev('cgp_q_commencer', {});
     var top = R.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }
@@ -730,5 +737,5 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   if (ACC && !entame) { accueil(true); try { history.replaceState({ cgq: 'accueil' }, '', location.href); } catch (e) { } }
   else { accueil(false); try { history.replaceState({ cgq: S.etape }, '', location.href); } catch (e) { } }
   rendre();
-  ev('cgp_q_vue', { etape: S.id ? 'attente' : S.etape, reponse: S.etape !== 'envie' && !S.id ? 'reprise' : 'nouveau' });
+  ev('cgp_q_vue', { etape: S.id ? 'attente' : S.etape, reponse: S.etape !== 'adresse' && !S.id ? 'reprise' : 'nouveau' });
 })();
