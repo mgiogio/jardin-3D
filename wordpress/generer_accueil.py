@@ -8,7 +8,7 @@ js = open(os.path.join(ICI, '..', 'service', 'questionnaire', 'q.js'), encoding=
 i = js.index('  function bordure() {'); j = js.index('  var FRISE =')
 svg = subprocess.run(['node', '-e', js[i:j] + '\nprocess.stdout.write(bordure())'], capture_output=True, text=True, check=True).stdout
 svg = re.sub(r'(\d+\.\d{2})\d+', r'\1', svg)                       # arrondi : fichier plus léger
-html = lp.rendre('', '{{QUESTIONNAIRE}}')
+html = lp.rendre('', '{{QUESTIONNAIRE}}', 'https://diagnostic-jardin-349938922301.europe-west1.run.app')
 html = html.replace("/assets/refs/pergola_ensemble.jpg", "/wp-content/uploads/2026/08/brottier-2-768x1024.jpg")
 css_frise = ('<style>.cglp-page{background:#F4F6F7;display:flex;flex-direction:column}.cglp .cta{text-decoration:none}.cglp .cta:hover{color:#fff}'
              '.cglp-frise{margin-top:auto;padding-top:24px;height:110px;overflow:hidden;pointer-events:none}.cglp-frise svg{display:block;width:100%;height:110px}'

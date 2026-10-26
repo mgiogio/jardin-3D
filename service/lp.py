@@ -43,7 +43,11 @@ background:var(--orange);color:#fff;font:600 17px/1 var(--f);cursor:pointer;marg
 .cglp .sug{position:absolute;left:0;right:0;top:60px;z-index:20;list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--ligne);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.12);overflow:hidden}
 .cglp .sug button{appearance:none;display:block;width:100%;text-align:left;background:#fff;border:0;border-top:1px solid var(--ligne);padding:13px 16px;font:400 15px var(--f);color:var(--txt);cursor:pointer}
 .cglp .sug li:first-child button{border-top:0}.cglp .sug button:hover,.cglp .sug button:focus{background:var(--brume);outline:none}.cglp .sug small{color:var(--muted)}
-.cglp form .cta{width:100%;min-width:0;margin-top:2px}
+.cglp form .cta{width:100%;min-width:0;margin-top:2px;gap:10px}
+.cglp form.ok .champ input{border-color:var(--vert);background-color:#F6FBF4}
+.cglp form.encours .cta{opacity:.92;cursor:progress}
+.cglp .rond{width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,255,255,.45);border-top-color:#fff;animation:cglp-t .8s linear infinite;flex:none}
+@keyframes cglp-t{to{transform:rotate(360deg)}}
 .cglp .geo{appearance:none;background:none;border:0;padding:4px 0;font:500 14px var(--f);color:var(--vert);text-decoration:underline;cursor:pointer;justify-self:center}
 .cglp .msg{margin:0;font-size:14px;color:#C62828;min-height:0}.cglp .msg:empty{display:none}
 .cglp .reprise{font-size:14px;color:var(--txt);text-decoration:underline}
@@ -71,7 +75,7 @@ ICO = {'plante': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
        'plan': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9h18M5 9l2-4h10l2 4M6 9v11M18 9v11M3 20h18"/></svg>'}
 
 
-JS = r'''<script>(function(){var F=document.getElementById("cglp-form");if(!F)return;var I=document.getElementById("cglp-a"),L=document.getElementById("cglp-sug"),M=document.getElementById("cglp-msg"),G=document.getElementById("cglp-geo"),Q=F.getAttribute("data-q"),res=[],tm,ct,CLE="cg_diag_v1";
+JS = r'''<script>(function(){var F=document.getElementById("cglp-form");if(!F)return;var I=document.getElementById("cglp-a"),L=document.getElementById("cglp-sug"),M=document.getElementById("cglp-msg"),G=document.getElementById("cglp-geo"),Q=F.getAttribute("data-q"),A=F.getAttribute("data-api"),B=F.querySelector(".cta"),res=[],tm,ct,sel=null,tp=null,CLE="cg_diag_v1";
 function h(s){return String(s||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function ev(n,p){try{window.dataLayer=window.dataLayer||[];var o={event:n};for(var k in p)o[k]=p[k];dataLayer.push(o)}catch(e){}}
 function va(f){var p=f.properties||{},c=f.geometry.coordinates;return{label:p.label,name:p.name||p.label,city:p.city,postcode:p.postcode||"",citycode:p.citycode,lat:c[1],lon:c[0],score:p.score,type:p.type}}
@@ -79,19 +83,24 @@ function cherche(q,sig){var u=["https://data.geopf.fr/geocodage/search?q="+encod
 function t(i){if(i>=u.length)return Promise.reject(new Error("x"));return fetch(u[i],{signal:sig}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){return(d.features||[]).map(va)}).catch(function(e){if(e&&e.name==="AbortError")throw e;return t(i+1)})}return t(0)}
 function aff(l){res=l;if(!l.length){L.hidden=true;return}L.innerHTML=l.map(function(a,i){return'<li role="option"><button type="button" data-i="'+i+'">'+h(a.name)+" <small>"+h(a.postcode+" "+a.city)+"</small></button></li>"}).join("");L.hidden=false}
 function suivi(){var q=new URLSearchParams(location.search),s={};["utm_source","utm_medium","utm_campaign","utm_content","utm_term","gclid","fbclid","msclkid"].forEach(function(k){if(q.get(k))s[k]=q.get(k).slice(0,120)});s.referrer=(document.referrer||"").slice(0,200);s.page=(location.origin+location.pathname).slice(0,200);return s}
-function partir(a){var S={v:1,cree:Date.now(),etape:"terrain",temps:{},infos:{},suivi:suivi(),adresse:{label:a.label,city:a.city,postcode:a.postcode,citycode:a.citycode,lat:a.lat,lon:a.lon,score:a.score}};
+function terrain(a){if(!A)return Promise.resolve(null);return fetch(A+"/api/terrain?lat="+a.lat+"&lon="+a.lon).then(function(r){return r.ok?r.json():null}).catch(function(){return null})}
+function choisir(a){sel=a;I.value=a.label;L.hidden=true;F.classList.add("ok");tp=terrain(a);ev("cgp_q_adresse_choisie",{etape:"accueil"});try{B.focus({preventScroll:true})}catch(e){}}
+function go(a){if(F.classList.contains("encours"))return;F.classList.add("encours");B.disabled=true;B.innerHTML='<span class="rond"></span>Nous cherchons votre terrain…';
+var t=(sel===a&&tp)?tp:terrain(a);Promise.race([t,new Promise(function(r){setTimeout(function(){r(null)},9000)})]).then(function(x){partir(a,x)})}
+function partir(a,t){var S={v:1,cree:Date.now(),etape:"terrain",temps:{},infos:{},suivi:suivi(),adresse:{label:a.label,city:a.city,postcode:a.postcode,citycode:a.citycode,lat:a.lat,lon:a.lon,score:a.score}};if(t)S.terrain=t;
 try{localStorage.setItem(CLE,JSON.stringify(S))}catch(e){}ev("cgp_q_adresse",{etape:"accueil",reponse:a.type||""});
 var u=new URLSearchParams(location.search),k=new URLSearchParams();u.forEach(function(v,n){if(/^(utm_|gclid$|fbclid$|msclkid$)/.test(n))k.append(n,v)});var qs=k.toString();if(Q)location.href=Q+(qs?(Q.indexOf("?")<0?"?":"&")+qs:"");else location.reload()}
-I.addEventListener("input",function(){clearTimeout(tm);M.textContent="";var v=I.value.trim();if(v.length<4){L.hidden=true;return}tm=setTimeout(function(){if(ct)ct.abort();ct=window.AbortController?new AbortController():null;cherche(v,ct&&ct.signal).then(aff).catch(function(e){if(!e||e.name!=="AbortError")M.textContent="La recherche d'adresse ne répond pas, réessayez dans un instant."})},220)});
+I.addEventListener("input",function(){clearTimeout(tm);M.textContent="";sel=null;tp=null;F.classList.remove("ok");var v=I.value.trim();if(v.length<4){L.hidden=true;return}tm=setTimeout(function(){if(ct)ct.abort();ct=window.AbortController?new AbortController():null;cherche(v,ct&&ct.signal).then(aff).catch(function(e){if(!e||e.name!=="AbortError")M.textContent="La recherche d'adresse ne répond pas, réessayez dans un instant."})},220)});
 I.addEventListener("focus",function(){ev("cgp_q_etape",{etape:"accueil_adresse"})},{once:true});
-L.addEventListener("click",function(e){var b=e.target.closest("button[data-i]");if(b)partir(res[+b.getAttribute("data-i")])});
-F.addEventListener("submit",function(e){e.preventDefault();if(res[0])return partir(res[0]);var v=I.value.trim();if(v.length<4){M.textContent="Indiquez l'adresse de votre jardin.";I.focus();return}cherche(v).then(function(l){if(l[0])partir(l[0]);else M.textContent="Adresse introuvable, vérifiez-la ou choisissez-la dans la liste."}).catch(function(){M.textContent="La recherche d'adresse ne répond pas, réessayez dans un instant."})});
-if("geolocation" in navigator){G.hidden=false;G.addEventListener("click",function(){G.textContent="Localisation en cours…";navigator.geolocation.getCurrentPosition(function(p){var la=p.coords.latitude,lo=p.coords.longitude;fetch("https://data.geopf.fr/geocodage/reverse?lat="+la+"&lon="+lo+"&limit=1&index=address").then(function(r){return r.json()}).then(function(d){var f=(d.features||[])[0];if(!f)throw 0;var a=va(f);a.lat=la;a.lon=lo;ev("cgp_q_geoloc",{});partir(a)}).catch(function(){M.textContent="Adresse introuvable, tapez-la simplement.";G.textContent="Je suis dans mon jardin : me localiser"})},function(){M.textContent="Position indisponible, tapez simplement votre adresse.";G.textContent="Je suis dans mon jardin : me localiser"},{enableHighAccuracy:true,timeout:10000,maximumAge:60000})})}
+L.addEventListener("click",function(e){var b=e.target.closest("button[data-i]");if(b)choisir(res[+b.getAttribute("data-i")])});
+F.addEventListener("submit",function(e){e.preventDefault();if(sel)return go(sel);if(res[0])return go(res[0]);var v=I.value.trim();if(v.length<4){M.textContent="Indiquez l'adresse de votre jardin.";I.focus();return}cherche(v).then(function(l){if(l[0])go(l[0]);else M.textContent="Adresse introuvable, vérifiez-la ou choisissez-la dans la liste."}).catch(function(){M.textContent="La recherche d'adresse ne répond pas, réessayez dans un instant."})});
+if("geolocation" in navigator){G.hidden=false;G.addEventListener("click",function(){G.textContent="Localisation en cours…";navigator.geolocation.getCurrentPosition(function(p){var la=p.coords.latitude,lo=p.coords.longitude;fetch("https://data.geopf.fr/geocodage/reverse?lat="+la+"&lon="+lo+"&limit=1&index=address").then(function(r){return r.json()}).then(function(d){var f=(d.features||[])[0];if(!f)throw 0;var a=va(f);a.lat=la;a.lon=lo;ev("cgp_q_geoloc",{});go(a)}).catch(function(){M.textContent="Adresse introuvable, tapez-la simplement.";G.textContent="Je suis dans mon jardin : me localiser"})},function(){M.textContent="Position indisponible, tapez simplement votre adresse.";G.textContent="Je suis dans mon jardin : me localiser"},{enableHighAccuracy:true,timeout:10000,maximumAge:60000})})}
 try{var s=JSON.parse(localStorage.getItem(CLE)||"null");if(s&&!s.id&&s.adresse){var r=document.getElementById("cglp-reprise");if(r&&Q)r.hidden=false}}catch(e){}
+if(A&&Q)try{fetch(A+"/q/q.js",{mode:"no-cors"}).catch(function(){})}catch(e){}
 ev("cgp_q_vue",{etape:"accueil"})})()</script>'''
 
 
-def rendre(base='', questionnaire=''):
+def rendre(base='', questionnaire='', api=''):
     return CSS + f'''<div class="cglp" id="cglp-accueil">
 <div class="entree">
 <div class="apercu">
@@ -115,7 +124,7 @@ def rendre(base='', questionnaire=''):
 </svg>
 <div class="lignes">
 <div class="lig"><i>{SOLEIL}</i><span>Soleil : 7 h par jour en été, ombre dès 17 h sur la terrasse</span></div>
-<div class="lig"><i>{FEUILLE_V}</i><span>À planter en mars :<span class="flou" style="width:58px"></span><span class="flou" style="width:44px"></span><span class="flou" style="width:52px"></span></span></div>
+<div class="lig"><i>{FEUILLE_V}</i><span>À planter aujourd'hui :<span class="flou" style="width:58px"></span><span class="flou" style="width:44px"></span><span class="flou" style="width:52px"></span></span></div>
 <div class="lig"><i>{OEIL}</i><span>Vis-à-vis à 4,5 m : 12 m de clôture occultante</span></div>
 </div>
 <div class="budget"><small>Budget, idée par idée</small><ul><li><span>Massif de vivaces</span><b>150 à 250 €</b></li><li><span>Pergola</span><b>1 100 à 1 400 €</b></li><li><span>Clôture, 12 m</span><b>1 400 à 1 700 €</b></li></ul></div>
@@ -123,7 +132,7 @@ def rendre(base='', questionnaire=''):
 <div class="boite">
 <h1>Le diagnostic gratuit de votre <span class="v">jardin</span><span class="o">.</span></h1>
 <p>Quoi planter et quand, où créer de l'ombre et de l'intimité, et combien ça coûte, idée par idée. Tout commence par son adresse.</p>
-<form id="cglp-form" data-q="{e(questionnaire)}" novalidate autocomplete="off">
+<form id="cglp-form" data-q="{e(questionnaire)}" data-api="{e(api)}" novalidate autocomplete="off">
 <label for="cglp-a">Où se trouve votre jardin ?</label>
 <div class="champ"><input id="cglp-a" type="text" autocomplete="street-address" placeholder="Ex. 12 rue des Lilas, Nantes" aria-autocomplete="list" aria-controls="cglp-sug"><ul class="sug" id="cglp-sug" role="listbox" hidden></ul></div>
 <p class="msg" id="cglp-msg" role="status"></p>
