@@ -55,11 +55,22 @@ add_shortcode('cg_diagnostic_accueil', function () {
 --f:"Roboto","Roboto Secours",Arial,sans-serif;font:400 16px/1.55 var(--f);color:var(--txt);max-width:1080px;margin:0 auto;padding:32px 16px 8px}
 .cglp *,.cglp *:before,.cglp *:after{box-sizing:border-box}
 .cglp .entree{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(30,33,31,.08),0 8px 30px rgba(30,33,31,.06)}
-.cglp .visuel{position:relative;min-height:420px;background:var(--gris) center/cover no-repeat}
-.cglp .bulle{position:absolute;display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:500;
-box-shadow:0 6px 18px rgba(0,0,0,.18);max-width:78%}
-.cglp .bulle svg{flex:none;width:20px;height:20px}
-.cglp .bulle.b1{left:18px;top:22px}.cglp .bulle.b2{right:18px;top:42%}.cglp .bulle.b3{left:18px;bottom:22px;background:var(--vert);color:#fff}
+.cglp .apercu{position:relative;min-height:440px;background:linear-gradient(160deg,#EAF7E5 0%,#F7FBF5 60%,#FFF4EC 100%);padding:28px 30px 40px 26px;display:flex;align-items:center;justify-content:center}
+.cglp .rapport{position:relative;width:100%;max-width:400px;background:#fff;border-radius:14px;box-shadow:0 2px 6px rgba(30,33,31,.06),0 18px 40px rgba(30,33,31,.10);padding:16px 16px 18px}
+.cglp .rapport .tete{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:10px}
+.cglp .rapport .tete b{font-size:14px;color:var(--txt)}
+.cglp .rapport .tete em{font-style:normal;background:var(--gris);border-radius:20px;padding:2px 9px}
+.cglp .rapport svg.plan{display:block;width:100%;height:auto;border-radius:10px}
+.cglp .lignes{display:grid;gap:8px;margin-top:12px;padding-right:0}
+.cglp .lig{display:flex;align-items:center;gap:10px;font-size:13.5px;line-height:1.3;text-align:left}
+.cglp .lig i{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--brume)}
+.cglp .lig i svg{width:17px;height:17px}
+.cglp .lig .flou{display:inline-block;height:11px;border-radius:6px;background:#BFE2B3;filter:blur(2.5px);vertical-align:middle;margin-left:5px}
+.cglp .budget{margin:14px -26px -30px 26px;background:var(--txt);color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 12px 28px rgba(0,0,0,.22);display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 14px;text-align:left}
+.cglp .budget small{grid-column:1;font-size:11.5px;opacity:.75;text-transform:uppercase;letter-spacing:.04em}
+.cglp .budget b{grid-column:1;font-size:21px;font-weight:800;white-space:nowrap}
+.cglp .budget span{grid-column:2;grid-row:1 / span 2;font-size:12.5px;line-height:1.45;opacity:.92;border-left:1px solid rgba(255,255,255,.18);padding-left:14px}
+.cglp .budget span em{font-style:normal;color:#9BE37F;font-weight:600}
 .cglp .boite{margin:20px;border:2px dashed #9AA29E;border-radius:12px;padding:36px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
 .cglp h1{font:800 34px/1.12 var(--f);margin:0;letter-spacing:-.01em;color:var(--txt)}
 .cglp h1 .v{color:var(--vert)}.cglp h1 .o{color:var(--orange)}
@@ -81,23 +92,47 @@ background:var(--orange);color:#fff;font:600 17px/1 var(--f);cursor:pointer;marg
 .cglp .geo{appearance:none;background:none;border:0;padding:4px 0;font:500 14px var(--f);color:var(--vert);text-decoration:underline;cursor:pointer;justify-self:center}
 .cglp .msg{margin:0;font-size:14px;color:#C62828;min-height:0}.cglp .msg:empty{display:none}
 .cglp .reprise{font-size:14px;color:var(--txt);text-decoration:underline}
-.cglp .atouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+.cglp .atouts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:16px}
 .cglp .atouts div{background:#fff;border-radius:14px;padding:22px 20px;text-align:center;box-shadow:0 1px 3px rgba(30,33,31,.06)}
 .cglp .atouts i{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:10px;background:var(--brume);color:var(--vert);margin-bottom:10px}
 .cglp .atouts i svg{width:24px;height:24px}
 .cglp .atouts b{display:block;font-size:17px;margin-bottom:4px}.cglp .atouts p{margin:0;color:var(--muted);font-size:14px}
-@media (max-width:820px){.cglp{padding-top:16px}.cglp .entree{grid-template-columns:1fr}.cglp .visuel{min-height:260px}
-.cglp .boite{margin:14px;padding:26px 18px}.cglp h1{font-size:28px}.cglp .cta{width:100%;min-width:0;padding:0 14px;font-size:16px;white-space:nowrap}.cglp .atouts{grid-template-columns:1fr}
-.cglp .bulle{font-size:13px;padding:8px 11px}.cglp .bulle.b2{top:auto;bottom:64px}}
+@media (max-width:980px){.cglp .atouts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:820px){.cglp{padding-top:16px}.cglp .entree{grid-template-columns:1fr}.cglp .boite{order:-1;margin:14px;padding:26px 18px}
+.cglp .apercu{min-height:0;padding:8px 22px 48px 16px;background:linear-gradient(180deg,#fff 0%,#EAF7E5 30%,#F7FBF5 100%)}.cglp .budget{margin:14px -14px -26px 10px}
+.cglp h1{font-size:28px}.cglp .cta{width:100%;min-width:0;padding:0 14px;font-size:16px;white-space:nowrap}}
+@media (max-width:520px){.cglp .atouts{grid-template-columns:1fr}.cglp .budget{grid-template-columns:1fr}.cglp .budget span{grid-column:1;grid-row:auto;border-left:0;padding-left:0;border-top:1px solid rgba(255,255,255,.18);padding-top:6px;margin-top:6px}}
 </style><div class="cglp" id="cglp-accueil">
 <div class="entree">
-<div class="visuel" style="background-image:url('/wp-content/uploads/2026/08/brottier-2-768x1024.jpg')" role="img" aria-label="Une pergola Cover Green posée chez un client">
-<span class="bulle b1"><svg viewBox="0 0 24 24" fill="none" stroke="#EB5A00" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Le soleil heure par heure</span>
-<span class="bulle b2"><svg viewBox="0 0 24 24" fill="none" stroke="#049E00" stroke-width="2" stroke-linecap="round"><path d="M12 21v-8M12 13c-4 0-6-3-6-7 4 0 6 3 6 7zM12 13c4 0 6-3 6-7-4 0-6 3-6 7z"/></svg>Quoi planter, et quand</span>
-<span class="bulle b3"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15M5 19l7-7"/></svg>Le potentiel de votre jardin</span></div>
+<div class="apercu">
+<div class="rapport" aria-label="Exemple de diagnostic">
+<div class="tete"><b>Votre diagnostic</b><em>Exemple</em></div>
+<svg class="plan" viewBox="0 0 368 190" role="img" aria-label="Plan d'exemple : le soleil, l'ombre, le vis-à-vis et les emplacements proposés">
+<defs><linearGradient id="cglp-sol" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFE3B3"/><stop offset=".55" stop-color="#FFF6E2"/><stop offset="1" stop-color="#E4EEF6"/></linearGradient>
+<pattern id="cglp-h" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#C9D8E4"/><line x1="0" y1="0" x2="0" y2="7" stroke="#B3C5D4" stroke-width="3"/></pattern></defs>
+<rect width="368" height="190" fill="#DDEFD5"/>
+<rect x="10" y="10" width="348" height="170" rx="6" fill="url(#cglp-sol)" opacity=".55"/>
+<rect x="10" y="10" width="348" height="170" rx="6" fill="none" stroke="#049E00" stroke-width="2"/>
+<rect x="18" y="18" width="118" height="68" rx="3" fill="#D9DCDA" stroke="#B5BAB7"/><text x="77" y="56" font-size="11" text-anchor="middle" fill="#5B625E" font-family="Roboto,Arial">Maison</text>
+<rect x="250" y="120" width="100" height="52" fill="url(#cglp-h)" opacity=".8"/><text x="300" y="150" font-size="10" text-anchor="middle" fill="#3D5466" font-family="Roboto,Arial">Ombre à 17 h</text>
+<line x1="356" y1="14" x2="356" y2="176" stroke="#EB5A00" stroke-width="5" stroke-linecap="round"/>
+<g font-family="Roboto,Arial" font-size="10" fill="#C84800"><rect x="292" y="20" width="58" height="18" rx="9" fill="#fff"/><text x="321" y="33" text-anchor="middle">Vis-à-vis</text></g>
+<rect x="150" y="26" width="84" height="62" rx="2" fill="none" stroke="#EB5A00" stroke-width="2" stroke-dasharray="5 4"/>
+<g stroke="#EB5A00" stroke-width="1.4" opacity=".7"><line x1="160" y1="26" x2="160" y2="88"/><line x1="172" y1="26" x2="172" y2="88"/><line x1="184" y1="26" x2="184" y2="88"/><line x1="196" y1="26" x2="196" y2="88"/><line x1="208" y1="26" x2="208" y2="88"/><line x1="220" y1="26" x2="220" y2="88"/></g>
+<g font-family="Roboto,Arial" font-size="10"><rect x="160" y="94" width="64" height="18" rx="9" fill="#EB5A00"/><text x="192" y="107" text-anchor="middle" fill="#fff">Pergola</text></g>
+<g fill="#049E00"><circle cx="40" cy="150" r="9" opacity=".85"/><circle cx="64" cy="160" r="7" opacity=".7"/><circle cx="88" cy="148" r="10" opacity=".8"/><circle cx="114" cy="160" r="6" opacity=".7"/><circle cx="330" cy="70" r="8" opacity=".75"/><circle cx="330" cy="98" r="7" opacity=".65"/></g>
+<g font-family="Roboto,Arial" font-size="10" fill="#1E211F"><rect x="26" y="112" width="88" height="18" rx="9" fill="#fff"/><text x="70" y="125" text-anchor="middle">Plein soleil</text></g>
+</svg>
+<div class="lignes">
+<div class="lig"><i><svg viewBox="0 0 24 24" fill="none" stroke="#EB5A00" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></i><span>Soleil : 7 h par jour en été, ombre dès 17 h sur la terrasse</span></div>
+<div class="lig"><i><svg viewBox="0 0 24 24" fill="none" stroke="#049E00" stroke-width="2" stroke-linecap="round"><path d="M12 21v-8M12 13c-4 0-6-3-6-7 4 0 6 3 6 7zM12 13c4 0 6-3 6-7-4 0-6 3-6 7z"/></svg></i><span>À planter en mars :<span class="flou" style="width:58px"></span><span class="flou" style="width:44px"></span><span class="flou" style="width:52px"></span></span></div>
+<div class="lig"><i><svg viewBox="0 0 24 24" fill="none" stroke="#1E211F" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></i><span>Vis-à-vis à 4,5 m : 12 m de clôture occultante</span></div>
+</div>
+<div class="budget"><small>Budget estimé</small><b>2 600 € à 3 400 €</b><span>Pergola, clôture et plantes<br><em>Paiement jusqu'à 4x sans frais</em></span></div>
+</div></div>
 <div class="boite">
 <h1>Le diagnostic gratuit de votre <span class="v">jardin</span><span class="o">.</span></h1>
-<p>Quoi planter et quand, où créer de l'ombre et de l'intimité, et votre jardin imaginé avec nos produits. Tout commence par son adresse.</p>
+<p>Quoi planter et quand, où créer de l'ombre et de l'intimité, et combien ça coûte, idée par idée. Tout commence par son adresse.</p>
 <form id="cglp-form" data-q="{{QUESTIONNAIRE}}" novalidate autocomplete="off">
 <label for="cglp-a">Où se trouve votre jardin ?</label>
 <div class="champ"><input id="cglp-a" type="text" autocomplete="street-address" placeholder="Ex. 12 rue des Lilas, Nantes" aria-autocomplete="list" aria-controls="cglp-sug"><ul class="sug" id="cglp-sug" role="listbox" hidden></ul></div>
@@ -105,13 +140,14 @@ background:var(--orange);color:#fff;font:600 17px/1 var(--f);cursor:pointer;marg
 <button type="submit" class="cta">Voir le potentiel de mon jardin</button>
 <button type="button" class="geo" id="cglp-geo" hidden>Je suis dans mon jardin : me localiser</button>
 </form>
-<span class="petit"><b>Gratuit</b> · résultat par email en 3 minutes · votre adresse sert uniquement au calcul</span>
+<span class="petit"><b>Gratuit</b> · plan, plantes et budget par email en 3 minutes · votre adresse sert uniquement au calcul</span>
 <a class="reprise" id="cglp-reprise" href="{{QUESTIONNAIRE}}" hidden>Reprendre mon diagnostic en cours</a>
 </div></div>
 <div class="atouts">
 <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21v-8M12 13c-4 0-6-3-6-7 4 0 6 3 6 7zM12 13c4 0 6-3 6-7-4 0-6 3-6 7zM7 21h10"/></svg></i><b>Quoi planter, et quand</b><p>Des plantes choisies pour votre région, votre soleil et votre temps, avec le bon mois pour les planter.</p></div>
 <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></i><b>Le potentiel de votre jardin</b><p>Le soleil heure par heure, les vis-à-vis, les coins à valoriser : ce que votre jardin peut devenir.</p></div>
-<div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9h18M5 9l2-4h10l2 4M6 9v11M18 9v11M3 20h18"/></svg></i><b>Votre jardin imaginé</b><p>À partir de votre photo, nos produits posés chez vous, au bon endroit, avec un budget clair.</p></div>
+<div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9h18M5 9l2-4h10l2 4M6 9v11M18 9v11M3 20h18"/></svg></i><b>Votre jardin imaginé</b><p>À partir de votre photo, nos produits posés chez vous, au bon endroit.</p></div>
+<div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 6.5A7 7 0 1 0 17 17.5M4 10h9M4 14h9"/></svg></i><b>Le budget, chiffré</b><p>Chaque idée chiffrée avec nos prix, de la plus simple à la plus complète, avant de vous engager.</p></div>
 </div></div><script>(function(){var F=document.getElementById("cglp-form");if(!F)return;var I=document.getElementById("cglp-a"),L=document.getElementById("cglp-sug"),M=document.getElementById("cglp-msg"),G=document.getElementById("cglp-geo"),Q=F.getAttribute("data-q"),res=[],tm,ct,CLE="cg_diag_v1";
 function h(s){return String(s||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function ev(n,p){try{window.dataLayer=window.dataLayer||[];var o={event:n};for(var k in p)o[k]=p[k];dataLayer.push(o)}catch(e){}}
