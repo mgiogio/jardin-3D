@@ -284,5 +284,8 @@ L.forEach(a=>a.addEventListener("click",ev=>{const t=document.querySelector(a.ha
     b=document.getElementById(mob?"cgh-main":"cgh-nav"),hb=!b?0:(mob?b.offsetHeight:(desc?0:b.offsetHeight));
   scrollTo({top:Math.max(0,y-admin()-hb-nav.offsetHeight-8),behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});try{history.replaceState(null,"",a.hash)}catch(e){}}));
 })();</script>
+<script>(function(){try{if(!/[?&]src=email\b/.test(location.search))return;var r=document.querySelector(".cgp[data-api]"),api=r?r.getAttribute("data-api"):"",id=r?r.getAttribute("data-projet"):"";
+var k="cgp_vu_"+id;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");fetch(api+"/api/vu/"+encodeURIComponent(id)+"?src=email",{method:"POST",keepalive:true});
+window.dataLayer=window.dataLayer||[];dataLayer.push({event:"cgp_email_clic",projet_jardin:id})}catch(e){}})();</script>
 <!--FIN-->
 </body></html>

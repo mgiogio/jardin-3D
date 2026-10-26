@@ -7,7 +7,7 @@ import os, json, secrets, threading, html, time, collections
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-import pipeline
+import pipeline, envoi
 
 DATA = os.environ.get('DATA_DIR', '/data')            # sur Cloud Run : bucket Cloud Storage monté ici
 ORIGINES = os.environ.get('ORIGINES', 'https://www.cover.green,https://cover.green,https://dhxx19tchw-staging.onrocket.site,https://mgiogio.github.io').split(',')
@@ -22,6 +22,9 @@ def lancer(dossier):
         pipeline.run(dossier)
     except Exception as e:
         json.dump({'statut': 'erreur', 'erreur': str(e)[:500]}, open(f'{dossier}/etat.json', 'w'))
+        return
+    try: envoi.envoyer(dossier, os.path.basename(dossier))     # « votre diagnostic est prêt » (une seule fois)
+    except Exception: pass
 
 
 # garde-fou contre les abus (chaque diagnostic coûte de l'IA) : par adresse IP et par jour, sur chaque instance
@@ -57,6 +60,8 @@ async def creer(request: Request, projet: str = Form(...), photo: UploadFile | N
     except Exception: raise HTTPException(400, 'Questionnaire illisible.')
     pid = time.strftime('%y%m') + '-' + secrets.token_urlsafe(9)      # lien personnel non devinable
     d = os.path.join(DATA, pid); os.makedirs(d)
+    pp = str(P.get('page_projet') or '')
+    if not any(pp.startswith(o + '/') for o in ORIGINES): P.pop('page_projet', None)   # lien de la page projet du site, pour l'email
     P['contact'] = dict(P.get('contact') or {}, firstName=prenom or (P.get('contact') or {}).get('firstName', ''), email=email or (P.get('contact') or {}).get('email', ''))
     json.dump(P, open(f'{d}/projet.json', 'w'), ensure_ascii=False)
     if contenu: open(f'{d}/photo_brute', 'wb').write(contenu)
@@ -168,7 +173,34 @@ async def avis(pid: str, request: Request):
 def lire(pid: str):
     d = dossier(pid); etat = json.load(open(f'{d}/etat.json')) if os.path.exists(f'{d}/etat.json') else {'statut': 'en_attente'}
     if etat.get('statut') == 'pret': etat['data'] = json.load(open(f'{d}/data.json'))
+    etat['email'] = envoi.etat(d)
     return JSONResponse(etat)
+
+
+@app.post('/api/renvoyer/{pid}')
+async def renvoyer(pid: str, request: Request):
+    # « Pas reçu ? » : renvoi de l'email, éventuellement à une adresse corrigée
+    d = dossier(pid)
+    try: A = await request.json()
+    except Exception: A = {}
+    P = json.load(open(f'{d}/projet.json')); C = P.setdefault('contact', {})
+    m = str((A or {}).get('email') or '').strip()[:120]
+    if m:
+        if not envoi.EMAIL_OK.match(m): raise HTTPException(400, 'Cette adresse email ne semble pas valide.')
+        C['email'] = m; json.dump(P, open(f'{d}/projet.json', 'w'), ensure_ascii=False)
+    if len(envoi.lire(d)['envois']) >= envoi.MAX_ENVOIS: raise HTTPException(429, 'Nous avons déjà envoyé plusieurs emails. Écrivez-nous à contact@cover.green.')
+    ok = envoi.envoyer(d, pid, force=True)
+    if not ok: raise HTTPException(503, "L'envoi n'a pas marché, réessayez dans un instant.")
+    return {'ok': True, 'email': C['email']}
+
+
+@app.post('/api/vu/{pid}')
+def vu(pid: str, src: str = ''):
+    # ouverture de la page projet depuis l'email : adresse confirmée
+    d = dossier(pid)
+    if src == 'email':
+        M = envoi.lire(d); M['clics'].append(time.strftime('%Y-%m-%d %H:%M')); M['clics'] = M['clics'][-20:]; envoi.ecrire(d, M)
+    return {'ok': True}
 
 
 @app.get('/fichiers/{pid}/{nom}')
@@ -375,7 +407,7 @@ def admin_avis(cle: str = ''):
           <td class="n">{'👍' if dernier and dernier['note'] == 'haut' else ('👎' if dernier else '')}</td>
           <td>{', '.join(MOTIF_LAB.get(m, m) for x in A for m in (x.get('motifs') or []))}</td><td>{textes}</td>
           <td>{e(INFO_LAB.get(I.get('delai'), ''))}</td><td>{e(INFO_LAB.get(I.get('budget'), ''))}</td><td>{e(INFO_LAB.get(I.get('pose'), ''))}</td><td>{e(INFO_LAB.get(I.get('frein'), ''))}</td>
-          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td></tr>''')
+          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td><td>{('cliqué' if envoi.etat(d)['clic'] else ('envoyé' if envoi.etat(d)['envoye'] else ''))}</td></tr>''')
     pc = lambda a, b: f'{round(100 * a / b)} %' if b else '-'
     mot = lambda C: ''.join(f'<li>{MOTIF_LAB.get(k, k)} : <b>{v}</b></li>' for k, v in C.most_common()) or '<li>aucun</li>'
     return HTMLResponse(f'''<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Avis diagnostic jardin</title>
@@ -387,7 +419,7 @@ table{{border-collapse:collapse;width:100%;font-size:14px}}th,td{{text-align:lef
 <div><b>{haut} 👍 / {bas} 👎</b>avis donnés ({pc(haut + bas, prets)} des diagnostics)</div><div><b>{pc(haut, haut + bas)}</b>de satisfaits</div></div>
 <div class="m"><div><h3>Ce qui a plu</h3><ul>{mot(motifs_h)}</ul></div><div><h3>Ce qui n'a pas plu</h3><ul>{mot(motifs_b)}</ul></div></div>
 <div class="m">{''.join(f'<div><h3>{QLAB[k]}</h3><ul>' + ''.join(f'<li>{e(INFO_LAB.get(a, a))} : <b>{v}</b></li>' for a, v in reponses[k].most_common()) + '</ul></div>' for k in QLAB if reponses[k])}</div>
-<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Délai</th><th>Enveloppe</th><th>Montage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th></tr>{''.join(lignes)}</table></div>''')
+<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Délai</th><th>Enveloppe</th><th>Montage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th><th>Email</th></tr>{''.join(lignes)}</table></div>''')
 
 
 @app.get('/')

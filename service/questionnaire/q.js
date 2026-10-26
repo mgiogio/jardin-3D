@@ -29,6 +29,11 @@
 .cgq .recap{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-wrap:wrap;gap:8px}\
 .cgq .recap li{background:var(--brume);border-radius:999px;padding:6px 12px 6px 30px;font-size:14px;font-weight:500;position:relative}\
 .cgq .recap li:before{content:"";position:absolute;left:12px;top:50%;width:6px;height:10px;border:solid var(--vert);border-width:0 2px 2px 0;transform:translateY(-65%) rotate(45deg)}\
+.cgq .apercu-fin{background:#fff;border:1px solid var(--ligne);border-radius:12px;padding:16px;margin:4px 0 16px}\
+.cgq .verrou{list-style:none;padding:0;margin:0;display:grid;gap:8px}\
+.cgq .verrou li{position:relative;padding-left:28px;font-size:15px}\
+.cgq .verrou li:before{content:"";position:absolute;left:2px;top:3px;width:16px;height:16px;background:no-repeat center/16px url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23EB5A00%27 stroke-width=%272.2%27 stroke-linecap=%27round%27%3E%3Crect x=%275%27 y=%2711%27 width=%2714%27 height=%2710%27 rx=%272%27/%3E%3Cpath d=%27M8 11V8a4 4 0 0 1 8 0v3%27/%3E%3C/svg%3E")}\
+.cgq .pasrecu{margin-top:14px;font-size:14px;color:var(--muted)}.cgq .pasrecu p{margin:0}.cgq .pasrecu .lien{display:inline;padding:0;margin:0;font-size:14px}\
 .cgq .ecran{animation:cgqIn .28s ease both;padding-top:8px}\
 @keyframes cgqIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}\
 .cgq h2{font:800 26px/1.2 var(--f);margin:8px 0 8px;letter-spacing:-.01em;color:var(--txt)}\
@@ -306,10 +311,10 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   E.attente = function () {
     var pret = S.statut === 'pret';
     return '<div class="ecran"><h2>' + (pret ? 'Votre diagnostic est prêt' : (S.prenom ? 'C\'est parti, ' + h(S.prenom) + ' !' : 'C\'est parti !')) + '</h2>'
-      + '<p class="sous">' + (pret ? 'Retrouvez-le aussi dans l\'email envoyé à ' + h(S.email) + '.' : 'Nous préparons votre diagnostic. Il arrive par email à <b>' + h(S.email) + '</b> dans 2 à 3 minutes, vous pouvez aussi rester ici.') + '</p>'
+      + '<p class="sous">' + (pret ? sousPret() : 'Nous préparons votre diagnostic. Il arrive par email à <b>' + h(S.email) + '</b> dans 2 à 3 minutes, vous pouvez aussi rester ici.') + '</p>'
       + (S.erreur ? '<div class="erreur">' + h(S.erreur) + '</div><div class="pile"><button type="button" class="cta" data-a="renvoyer">Réessayer</button><button type="button" class="lien" data-a="modifier">Modifier mes réponses</button></div>' : '')
-      + (!S.erreur ? '<ul class="etapes" id="cgq-et">' + ['Le soleil de votre jardin, heure par heure', 'Les vis-à-vis des maisons voisines', 'Les plantes adaptées à votre climat', S.avecPhoto ? 'Votre idée d\'aménagement avec nos produits' : 'Les produits adaptés à votre envie'].map(function (t) { return '<li><i></i><span>' + t + '</span></li>'; }).join('') + '</ul>' : '')
-      + '<div id="cgq-voir">' + (pret ? '<a class="cta" href="' + h(lienProjet()) + '" data-a="voir">Voir mon projet jardin</a>' : '') + '</div>'
+      + (!S.erreur && !(pret && S.mailOk) ? '<ul class="etapes" id="cgq-et">' + ['Le soleil de votre jardin, heure par heure', 'Les vis-à-vis des maisons voisines', 'Les plantes adaptées à votre climat', S.avecPhoto ? 'Votre idée d\'aménagement avec nos produits' : 'Les produits adaptés à votre envie'].map(function (t) { return '<li><i></i><span>' + t + '</span></li>'; }).join('') + '</ul>' : '')
+      + '<div id="cgq-voir">' + (pret ? voirPret() : '') + '</div>'
       + '<div class="bonus" id="cgq-bonus"></div>'
       + '<button type="button" class="lien" data-a="nouveau">Faire le diagnostic d\'un autre jardin</button></div>';
   };
@@ -359,6 +364,15 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (a === 'renvoyer') { S.erreur = null; return envoyer(); }
     if (a === 'nouveau') { try { localStorage.removeItem(CLE); } catch (x) { } if (R.dataset.accueil) { location.href = R.dataset.accueil; return; } S = { v: 1, cree: maintenant(), etape: 'adresse', temps: {}, infos: {}, suivi: S.suivi }; tEtape = maintenant(); rendre(); return; }
     if (a === 'voir') ev('cgp_q_voir', { projet_jardin: S.id });
+    if (a === 'boite') ev('cgp_q_boite', { projet_jardin: S.id });
+    if (a === 'mail-renvoi') { renvoyerMail(''); return; }
+    if (a === 'mail-corriger') {
+      var P = M.querySelector('#cgq-pr'); if (!P) return;
+      P.innerHTML = '<form id="cgq-fc" novalidate><label class="ch" for="cgq-m2">Votre email</label><input id="cgq-m2" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="' + h(S.email) + '">'
+        + '<div class="pile"><button type="submit" class="cta sec">Envoyer à cette adresse</button></div></form>';
+      P.querySelector('#cgq-fc').onsubmit = function (x) { x.preventDefault(); var v = P.querySelector('#cgq-m2').value.trim(); if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(v)) { P.querySelector('#cgq-m2').classList.add('err'); return; } renvoyerMail(v); };
+      P.querySelector('#cgq-m2').focus(); return;
+    }
     if (a === 'info') return repondre(b.getAttribute('data-q'), v);
     if (a === 'info-passer') return repondre(b.getAttribute('data-q'), null);
     if (a === 'rappel') return rappel(b);
@@ -599,6 +613,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var projet = {
       version: 2, createdAt: new Date().toISOString(), source: 'questionnaire',
       address: S.adresse, parcel: T.parcel || null, building: T.building || null, facades: T.facades || [],
+      page_projet: /^https?:/.test(PROJET) ? PROJET : '',
       project: { need: S.envie, needs: S.envies || [S.envie] }, needs: { style: S.style || 'contemporain', upkeep: S.entretien || 'peu' },
       contact: { firstName: S.prenom || '', email: S.email, optin: !!S.optin, consent: true },
       suivi: Object.assign({}, S.suivi, {
@@ -622,6 +637,45 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   }
   function lienProjet() { return PROJET + encodeURIComponent(S.id || ''); }
 
+  /* ---------- fin : le diagnostic complet s'ouvre depuis l'email (adresse confirmée, meilleure délivrabilité) ---------- */
+  function faits(D) {
+    var g = (D && D.diag) || {}, f = [];
+    if (g.soleil_ete_h_moyen) f.push(String(g.soleil_ete_h_moyen).replace('.', ',') + ' h de soleil par jour en été');
+    if (g.surface_jardin_m2) f.push(g.surface_jardin_m2 + ' m² de jardin');
+    if (g.part_jardin_plus_6h_ete != null) f.push(g.part_jardin_plus_6h_ete + ' % du jardin au soleil plus de 6 h');
+    return f;
+  }
+  function boiteMail(m) {
+    var d = String(m || '').split('@')[1] || '';
+    var B = [[/^(gmail|googlemail)\./, 'https://mail.google.com/mail/u/0/#search/from%3Acover.green', 'Gmail'], [/^(outlook|hotmail|live|msn)\./, 'https://outlook.live.com/mail/', 'Outlook'],
+      [/^(orange|wanadoo)\./, 'https://mail.orange.fr/', 'Orange Mail'], [/^free\./, 'https://webmail.free.fr/', 'Free'], [/^(sfr|neuf)\./, 'https://webmail.sfr.fr/', 'SFR Mail'],
+      [/^(yahoo|ymail)\./, 'https://mail.yahoo.com/', 'Yahoo Mail'], [/^(icloud|me|mac)\./, 'https://www.icloud.com/mail', 'iCloud Mail'], [/^laposte\./, 'https://www.laposte.net/accueil', 'La Poste']];
+    for (var i = 0; i < B.length; i++) if (B[i][0].test(d)) return { url: B[i][1], nom: B[i][2] };
+    return null;
+  }
+  function sousPret() {
+    if (!S.mailOk) return 'Retrouvez-le aussi dans l\'email envoyé à ' + h(S.email) + '.';
+    return 'Nous venons de l\'envoyer à <b>' + h(S.email) + '</b>. Ouvrez l\'email pour découvrir votre diagnostic complet.';
+  }
+  function voirPret() {
+    if (!S.mailOk) return '<a class="cta" href="' + h(lienProjet()) + '" data-a="voir">Voir mon projet jardin</a>';
+    var b = boiteMail(S.email), f = S.faits || [];
+    return '<div class="apercu-fin">'
+      + (f.length ? '<p class="qb" style="margin:0 0 8px">Déjà dans votre diagnostic</p><ul class="recap">' + f.map(function (t) { return '<li>' + h(t) + '</li>'; }).join('') + '</ul>' : '')
+      + '<p class="qb" style="margin:14px 0 8px">À découvrir dans l\'email</p><ul class="verrou">' + ['Les plantes à planter chez vous, et quand', 'Où créer de l\'ombre et de l\'intimité', 'Ce que coûte chaque idée', 'Votre jardin imaginé avec nos produits']
+        .map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul></div>'
+      + (b ? '<a class="cta" href="' + b.url + '" target="_blank" rel="noopener" data-a="boite">Ouvrir ' + b.nom + '</a>' : '')
+      + '<div class="pasrecu" id="cgq-pr"><p>Pas reçu ? Regardez dans les spams ou l\'onglet Promotions, ou <button type="button" class="lien" data-a="mail-renvoi">renvoyer l\'email</button> · <button type="button" class="lien" data-a="mail-corriger">corriger mon adresse</button></p></div>';
+  }
+  function renvoyerMail(m) {
+    var P = M.querySelector('#cgq-pr'); if (!P) return;
+    var msg = P.querySelector('.msg') || P.appendChild(document.createElement('p')); msg.className = 'msg'; msg.textContent = 'Envoi en cours…';
+    fetch(API + '/api/renvoyer/' + encodeURIComponent(S.id), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m ? { email: m } : {}) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.detail || 'L\'envoi n\'a pas marché.'); return j; }); })
+      .then(function (j) { if (j.email) { S.email = j.email; garder(); } msg.textContent = 'C\'est renvoyé à ' + S.email + '.'; var so = M.querySelector('.ecran .sous'); if (so) so.innerHTML = sousPret(); ev('cgp_q_mail_renvoi', { reponse: m ? 'corrige' : 'renvoi' }); })
+      .catch(function (x) { msg.textContent = x.message; });
+  }
+
   /* ---------- attente : étapes qui avancent, puis lien vers le projet ---------- */
   var sondage;
   function attente() {
@@ -641,8 +695,11 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
           S.statut = 'pret'; garder(); clearInterval(tick);
           [].forEach.call(M.querySelectorAll('#cgq-et li'), function (x) { x.className = 'ok'; });
           var h2 = M.querySelector('.ecran h2'); if (h2) h2.textContent = 'Votre diagnostic est prêt';
-          var so = M.querySelector('.ecran .sous'); if (so) so.textContent = 'Retrouvez-le aussi dans l\'email envoyé à ' + S.email + '.';
-          var v = M.querySelector('#cgq-voir'); if (v) v.innerHTML = '<a class="cta" href="' + h(lienProjet()) + '" data-a="voir">Voir mon projet jardin</a>';
+          S.mailOk = !!(j.email && j.email.envoye); S.faits = faits(j.data); garder();
+          var so = M.querySelector('.ecran .sous'); if (so) so.innerHTML = sousPret();
+          var v = M.querySelector('#cgq-voir'); if (v) v.innerHTML = voirPret();
+          if (S.mailOk) { var et = M.querySelector('#cgq-et'); if (et) et.remove(); }
+          ev('cgp_q_pret_email', { projet_jardin: S.id, reponse: S.mailOk ? 'envoye' : 'ecran' });
           ev('cgp_q_pret', { projet_jardin: S.id });
         } else sondage = setTimeout(sonder, 5000);
       }).catch(function () { sondage = setTimeout(sonder, 8000); });
