@@ -94,7 +94,7 @@ I.addEventListener("input",function(){clearTimeout(tm);M.textContent="";sel=null
 I.addEventListener("focus",function(){ev("cgp_q_etape",{etape:"accueil_adresse"})},{once:true});
 L.addEventListener("click",function(e){var b=e.target.closest("button[data-i]");if(b)choisir(res[+b.getAttribute("data-i")])});
 F.addEventListener("submit",function(e){e.preventDefault();if(sel)return go(sel);if(res[0])return go(res[0]);var v=I.value.trim();if(v.length<4){M.textContent="Indiquez l'adresse de votre jardin.";I.focus();return}cherche(v).then(function(l){if(l[0])go(l[0]);else M.textContent="Adresse introuvable, vérifiez-la ou choisissez-la dans la liste."}).catch(function(){M.textContent="La recherche d'adresse ne répond pas, réessayez dans un instant."})});
-if("geolocation" in navigator){G.hidden=false;G.addEventListener("click",function(){G.textContent="Localisation en cours…";navigator.geolocation.getCurrentPosition(function(p){var la=p.coords.latitude,lo=p.coords.longitude;fetch("https://data.geopf.fr/geocodage/reverse?lat="+la+"&lon="+lo+"&limit=1&index=address").then(function(r){return r.json()}).then(function(d){var f=(d.features||[])[0];if(!f)throw 0;var a=va(f);a.lat=la;a.lon=lo;ev("cgp_q_geoloc",{});go(a)}).catch(function(){M.textContent="Adresse introuvable, tapez-la simplement.";G.textContent="Je suis dans mon jardin : me localiser"})},function(){M.textContent="Position indisponible, tapez simplement votre adresse.";G.textContent="Je suis dans mon jardin : me localiser"},{enableHighAccuracy:true,timeout:10000,maximumAge:60000})})}
+if("geolocation" in navigator&&window.matchMedia&&matchMedia("(pointer:coarse)").matches){G.hidden=false;G.addEventListener("click",function(){G.textContent="Localisation en cours…";navigator.geolocation.getCurrentPosition(function(p){var la=p.coords.latitude,lo=p.coords.longitude;fetch("https://data.geopf.fr/geocodage/reverse?lat="+la+"&lon="+lo+"&limit=1&index=address").then(function(r){return r.json()}).then(function(d){var f=(d.features||[])[0];if(!f)throw 0;var a=va(f);a.lat=la;a.lon=lo;ev("cgp_q_geoloc",{});go(a)}).catch(function(){M.textContent="Adresse introuvable, tapez-la simplement.";G.textContent="Je suis dans mon jardin : me localiser"})},function(){M.textContent="Position indisponible, tapez simplement votre adresse.";G.textContent="Je suis dans mon jardin : me localiser"},{enableHighAccuracy:true,timeout:10000,maximumAge:60000})})}
 try{var s=JSON.parse(localStorage.getItem(CLE)||"null");if(s&&!s.id&&s.adresse){var r=document.getElementById("cglp-reprise");if(r&&Q)r.hidden=false}}catch(e){}
 if(A&&Q)try{fetch(A+"/q/q.js",{mode:"no-cors"}).catch(function(){})}catch(e){}
 ev("cgp_q_vue",{etape:"accueil"})})()</script>'''
@@ -131,7 +131,7 @@ def rendre(base='', questionnaire='', api=''):
 </div></div>
 <div class="boite">
 <h1>Le diagnostic gratuit de votre <span class="v">jardin</span><span class="o">.</span></h1>
-<p>Quoi planter et quand, où créer de l'ombre et de l'intimité, et combien ça coûte, idée par idée. Tout commence par son adresse.</p>
+<p>Quoi planter et quand, où créer de l'ombre et de l'intimité, et ce que coûte chaque idée. Il suffit de son adresse.</p>
 <form id="cglp-form" data-q="{e(questionnaire)}" data-api="{e(api)}" novalidate autocomplete="off">
 <label for="cglp-a">Où se trouve votre jardin ?</label>
 <div class="champ"><input id="cglp-a" type="text" autocomplete="street-address" placeholder="Ex. 12 rue des Lilas, Nantes" aria-autocomplete="list" aria-controls="cglp-sug"><ul class="sug" id="cglp-sug" role="listbox" hidden></ul></div>
