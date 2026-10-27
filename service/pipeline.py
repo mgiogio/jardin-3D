@@ -2,7 +2,7 @@
 # le diagnostic (soleil, vis-à-vis, surface), le plan vu du ciel, la sélection de plantes, un visuel avec NOS produits
 # (contrôlé) et les données de la page « Mon projet jardin ».
 # Usage local : python3 pipeline.py dossier   (dossier contenant projet.json et photo.jpg)
-import os, sys, io, json, time, base64, subprocess, urllib.request, urllib.error, traceback
+import threading, os, sys, io, json, time, base64, subprocess, urllib.request, urllib.error, traceback
 from PIL import Image, ImageOps
 try:
     import pillow_heif; pillow_heif.register_heif_opener()      # photos iPhone (HEIC)
@@ -17,6 +17,21 @@ TEXTE = os.environ.get('MODELE_TEXTE', 'gpt-5.5'); IMAGE = os.environ.get('IMG_M
 CONTROLE = os.environ.get('MODELE_CONTROLE', 'claude-opus-5-5')
 
 
+# coût IA de chaque diagnostic (USD par million de jetons, tarifs publics ; ajustables par la variable PRIX_IA en JSON)
+PRIX = {'texte': {'in': 5.0, 'out': 30.0}, 'image': {'in_texte': 5.0, 'in_image': 8.0, 'out': 30.0}, 'controle': {'in': 4.0, 'out': 20.0}}
+PRIX.update(json.loads(os.environ.get('PRIX_IA') or '{}'))
+_cout = threading.local()
+def compter(genre, u):
+    L = getattr(_cout, 'lignes', None)
+    if L is None or not u: return
+    if genre == 'image':
+        d = u.get('input_tokens_details') or {}; ti = d.get('text_tokens', 0); ii = d.get('image_tokens', max(0, u.get('input_tokens', 0) - ti))
+        usd = (ti * PRIX['image']['in_texte'] + ii * PRIX['image']['in_image'] + u.get('output_tokens', 0) * PRIX['image']['out']) / 1e6
+    else:
+        P_ = PRIX[genre]; usd = (u.get('input_tokens', 0) * P_['in'] + u.get('output_tokens', 0) * P_['out']) / 1e6
+    L.append({'genre': genre, 'usd': round(usd, 4), 'in': u.get('input_tokens', 0), 'out': u.get('output_tokens', 0)})
+
+
 def b64(im, mx=1280):
     im = im.copy(); im.thumbnail((mx, mx)); b = io.BytesIO(); im.convert('RGB').save(b, 'JPEG', quality=86); return base64.b64encode(b.getvalue()).decode()
 
@@ -28,7 +43,7 @@ def gpt(consigne, images, effort='low'):
                                  headers={'Authorization': 'Bearer ' + os.environ['OPENAI_API_KEY'], 'Content-Type': 'application/json'})
     for essai in range(3):
         try:
-            r = json.load(urllib.request.urlopen(req, timeout=300)); break
+            r = json.load(urllib.request.urlopen(req, timeout=300)); compter('texte', r.get('usage')); break
         except Exception:
             if essai == 2: raise
             time.sleep(4)
@@ -42,7 +57,7 @@ def claude(consigne, images):
         req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=json.dumps({'model': CONTROLE, 'max_tokens': 8000, 'messages': [{'role': 'user', 'content': contenu}]}).encode(),
                                      headers={'x-api-key': os.environ['ANTHROPIC_API_KEY'], 'anthropic-version': '2023-06-01', 'content-type': 'application/json'})
         try:
-            r = json.load(urllib.request.urlopen(req, timeout=300))
+            r = json.load(urllib.request.urlopen(req, timeout=300)); compter('controle', r.get('usage'))
             t = ''.join(b.get('text', '') for b in r['content'] if b['type'] == 'text'); t = t[t.find('{'):t.rindex('}') + 1]
             return json.loads(t)
         except Exception as ex:
@@ -61,7 +76,7 @@ def editer(prompt, images, sortie, qualite='high'):
     body = b''.join([part('model', IMAGE), part('prompt', prompt), part('size', size), part('quality', qualite)] +
                     [part('image[]', png(im, 1536 if i == 0 else 1024), f'i{i}.png', 'image/png') for i, im in enumerate(images)]) + f'--{bd}--\r\n'.encode()
     req = urllib.request.Request('https://api.openai.com/v1/images/edits', data=body, headers={'Authorization': 'Bearer ' + os.environ['OPENAI_API_KEY'], 'Content-Type': f'multipart/form-data; boundary={bd}'})
-    res = json.load(urllib.request.urlopen(req, timeout=500))
+    res = json.load(urllib.request.urlopen(req, timeout=500)); compter('image', res.get('usage'))
     Image.open(io.BytesIO(base64.b64decode(res['data'][0]['b64_json']))).convert('RGB').resize((W, H), Image.LANCZOS).save(sortie, quality=90)
     return res.get('usage', {})
 
@@ -88,7 +103,7 @@ def choisir_produits(envies, ombre_maison=False):
 
 
 def run(dossier, log=print):
-    t0 = time.time(); P = json.load(open(f'{dossier}/projet.json')); etat = {'statut': 'en_cours', 'etapes': {}}
+    t0 = time.time(); P = json.load(open(f'{dossier}/projet.json')); etat = {'statut': 'en_cours', 'etapes': {}}; _cout.lignes = []
     def maj(**k):
         etat.update(k); json.dump(etat, open(f'{dossier}/etat.json', 'w'), ensure_ascii=False)
     maj()
@@ -264,6 +279,7 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
     for c in comp[:2]: c.update(nom=C[c['cle']]['nom'], lien=C[c['cle']]['lien'], photo=C[c['cle']]['photo'], bouton=C[c['cle']]['bouton'])
     data['complements'] = comp[:2]
     data['duree_s'] = round(time.time() - t0)
+    L = _cout.lignes; data['cout'] = {'usd': round(sum(x['usd'] for x in L), 3), 'appels': L}
     json.dump(data, open(f'{dossier}/data.json', 'w'), ensure_ascii=False, indent=1)
     maj(statut='pret')
     return data

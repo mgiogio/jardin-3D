@@ -387,7 +387,7 @@ def admin_avis(cle: str = ''):
     # récapitulatif des diagnostics et des avis clients (accès par clé privée)
     if not CLE_ADMIN or not secrets.compare_digest(cle, CLE_ADMIN): raise HTTPException(404)
     reponses = collections.defaultdict(collections.Counter)
-    lignes, n, prets, visuels, haut, bas, motifs_b, motifs_h, durees = [], 0, 0, 0, 0, 0, collections.Counter(), collections.Counter(), []
+    lignes, n, prets, visuels, haut, bas, motifs_b, motifs_h, durees = [], 0, 0, 0, 0, 0, collections.Counter(), collections.Counter(), []; couts = []
     for pid in sorted(os.listdir(DATA), reverse=True):
         d = os.path.join(DATA, pid)
         if not os.path.isfile(f'{d}/projet.json'): continue
@@ -412,7 +412,8 @@ def admin_avis(cle: str = ''):
           <td class="n">{'👍' if dernier and dernier['note'] == 'haut' else ('👎' if dernier else '')}</td>
           <td>{', '.join(MOTIF_LAB.get(m, m) for x in A for m in (x.get('motifs') or []))}</td><td>{textes}</td>
           <td>{e(INFO_LAB.get(I.get('etat'), ''))} {e(INFO_LAB.get(I.get('delai'), ''))}</td><td>{e(INFO_LAB.get(I.get('budget'), ''))}</td><td>{e(INFO_LAB.get(I.get('bricolage') or I.get('pose'), ''))}</td><td>{e(INFO_LAB.get(I.get('frein'), ''))}</td>
-          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td><td>{('cliqué' if envoi.etat(d)['clic'] else ('envoyé' if envoi.etat(d)['envoye'] else ''))}</td></tr>''')
+          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td><td>{('cliqué' if envoi.etat(d)['clic'] else ('envoyé' if envoi.etat(d)['envoye'] else ''))}</td><td>{(str(round(D['cout']['usd'], 2)).replace('.', ',') + ' $') if D.get('cout') else ''}</td></tr>''')
+        if D.get('cout'): couts.append(D['cout']['usd'])
     pc = lambda a, b: f'{round(100 * a / b)} %' if b else '-'
     mot = lambda C: ''.join(f'<li>{MOTIF_LAB.get(k, k)} : <b>{v}</b></li>' for k, v in C.most_common()) or '<li>aucun</li>'
     return HTMLResponse(f'''<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Avis diagnostic jardin</title>
@@ -420,11 +421,11 @@ def admin_avis(cle: str = ''):
 .k div{{background:#F4F6F7;border-radius:8px;padding:14px}}.k b{{display:block;font-size:26px;font-weight:800}}.m{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}}.m div{{background:#EAF7E5;border-radius:8px;padding:14px}}
 table{{border-collapse:collapse;width:100%;font-size:14px}}th,td{{text-align:left;padding:8px;border-bottom:1px solid #E1E5E3;vertical-align:top}}th{{background:#F4F6F7}}a{{color:#049E00}}.w{{overflow-x:auto}}</style>
 <h1>Diagnostic jardin : avis clients</h1>
-<div class="k"><div><b>{n}</b>diagnostics lancés</div><div><b>{pc(visuels, prets)}</b>avec un visuel validé</div><div><b>{round(sum(durees) / len(durees)) if durees else '-'} s</b>temps moyen</div>
+<div class="k"><div><b>{n}</b>diagnostics lancés</div><div><b>{pc(visuels, prets)}</b>avec un visuel validé</div><div><b>{round(sum(durees) / len(durees)) if durees else '-'} s</b>temps moyen</div><div><b>{(str(round(sum(couts) / len(couts), 2)).replace('.', ',') + ' $') if couts else '-'}</b>coût IA moyen</div>
 <div><b>{haut} 👍 / {bas} 👎</b>avis donnés ({pc(haut + bas, prets)} des diagnostics)</div><div><b>{pc(haut, haut + bas)}</b>de satisfaits</div></div>
 <div class="m"><div><h3>Ce qui a plu</h3><ul>{mot(motifs_h)}</ul></div><div><h3>Ce qui n'a pas plu</h3><ul>{mot(motifs_b)}</ul></div></div>
 <div class="m">{''.join(f'<div><h3>{QLAB[k]}</h3><ul>' + ''.join(f'<li>{e(INFO_LAB.get(a, a))} : <b>{v}</b></li>' for a, v in reponses[k].most_common()) + '</ul></div>' for k in QLAB if reponses[k])}</div>
-<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Jardin, délai</th><th>Enveloppe</th><th>Bricolage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th><th>Email</th></tr>{''.join(lignes)}</table></div>''')
+<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Jardin, délai</th><th>Enveloppe</th><th>Bricolage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th><th>Email</th><th>Coût IA</th></tr>{''.join(lignes)}</table></div>''')
 
 
 @app.get('/')
