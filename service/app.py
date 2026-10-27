@@ -82,8 +82,9 @@ async def ajouter_photo(pid: str, request: Request, photo: UploadFile = File(...
 
 
 # réponses facultatives données pendant la préparation du diagnostic (connaissance client), une par une
-INFOS = {'delai': {'saison', '3mois', 'annee', 'reve'}, 'budget': {'moins3', '3a6', '6a12', 'plus12', 'nsp'},
-         'pose': {'moi', 'proche', 'poseur', 'nsp'}, 'frein': {'budget', 'montage', 'choix', 'temps', 'rien'},
+INFOS = {'etat': {'neuf', 'creer', 'rafraichir', 'touches'}, 'delai': {'saison', '3mois', 'annee', 'plus', 'reve'},
+         'bricolage': {'adore', 'debrouille', 'aide', 'faire'}, 'budget': {'moins1', '1a3', '3a6', 'plus6', 'moins3', '6a12', 'plus12', 'nsp'},
+         'pose': {'moi', 'proche', 'poseur', 'nsp'}, 'frein': {'commencer', 'budget', 'montage', 'choix', 'temps', 'rien'},
          'statut': {'proprietaire', 'locataire', 'achat'}, 'source': {'google', 'social', 'pinterest', 'bouche', 'client', 'autre'}}
 
 
@@ -250,13 +251,13 @@ AJOUT_PHOTO = '''<style>.cgp .demo{display:grid;grid-template-columns:minmax(0,1
 <div class="demo" id="cgp-ajout-bloc">
 <button type="button" class="case avant" onclick="document.getElementById('cgp-ajout').click()"><span class="tag">Avant</span>
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-<b>Envoyer la photo de mon jardin</b><small>Prise depuis la maison ou la terrasse, de jour</small></button>
+<b>Envoyer la photo de mon jardin</b><small>Prise depuis la maison ou la terrasse, de jour. Sur ordinateur, glissez-la ici.</small></button>
 <span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span>
 <div class="case apres"><span class="tag">Après</span>
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18M5 9l2-4h10l2 4M6 9v11M18 9v11M9 9v3M12 9v3M15 9v3M3 20h18"/></svg>
 <span class="t">Votre jardin aménagé avec nos produits apparaîtra ici, 3 minutes après votre photo</span></div></div>
 <input type="file" accept="image/*" id="cgp-ajout" hidden><p id="cgp-ajout-msg" class="note" role="status" style="margin:10px 0 0"></p>
-<script>(function(){var i=document.getElementById("cgp-ajout"),m=document.getElementById("cgp-ajout-msg");i.onchange=function(){var f=i.files[0];if(!f)return;m.textContent="Envoi de la photo…";
+<script>(function(){var i=document.getElementById("cgp-ajout"),m=document.getElementById("cgp-ajout-msg"),z=document.querySelector("#cgp-ajout-bloc .avant");if(z){["dragenter","dragover"].forEach(function(t){z.addEventListener(t,function(e){e.preventDefault();z.style.background="#DDF1D4"})});z.addEventListener("dragleave",function(){z.style.background=""});z.addEventListener("drop",function(e){e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files[0];if(f&&f.type.indexOf("image")===0)envoyer(f);else m.textContent="Déposez une photo (JPG ou PNG)."})}i.onchange=function(){var f=i.files[0];if(f)envoyer(f)};function envoyer(f){m.textContent="Envoi de la photo…";
 var r=document.querySelector(".cgp[data-api]"),api=r?r.getAttribute("data-api"):"",fd=new FormData();fd.append("photo",f);
 try{var a=document.querySelector("#cgp-ajout-bloc .avant"),u=URL.createObjectURL(f);a.style.background="center/cover url("+u+")";a.style.borderStyle="solid";[].forEach.call(a.querySelectorAll("svg,b,small"),function(x){x.style.visibility="hidden"})}catch(e){}
 fetch(api+"/api/photo/PID",{method:"POST",body:fd}).then(function(x){if(!x.ok)throw 0;m.textContent="C'est parti : votre jardin aménagé arrive dans 3 minutes, cette page se mettra à jour.";var t=document.querySelector("#cgp-ajout-bloc .apres .t");if(t)t.textContent="En préparation…";try{dataLayer.push({event:"cgp_ajout_photo",projet_jardin:"PID"})}catch(e){}setTimeout(function(){location.reload()},150000)}).catch(function(){m.textContent="L'envoi n'a pas marché, réessayez."})}})()</script>'''
@@ -372,8 +373,10 @@ INFO_LAB = {'saison': 'Cette saison', '3mois': 'Dans les 3 mois', 'annee': "Dans
             '6a12': '6 000 à 12 000 €', 'plus12': 'Plus de 12 000 €', 'nsp': 'Ne sait pas', 'moi': 'Lui-même', 'proche': 'Avec un proche', 'poseur': 'Cherche un poseur',
             'montage': 'Le montage', 'choix': 'Choisir les produits', 'temps': 'Le temps', 'rien': 'Rien', 'budget': 'Le budget', 'proprietaire': 'Propriétaire',
             'locataire': 'Locataire', 'achat': 'Achat en cours', 'google': 'Google', 'social': 'Instagram ou Facebook', 'pinterest': 'Pinterest', 'bouche': 'Bouche-à-oreille',
-            'client': 'Déjà client', 'autre': 'Autre'}
-QLAB = {'delai': 'Délai', 'budget': 'Enveloppe', 'pose': 'Montage', 'frein': 'Frein', 'statut': 'Statut', 'canal': 'Canal'}
+            'client': 'Déjà client', 'autre': 'Autre', 'neuf': 'Maison neuve', 'creer': 'Jardin à créer', 'rafraichir': 'À rafraîchir', 'touches': 'Quelques touches',
+            'plus': 'Plus tard', 'adore': 'Adore bricoler', 'debrouille': 'Se débrouille', 'aide': 'Avec un coup de main', 'faire': 'Préfère faire faire',
+            'commencer': 'Par où commencer', 'moins1': 'Moins de 1 000 €', '1a3': '1 000 à 3 000 €', 'plus6': 'Plus de 6 000 €'}
+QLAB = {'etat': 'Jardin', 'delai': 'Délai', 'bricolage': 'Bricolage', 'budget': 'Enveloppe', 'pose': 'Montage', 'frein': 'Frein', 'statut': 'Statut', 'canal': 'Canal'}
 MOTIF_LAB = {'visuel': 'Le visuel', 'produits': 'Les produits proposés', 'budget': 'Le budget', 'plantes': 'Les plantes', 'soleil': 'Le soleil et le terrain', 'autre': 'Autre chose'}
 
 
@@ -406,7 +409,7 @@ def admin_avis(cle: str = ''):
           <td>{'oui' if D.get('visuel') else ('non' if D else 'en cours')}</td><td>{eur(D['budget'][0]) + ' à ' + eur(D['budget'][1]) if D.get('budget') else ''}</td>
           <td class="n">{'👍' if dernier and dernier['note'] == 'haut' else ('👎' if dernier else '')}</td>
           <td>{', '.join(MOTIF_LAB.get(m, m) for x in A for m in (x.get('motifs') or []))}</td><td>{textes}</td>
-          <td>{e(INFO_LAB.get(I.get('delai'), ''))}</td><td>{e(INFO_LAB.get(I.get('budget'), ''))}</td><td>{e(INFO_LAB.get(I.get('pose'), ''))}</td><td>{e(INFO_LAB.get(I.get('frein'), ''))}</td>
+          <td>{e(INFO_LAB.get(I.get('etat'), ''))} {e(INFO_LAB.get(I.get('delai'), ''))}</td><td>{e(INFO_LAB.get(I.get('budget'), ''))}</td><td>{e(INFO_LAB.get(I.get('bricolage') or I.get('pose'), ''))}</td><td>{e(INFO_LAB.get(I.get('frein'), ''))}</td>
           <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td><td>{('cliqué' if envoi.etat(d)['clic'] else ('envoyé' if envoi.etat(d)['envoye'] else ''))}</td></tr>''')
     pc = lambda a, b: f'{round(100 * a / b)} %' if b else '-'
     mot = lambda C: ''.join(f'<li>{MOTIF_LAB.get(k, k)} : <b>{v}</b></li>' for k, v in C.most_common()) or '<li>aucun</li>'
@@ -419,7 +422,7 @@ table{{border-collapse:collapse;width:100%;font-size:14px}}th,td{{text-align:lef
 <div><b>{haut} 👍 / {bas} 👎</b>avis donnés ({pc(haut + bas, prets)} des diagnostics)</div><div><b>{pc(haut, haut + bas)}</b>de satisfaits</div></div>
 <div class="m"><div><h3>Ce qui a plu</h3><ul>{mot(motifs_h)}</ul></div><div><h3>Ce qui n'a pas plu</h3><ul>{mot(motifs_b)}</ul></div></div>
 <div class="m">{''.join(f'<div><h3>{QLAB[k]}</h3><ul>' + ''.join(f'<li>{e(INFO_LAB.get(a, a))} : <b>{v}</b></li>' for a, v in reponses[k].most_common()) + '</ul></div>' for k in QLAB if reponses[k])}</div>
-<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Délai</th><th>Enveloppe</th><th>Montage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th><th>Email</th></tr>{''.join(lignes)}</table></div>''')
+<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Jardin, délai</th><th>Enveloppe</th><th>Bricolage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th><th>Email</th></tr>{''.join(lignes)}</table></div>''')
 
 
 @app.get('/')

@@ -9,6 +9,7 @@
   R.dataset.pret = '1';
   var API = (R.dataset.api || '').replace(/\/$/, '');
   var PROJET = R.dataset.projet || '/projet/';
+  var FIN = !!(window.matchMedia && matchMedia('(pointer:fine)').matches);   // souris : on propose le glisser-déposer
   var CLE = 'cg_diag_v1';
   var ACC = null;
   var VERT = '#049E00';
@@ -98,6 +99,7 @@ font:600 17px/1 var(--f);cursor:pointer;background:var(--orange);color:#fff;text
 cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 @media (hover:hover){.cgq .zone:hover{border-color:var(--vert);background:var(--brume)}}\
 .cgq .zone b{font-size:17px}\
+.cgq .zone.survol,.cgq .apercu.survol{border-color:var(--vert);border-style:solid;background:var(--brume)}\
 .cgq .zone small{color:var(--muted);font-size:14px}\
 .cgq .zone svg{width:40px;height:40px;color:var(--vert)}\
 .cgq .apercu{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:4/3;background:var(--gris)}\
@@ -106,7 +108,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 .cgq .conseils{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:6px;font-size:15px;color:var(--muted)}\
 .cgq .conseils li:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--vert);margin-right:10px;vertical-align:middle}\
 .cgq .case{display:flex;gap:12px;align-items:flex-start;margin:16px 0 0;font-size:15px;cursor:pointer}\
-.cgq .case input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--vert)}\
+.cgq .case input{flex:none;width:22px!important;height:22px!important;margin:0!important;padding:0!important;position:static!important;top:auto!important;vertical-align:top!important;accent-color:var(--vert)}\
+.cgq .case span{line-height:22px;padding-top:0}\
 .cgq .mention{font-size:13px;color:var(--muted);margin:14px 0 0;line-height:1.45}\
 .cgq .mention a{color:var(--muted)}\
 .cgq .confiance{font-size:14px;color:var(--muted);text-align:center;margin:14px 0 0}\
@@ -293,7 +296,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var a = S.photoUrl;
     return '<h2>Une photo de votre jardin</h2><p class="sous">Nous y placerons nos produits pour vous montrer le résultat chez vous.</p>'
       + (a ? '<div class="apercu"><img src="' + a + '" alt="Votre photo"><button type="button" data-a="photo-choisir">Changer</button></div>'
-        : '<button type="button" class="zone" data-a="photo-choisir">' + ICO.photo + '<b>Prendre ou choisir une photo</b><small>Depuis votre téléphone ou votre ordinateur</small></button>'
+        : '<button type="button" class="zone" data-a="photo-choisir">' + ICO.photo + '<b>Prendre ou choisir une photo</b><small>' + (FIN ? 'Glissez-la ici, ou cliquez pour la choisir' : 'Depuis votre téléphone ou votre galerie') + '</small></button>'
         + '<ul class="conseils"><li>Prise depuis la maison ou la terrasse</li><li>De jour, téléphone à l\'horizontale</li><li>Le plus de jardin possible dans le cadre</li></ul>')
       + '<input type="file" id="cgq-f" accept="image/*" hidden><p class="msg" id="cgq-pmsg" role="status"></p>'
       + '<div class="pile">' + (a ? '<button type="button" class="cta" data-a="photo-ok">Continuer</button>' : '')
@@ -542,9 +545,19 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 
   /* ---------- photo ---------- */
   function photo() {
-    var f = M.querySelector('#cgq-f'), msg = M.querySelector('#cgq-pmsg');
-    f.addEventListener('change', function () {
-      var file = f.files && f.files[0]; if (!file) return;
+    var f = M.querySelector('#cgq-f'), msg = M.querySelector('#cgq-pmsg'), Z = M.querySelector('.zone') || M.querySelector('.apercu');
+    // glisser-déposer une photo (ordinateur), en plus du choix classique
+    if (Z) {
+      ['dragenter', 'dragover'].forEach(function (t) { M.addEventListener(t, function (e) { if (e.dataTransfer && [].indexOf.call(e.dataTransfer.types || [], 'Files') >= 0) { e.preventDefault(); Z.classList.add('survol'); } }); });
+      ['dragleave', 'dragend'].forEach(function (t) { M.addEventListener(t, function (e) { if (!e.relatedTarget || !M.contains(e.relatedTarget)) Z.classList.remove('survol'); }); });
+      M.addEventListener('drop', function (e) {
+        var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (!file) return; e.preventDefault(); Z.classList.remove('survol');
+        if (!/^image\//.test(file.type) && !/\.(heic|heif)$/i.test(file.name)) { msg.className = 'msg'; msg.textContent = 'Déposez une photo (JPG, PNG ou HEIC).'; return; }
+        prendre(file);
+      });
+    }
+    f.addEventListener('change', function () { var file = f.files && f.files[0]; if (file) prendre(file); });
+    function prendre(file) {
       msg.className = 'msg ok'; msg.textContent = 'Préparation de la photo…';
       compresser(file).then(function (blob) {
         S.photo = blob; S.sansPhoto = false;
@@ -553,7 +566,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
         if (!S.photoUrl) return aller('contact');
         rendre();
       });
-    });
+    }
   }
   // photo réduite dans le navigateur (envoi rapide même en 4G), orientation respectée ; à défaut, le fichier d'origine
   function compresser(file) {
@@ -710,12 +723,14 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   function questions() {
     var m = new Date().getMonth() + 1;
     var saison = m <= 4 ? 'Avant l\'été' : m <= 7 ? 'Dès cet été' : m <= 9 ? 'Avant l\'hiver' : 'Pour le printemps';
+    // questions de connaissance (une par une, facultatives) : ce qui nous aide à mieux conseiller et à faire progresser l'offre
     var Q = [
-      ['delai', 'Quand aimeriez-vous en profiter ?', [['saison', saison], ['3mois', 'Dans les 3 mois'], ['annee', 'Dans l\'année'], ['reve', 'Je me renseigne']]],
-      ['pose', 'Qui fera le montage ?', [['moi', 'Moi-même'], ['proche', 'Avec un proche'], ['poseur', 'Je cherche un poseur'], ['nsp', 'Je ne sais pas encore']]],
-      ['budget', 'Quelle enveloppe pour l\'ensemble du projet ?', [['moins3', 'Moins de 3 000 €'], ['3a6', '3 000 à 6 000 €'], ['6a12', '6 000 à 12 000 €'], ['plus12', 'Plus de 12 000 €'], ['nsp', 'Je ne sais pas']]],
-      ['frein', 'Qu\'est-ce qui vous a retenu jusqu\'ici ?', [['budget', 'Le budget'], ['montage', 'Le montage'], ['choix', 'Choisir les bons produits'], ['temps', 'Le temps'], ['rien', 'Rien, je me lance']]],
-      ['statut', 'Vous êtes…', [['proprietaire', 'Propriétaire'], ['achat', 'En train d\'acheter'], ['locataire', 'Locataire']]]
+      ['etat', 'Votre jardin aujourd\'hui, c\'est plutôt…', [['neuf', 'Une maison neuve, tout est à faire'], ['creer', 'Un jardin à créer'], ['rafraichir', 'Un jardin à rafraîchir'], ['touches', 'Juste quelques touches à ajouter']]],
+      ['delai', 'Quand aimeriez-vous en profiter ?', [['saison', saison], ['annee', 'Dans l\'année'], ['plus', 'Plus tard'], ['reve', 'Je rêve pour l\'instant']]],
+      ['bricolage', 'Et le bricolage, vous en êtes où ?', [['adore', 'J\'adore ça'], ['debrouille', 'Je me débrouille'], ['aide', 'Avec un coup de main'], ['faire', 'Je préfère faire faire']]],
+      ['frein', 'Qu\'est-ce qui vous a freiné jusqu\'ici ?', [['commencer', 'Savoir par où commencer'], ['budget', 'Le budget'], ['temps', 'Le temps'], ['montage', 'La peur du montage'], ['rien', 'Rien, je me lance']]],
+      ['budget', 'Combien seriez-vous prêt à consacrer à votre jardin ?', [['moins1', 'Moins de 1 000 €'], ['1a3', '1 000 à 3 000 €'], ['3a6', '3 000 à 6 000 €'], ['plus6', 'Plus de 6 000 €'], ['nsp', 'Je ne sais pas encore']]],
+      ['statut', 'Ce jardin, vous en êtes…', [['proprietaire', 'Propriétaire'], ['achat', 'Bientôt propriétaire'], ['locataire', 'Locataire']]]
     ];
     var sv = S.suivi || {};
     if (!(sv.utm_source || sv.gclid || sv.fbclid || sv.msclkid)) Q.push(['source', 'Comment nous avez-vous connus ?', [['google', 'Google'], ['social', 'Instagram ou Facebook'], ['pinterest', 'Pinterest'], ['bouche', 'Bouche-à-oreille'], ['client', 'Déjà client'], ['autre', 'Autre']]]);
@@ -740,16 +755,10 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     }
     var Q = questions(), i = Q.findIndex(function (q) { return !(q[0] in S.infos); });
     if (i < 0) {
-      if (S.infos.telephone || ('rappelFait' in S.infos)) { B.innerHTML = '<div class="merci"><b>Merci' + (S.prenom ? ' ' + h(S.prenom) : '') + ', c\'est noté.</b><br>Vos réponses nous aident à vous conseiller au plus juste.</div>'; return; }
-      B.innerHTML = '<h3>Un conseil gratuit par téléphone ?</h3><p class="sous" style="margin-bottom:12px">Un conseiller Cover Green vous rappelle pour affiner votre projet, sans engagement.</p>'
-        + '<label class="ch" for="cgq-tel">Téléphone</label><input id="cgq-tel" class="t" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78">'
-        + '<p class="qb" style="margin:14px 0 8px">Le meilleur moment pour vous appeler</p><div class="cartes mini" id="cgq-cr">' + [['matin', 'Le matin'], ['midi', 'Entre midi et 14 h'], ['soir', 'En fin de journée'], ['indifferent', 'Peu importe']].map(function (o) { return '<button type="button" class="c" data-v="' + o[0] + '"><b>' + o[1] + '</b></button>'; }).join('') + '</div>'
-        + '<p class="msg" id="cgq-tmsg"></p><div class="pile"><button type="button" class="cta sec" data-a="rappel">Être rappelé</button><button type="button" class="lien" data-a="info-passer" data-q="rappelFait">Non merci</button></div>';
-      var cr = B.querySelector('#cgq-cr'); cr.onclick = function (e) { var b = e.target.closest('.c'); if (!b) return; [].forEach.call(cr.children, function (x) { x.classList.toggle('on', x === b); }); S.creneau = b.getAttribute('data-v'); };
-      return;
+      B.innerHTML = '<div class="merci"><b>Merci' + (S.prenom ? ' ' + h(S.prenom) : '') + ', c\'est noté.</b><br>Vos réponses nous aident à améliorer nos conseils.</div>'; return;
     }
     var q = Q[i];
-    B.innerHTML = (i === 0 ? '<h3>Pendant ce temps, affinons vos conseils</h3><p class="sous" style="margin-bottom:14px">' + Q.length + ' questions rapides, facultatives.</p>' : '')
+    B.innerHTML = (i === 0 ? '<h3>Pendant ce temps, aidez-nous à mieux vous conseiller</h3><p class="sous" style="margin-bottom:14px">' + Q.length + ' questions rapides, toutes facultatives.</p>' : '')
       + '<div class="points" aria-hidden="true">' + Q.map(function (x, k) { return '<i class="' + (k <= i ? 'on' : '') + '"></i>'; }).join('') + '</div>'
       + '<p class="qb">' + h(q[1]) + '</p><div class="cartes mini">' + q[2].map(function (o) { return '<button type="button" class="c" data-a="info" data-q="' + q[0] + '" data-v="' + o[0] + '"><b>' + h(o[1]) + '</b></button>'; }).join('') + '</div>'
       + '<button type="button" class="lien" data-a="info-passer" data-q="' + q[0] + '">Passer</button>';
