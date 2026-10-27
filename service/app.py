@@ -85,6 +85,7 @@ async def ajouter_photo(pid: str, request: Request, photo: UploadFile = File(...
 INFOS = {'etat': {'neuf', 'creer', 'rafraichir', 'touches'}, 'delai': {'saison', '3mois', 'annee', 'plus', 'reve'},
          'bricolage': {'adore', 'debrouille', 'aide', 'faire'}, 'budget': {'moins1', '1a3', '3a6', 'plus6', 'moins3', '6a12', 'plus12', 'nsp'},
          'pose': {'moi', 'proche', 'poseur', 'nsp'}, 'frein': {'commencer', 'budget', 'montage', 'choix', 'temps', 'rien'},
+         'critere': {'prix', 'look', 'duree', 'montage', 'origine'},
          'statut': {'proprietaire', 'locataire', 'achat'}, 'source': {'google', 'social', 'pinterest', 'bouche', 'client', 'autre'}}
 
 
@@ -375,8 +376,9 @@ INFO_LAB = {'saison': 'Cette saison', '3mois': 'Dans les 3 mois', 'annee': "Dans
             'locataire': 'Locataire', 'achat': 'Achat en cours', 'google': 'Google', 'social': 'Instagram ou Facebook', 'pinterest': 'Pinterest', 'bouche': 'Bouche-à-oreille',
             'client': 'Déjà client', 'autre': 'Autre', 'neuf': 'Maison neuve', 'creer': 'Jardin à créer', 'rafraichir': 'À rafraîchir', 'touches': 'Quelques touches',
             'plus': 'Plus tard', 'adore': 'Adore bricoler', 'debrouille': 'Se débrouille', 'aide': 'Avec un coup de main', 'faire': 'Préfère faire faire',
+            'prix': 'Le prix', 'look': 'Le look', 'duree': 'La durée de vie', 'origine': "L'origine du bois",
             'commencer': 'Par où commencer', 'moins1': 'Moins de 1 000 €', '1a3': '1 000 à 3 000 €', 'plus6': 'Plus de 6 000 €'}
-QLAB = {'etat': 'Jardin', 'delai': 'Délai', 'bricolage': 'Bricolage', 'budget': 'Enveloppe', 'pose': 'Montage', 'frein': 'Frein', 'statut': 'Statut', 'canal': 'Canal'}
+QLAB = {'etat': 'Jardin', 'delai': 'Délai', 'bricolage': 'Bricolage', 'budget': 'Enveloppe', 'pose': 'Montage', 'frein': 'Frein', 'critere': 'Critère', 'statut': 'Statut', 'canal': 'Canal'}
 MOTIF_LAB = {'visuel': 'Le visuel', 'produits': 'Les produits proposés', 'budget': 'Le budget', 'plantes': 'Les plantes', 'soleil': 'Le soleil et le terrain', 'autre': 'Autre chose'}
 
 

@@ -729,6 +729,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       ['delai', 'Quand aimeriez-vous en profiter ?', [['saison', saison], ['annee', 'Dans l\'année'], ['plus', 'Plus tard'], ['reve', 'Je rêve pour l\'instant']]],
       ['bricolage', 'Et le bricolage, vous en êtes où ?', [['adore', 'J\'adore ça'], ['debrouille', 'Je me débrouille'], ['aide', 'Avec un coup de main'], ['faire', 'Je préfère faire faire']]],
       ['frein', 'Qu\'est-ce qui vous a freiné jusqu\'ici ?', [['commencer', 'Savoir par où commencer'], ['budget', 'Le budget'], ['temps', 'Le temps'], ['montage', 'La peur du montage'], ['rien', 'Rien, je me lance']]],
+      ['critere', 'Qu\'est-ce qui compte le plus pour vous ?', [['prix', 'Le prix'], ['look', 'Le look'], ['duree', 'La durée de vie'], ['montage', 'La facilité de montage'], ['origine', 'L\'origine du bois']]],
       ['budget', 'Combien seriez-vous prêt à consacrer à votre jardin ?', [['moins1', 'Moins de 1 000 €'], ['1a3', '1 000 à 3 000 €'], ['3a6', '3 000 à 6 000 €'], ['plus6', 'Plus de 6 000 €'], ['nsp', 'Je ne sais pas encore']]],
       ['statut', 'Ce jardin, vous en êtes…', [['proprietaire', 'Propriétaire'], ['achat', 'Bientôt propriétaire'], ['locataire', 'Locataire']]]
     ];
