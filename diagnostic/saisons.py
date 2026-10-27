@@ -19,7 +19,10 @@ def climat(dep):
     return 'oceanique_degrade'
 dep = P['address']['postcode'][:2]; clim = climat(dep)
 style = P.get('needs', {}).get('style', 'contemporain'); upkeep = P.get('needs', {}).get('upkeep', 'peu')
-expo = 'soleil' if any(f['facing'] == 'sud' for f in P.get('facades', [])) else 'mi-ombre'
+# exposition : calculée par le diagnostic (soleil de la zone de vie contre la maison) ; à défaut, d'après les façades
+expo = os.environ.get('EXPO') or ('soleil' if any(f['facing'] == 'sud' for f in P.get('facades', [])) else 'mi-ombre')
+# styles du questionnaire -> styles de la banque végétale
+STYLES_KB = {'naturel': ['champetre', 'contemporain'], 'contemporain': ['contemporain', 'ville'], 'champetre': ['champetre', 'cottage'], 'mediterraneen': ['mediterraneen']}
 SAISONS = {'printemps': (3, 4, 5), 'ete': (6, 7, 8), 'automne': (9, 10, 11), 'hiver': (12, 1, 2)}
 def profil(p):
     fl = mois(p['floraison']); h = p['hiver'].lower(); s = set()
@@ -29,7 +32,14 @@ def profil(p):
     if any(w in h for w in ('persistant', 'marcescent', 'écorce', 'rouge en hiver', 'blond')): s.add('hiver')
     if 'feuillage' in h or 'persistant' in h: s.add('ete')
     return fl, s
-cands = [p for p in KB['plantes'] if clim in p['climats'] and expo in p['expo'] and (style in p['styles'] or not style)]
+SK = STYLES_KB.get(style, [style])
+def filtre(expos, avec_style=True):
+    return [p for p in KB['plantes'] if clim in p['climats'] and set(expos) & set(p['expo']) and (not avec_style or set(SK) & set(p['styles']))]
+# du plus précis au plus large : jamais de liste vide (style, puis exposition voisine)
+VOIS = {'soleil': ['soleil', 'mi-ombre'], 'mi-ombre': ['mi-ombre', 'soleil', 'ombre'], 'ombre': ['ombre', 'mi-ombre']}
+cands = filtre([expo])
+if len(cands) < 8: cands = filtre([expo], False)
+if len(cands) < 8: cands = filtre(VOIS.get(expo, [expo]), False)
 if upkeep == 'peu': cands = [p for p in cands if not re.search(r'taille 2|taille$', p['entretien'])]
 quota = {'focal': 1, 'structure': 2, 'vivace': 1, 'graminee': 1, 'grimpante': 1}
 choix, couvert = [], {}

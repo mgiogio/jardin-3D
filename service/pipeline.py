@@ -116,11 +116,25 @@ def run(dossier, log=print):
                 log('plan en échec', e, getattr(e, 'stderr', b'')[-800:])
     etat['etapes']['diagnostic'] = round(time.time() - t0); maj()
     # 2. plantes (banque, sans génération)
-    subprocess.run(['python3', f'{DIAG}/saisons.py', f'{dossier}/projet.json', '-', f'{dossier}/plantes'], check=True, capture_output=True, timeout=60, env=dict(os.environ, SAISONS_VISUELS='0'))
+    # exposition de la zone de vie contre la maison (côté principal du jardin), moyenne été / mi-saison
+    zm = (data.get('diag') or {}).get('zone_maison') or {}
+    expo = ''
+    if zm.get('soleil_ete_h') is not None:
+        moy = (zm['soleil_ete_h'] + zm.get('soleil_equinoxe_h', zm['soleil_ete_h'])) / 2
+        expo = 'soleil' if moy >= 7 else 'mi-ombre' if moy >= 3.5 else 'ombre'
+    # contre la maison, à l'ombre l'essentiel de l'année : une pergola brise-soleil n'y aurait pas de sens
+    ombre_maison = zm.get('soleil_equinoxe_h') is not None and zm['soleil_equinoxe_h'] < 4
+    if ombre_maison and 'pergola' in produits and len(produits) > 1:
+        produits.remove('pergola'); data['pergola_retiree'] = 'ombre contre la maison'
+    subprocess.run(['python3', f'{DIAG}/saisons.py', f'{dossier}/projet.json', '-', f'{dossier}/plantes'], check=True, capture_output=True, timeout=60, env=dict(os.environ, SAISONS_VISUELS='0', EXPO=expo))
     data['plantes'] = json.load(open(f'{dossier}/plantes/plantes.json'))
     # 3. lecture de la photo par l'IA : atouts, pistes, placement des produits (texte)
     d = data.get('diag') or {}
-    faits = {k: d.get(k) for k in ('surface_jardin_m2', 'soleil_ete_h_moyen', 'soleil_ete_apres14h_h')} | {'vis_a_vis_proche': (d.get('vis_a_vis') or [None])[0]}
+    faits = {k: d.get(k) for k in ('surface_jardin_m2', 'soleil_ete_h_moyen', 'soleil_ete_apres14h_h', 'cote_jardin')} | {'vis_a_vis_proche': (d.get('vis_a_vis') or [None])[0],
+             'zone_contre_la_maison': d.get('zone_maison')}
+    if data.get('pergola_retiree'):
+        faits['important'] = ("La zone contre la maison, celle de la photo, est à l'ombre l'essentiel de l'année : ne propose pas de pergola à cet endroit. "
+                              "Valorise plutôt une terrasse fraîche et des plantes d'ombre ; une pergola aurait sa place plus loin, dans la partie ensoleillée du jardin.")
     lecture = {} if im is None else gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, bardages en bois). Voici la photo du jardin d'un particulier.
 Son envie : {' ; puis '.join(BESOINS.get(x, x) for x in envies)}. Style souhaité : {style}. Données calculées depuis son adresse : {json.dumps(faits, ensure_ascii=False)}.
 Produits Cover Green à intégrer : {', '.join(PROD[p]['nom'] for p in produits)}.

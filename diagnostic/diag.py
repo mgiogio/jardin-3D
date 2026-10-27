@@ -82,6 +82,17 @@ def heures_soleil(jour, h0=8, h1=21):
     return n, apm
 ete, ete_apm = heures_soleil(172)          # 21 juin
 mi, _ = heures_soleil(265)                  # 22 septembre
+# ---- zone de vie contre la maison, côté principal du jardin : c'est là qu'on photographie, qu'on pose une terrasse ou une pergola ----
+P_ = np.array(pts); mc = np.array(maison.centroid.coords[0])
+_ang = (np.degrees(np.arctan2(P_[:, 0] - mc[0], P_[:, 1] - mc[1])) + 360) % 360
+_cote = (((_ang + 45) % 360) // 90).astype(int)          # 0 nord, 1 est, 2 sud, 3 ouest
+_dist = np.array([maison.distance(Point(p)) for p in pts])
+NOMS = ['nord', 'est', 'sud', 'ouest']; _princ = int(np.bincount(_cote, minlength=4).argmax())
+COTES = {}
+for k in range(4):
+    z = (_cote == k) & (_dist <= 6)
+    if z.sum() >= 4: COTES[NOMS[k]] = {'soleil_ete_h': round(float(ete[z].mean()), 1), 'soleil_ete_apres14h_h': round(float(ete_apm[z].mean()), 1), 'soleil_equinoxe_h': round(float(mi[z].mean()), 1)}
+ZONE = dict(COTES.get(NOMS[_princ]) or {}, cote=NOMS[_princ])
 # ---- vis-à-vis : étages voisins qui plongent sur le jardin ----
 vav = []
 for b in bats:
@@ -115,7 +126,7 @@ lim = parcelle.exterior.difference(unary_union([b['g'] for b in bats]).buffer(0.
 diag = {'surface_parcelle_m2': round(parcelle.area), 'surface_jardin_m2': round(jardin.area), 'surface_toit_m2': round(maison.area), 'hauteur_maison_m': h_maison,
         'soleil_ete_h_moyen': round(float(ete.mean()), 1), 'soleil_ete_apres14h_h': round(float(ete_apm.mean()), 1),
         'part_jardin_plus_6h_ete': round(float((ete >= 6).mean()) * 100), 'soleil_equinoxe_h': round(float(mi.mean()), 1),
-        'soleil_ete_profil_8h_21h': PROFILS.get(172), 'vis_a_vis': vav[:5], 'urbanisme': urba, 'lineaire_limites_libres_m': round(lim.length, 1)}
+        'soleil_ete_profil_8h_21h': PROFILS.get(172), 'vis_a_vis': vav[:5], 'cote_jardin': NOMS[_princ], 'zone_maison': ZONE, 'cotes_maison': COTES, 'urbanisme': urba, 'lineaire_limites_libres_m': round(lim.length, 1)}
 json.dump(diag, open(f'{OUT}/diagnostic.json', 'w'), ensure_ascii=False, indent=1)
 np.savez(f'{OUT}/geo.npz', pts=np.array(pts), ete=ete, parcelle=np.array(parcelle.exterior.coords), maison=np.array(maison.exterior.coords),
          bats=np.array([np.array(b['g'].exterior.coords) for b in bats], dtype=object), hb=np.array([b['h'] for b in bats]), client=np.array([b['client'] for b in bats]), allow_pickle=True)
