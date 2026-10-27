@@ -13,7 +13,13 @@ lat0, lon0 = P['address']['lat'], P['address']['lon']
 KX, KY = 111320 * math.cos(math.radians(lat0)), 110540
 loc = lambda lon, lat: ((lon - lon0) * KX, (lat - lat0) * KY)          # mètres, x = est, y = nord
 def get(url):
-    with urllib.request.urlopen(url, timeout=40) as r: return json.load(r)
+    # services IGN parfois lents : 3 essais avant d'abandonner
+    for k in range(3):
+        try:
+            with urllib.request.urlopen(url, timeout=40) as r: return json.load(r)
+        except Exception:
+            if k == 2: raise
+            __import__('time').sleep(2 + 3 * k)
 
 parcelle = Polygon([loc(*p[:2]) for p in P['parcel']['ring']])
 maison = Polygon([loc(*p[:2]) for p in P['building']['ring']])

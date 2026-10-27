@@ -1700,30 +1700,6 @@
    "couleur": ""
   },
   {
-   "latin": "Danae racemosa",
-   "nom": "Laurier d'Alexandrie",
-   "role": "structure",
-   "expo": [
-    "mi-ombre",
-    "ombre"
-   ],
-   "climats": [
-    "oceanique",
-    "oceanique_degrade",
-    "mediterraneen"
-   ],
-   "styles": [
-    "ville",
-    "japonisant",
-    "mediterraneen"
-   ],
-   "floraison": "",
-   "hiver": "persistant, baies orange",
-   "hauteur_m": 0.8,
-   "entretien": "aucun",
-   "couleur": ""
-  },
-  {
    "latin": "Geranium macrorrhizum",
    "nom": "Géranium à grosses racines",
    "role": "vivace",

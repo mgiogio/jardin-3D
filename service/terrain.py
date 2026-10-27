@@ -9,8 +9,12 @@ BOUSSOLE = ['nord', 'nord-est', 'est', 'sud-est', 'sud', 'sud-ouest', 'ouest', '
 
 
 def _get(url, t=20):
-    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=t) as r:
-        return json.load(r)
+    for k in range(2):      # un second essai si l'IGN répond mal
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=t) as r:
+                return json.load(r)
+        except Exception:
+            if k: raise
 
 
 def _anneaux(geom):
