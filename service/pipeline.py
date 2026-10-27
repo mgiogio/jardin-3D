@@ -169,6 +169,8 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
                     f"Les images suivantes sont des photos de vrais produits Cover Green posés chez des clients. Reproduis CES produits à l'identique (proportions, sections, espacement des lames, connecteurs, teinte), jamais un modèle générique :\n"
                     + ''.join(f"- {PROD[p]['description_visuel']} : {lecture['placement'][p]}\n" for p in noms)
                     + f"Aménage autour dans un style {STYLES.get(style, style)}, très peu d'entretien, crédible pour un particulier : remplace le mobilier, les tapis et la déco existants par un aménagement neuf dans ce style, ajoute des plantations généreuses. "
+                    + (f"Pour les plantations, utilise uniquement ces plantes, choisies pour l'exposition de cette zone ({(data.get('plantes') or {}).get('expo', '')}) : "
+                       + ', '.join(f"{x['nom']} ({x['latin']})" for x in (data.get('plantes') or {}).get('plantes', [])) + " ; aucune autre espèce. " if (data.get('plantes') or {}).get('plantes') else '')
                     + (f"Retire : {', '.join(lecture.get('a_retirer') or [])}. " if lecture.get('a_retirer') else '')
                     + (f"Conserve : {', '.join(lecture.get('a_garder') or [])}. " if lecture.get('a_garder') else '')
                     + "Les passages et l'accès à la maison restent libres : aucun poteau, aucune poutre ni clôture ne passe devant une fenêtre ou une porte, les poteaux se posent à côté des ouvertures. Photo réaliste de smartphone, aucun texte.")
