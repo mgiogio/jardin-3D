@@ -33,8 +33,12 @@ def profil(p):
     if 'feuillage' in h or 'persistant' in h: s.add('ete')
     return fl, s
 SK = STYLES_KB.get(style, [style])
+# seulement les plantes dont la photo existe dans la banque (une plante ajoutée attend sa photo avant d'être proposée)
+PHOTOS = os.path.join(ICI, '..', 'service', 'assets', 'plantes')
+_slug = lambda t: re.sub(r'[^a-z0-9]+', '-', t.lower()).strip('-')[:50]
+AVEC_PHOTO = [p for p in KB['plantes'] if not os.path.isdir(PHOTOS) or os.path.exists(os.path.join(PHOTOS, _slug(p['latin']) + '.jpg'))]
 def filtre(expos, avec_style=True):
-    return [p for p in KB['plantes'] if clim in p['climats'] and set(expos) & set(p['expo']) and (not avec_style or set(SK) & set(p['styles']))]
+    return [p for p in AVEC_PHOTO if clim in p['climats'] and set(expos) & set(p['expo']) and (not avec_style or set(SK) & set(p['styles']))]
 # du plus précis au plus large : jamais de liste vide (style, puis exposition voisine)
 VOIS = {'soleil': ['soleil', 'mi-ombre'], 'mi-ombre': ['mi-ombre', 'soleil', 'ombre'], 'ombre': ['ombre', 'mi-ombre']}
 cands = filtre([expo])
@@ -42,13 +46,15 @@ if len(cands) < 8: cands = filtre([expo], False)
 if len(cands) < 8: cands = filtre(VOIS.get(expo, [expo]), False)
 def entretien_ok(L): return [p for p in L if not re.search(r'taille 2|taille$', p['entretien'])] if upkeep == 'peu' else L
 quota = {'focal': 1, 'structure': 2, 'vivace': 1, 'graminee': 1, 'grimpante': 1}
+GROUPE = {'fleuri': 'structure', 'couvre_sol': 'vivace'}          # arbustes fleuris et couvre-sols comptent avec leurs voisins
+grp = lambda p: GROUPE.get(p['role'], p['role'])
 choix, couvert = [], {}
 def completer(cands):
     # ajoute, rôle par rôle, la plante qui couvre le mieux les saisons encore vides
     for _ in range(sum(quota.values())):
         best = None
         for p in cands:
-            if p in choix or quota.get(p['role'], 0) <= sum(1 for c in choix if c['role'] == p['role']): continue
+            if p in choix or quota.get(grp(p), 0) <= sum(1 for c in choix if grp(c) == grp(p)): continue
             fl, s = profil(p)
             sc = sum(1 / (1 + couvert.get(k, 0)) for k in s) + 0.1 * len(fl)
             if best is None or sc > best[0]: best = (sc, p, s)
@@ -61,7 +67,7 @@ for L in (entretien_ok(cands), entretien_ok(filtre([expo], False)), entretien_ok
 # mois de plantation : en automne pour les plantes rustiques (meilleure reprise), au printemps pour les plantes frileuses et les graminées
 FRILEUSES = ('Olea', 'Lagerstroemia', 'Trachycarpus', 'Cistus', 'Phlomis', 'Rosmarinus', 'Teucrium', 'Perovskia', 'Lavandula', 'Ceanothus', 'Gaura',
              'Erigeron', 'Agapanthus', 'Euphorbia characias', 'Stipa', 'Pennisetum', 'Miscanthus', 'Muhlenbergia', 'Festuca', 'Trachelospermum',
-             'Fargesia', 'Abelia', 'Arbutus', 'Pittosporum', 'Calamagrostis', 'Hakonechloa', 'Carex', 'Ophiopogon')
+             'Clematis armandii', 'Abelia', 'Arbutus', 'Pittosporum', 'Calamagrostis', 'Hakonechloa', 'Carex', 'Ophiopogon')
 def plantation(p):
     if p['latin'].startswith('Iris germanica'): return [7, 8, 9]
     fri = p['latin'].startswith(FRILEUSES)
@@ -72,7 +78,8 @@ plantes = []
 for p in choix:
     fl, s = profil(p)
     plantes.append({'latin': p['latin'], 'nom': p['nom'], 'role': p['role'], 'hauteur_m': p['hauteur_m'], 'floraison': p['floraison'],
-                    'hiver': p['hiver'], 'entretien': p['entretien'], 'mois_fleurs': fl, 'mois_plantation': plantation(p), 'saisons': sorted(s), 'couleur': p.get('couleur', '')})
+                    'hiver': p['hiver'], 'entretien': p['entretien'], 'mois_fleurs': fl, 'mois_plantation': plantation(p), 'saisons': sorted(s), 'couleur': p.get('couleur', ''),
+                    **({'attention': p['attention']} if p.get('attention') else {}), **({'sol': p['sol']} if p.get('sol') else {})})
 json.dump({'climat': clim, 'expo': expo, 'style': style, 'plantes': plantes}, open(f'{OUT}/plantes.json', 'w'), ensure_ascii=False, indent=1)
 print(clim, expo, style, [p['nom'] for p in plantes])
 
