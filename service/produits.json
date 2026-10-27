@@ -48,6 +48,7 @@
    "cloture"
   ],
   "sol": [
+   "terrasse",
    "pergola"
   ],
   "_defaut": [
@@ -100,5 +101,21 @@
     550
    ]
   }
+ },
+ "terrasse": {
+  "nom": "Terrasse bois",
+  "lien": "https://www.cover.green/configurateur-terrasse/",
+  "bouton": "Configurer ma terrasse",
+  "photo_url": "https://cover.green/wp-content/uploads/2026/04/terrace_bois_piscine_3.webp",
+  "photo": "terrasse.webp",
+  "prix_m2": [
+   60,
+   80
+  ],
+  "refs": [
+   "terrasse.webp"
+  ],
+  "format": "lames bois sur lambourdes",
+  "description_visuel": "une terrasse en lames de bois Cover Green (pin traité, lames droites et parallèles, joints fins et réguliers, teinte bois clair brun doré comme sur la photo de référence) posée de plain-pied sur la zone de vie, bords nets ; de la photo de référence, reprends seulement les lames de la terrasse, jamais la piscine ni le décor"
  }
 }

@@ -308,7 +308,7 @@ def rendre(pid, d):
     cartes = ''.join(f'''<article class="pcard"><img src="/assets/plantes/{e(p["photo"])}" alt="{e(p["nom"])}" loading="lazy"><div class="pc"><span class="role">{ROLE.get(p["role"], p["role"])}</span><h4>{e(p["nom"])}</h4><i>{e(p["latin"])}</i>
         <div class="badges">{''.join(f'<span class="badge">{LAB[s]}</span>' for s in ("printemps", "ete", "automne", "hiver") if s in p["saisons"])}</div>
         <dl><div><dt>Fleurs</dt><dd>{e(p["floraison"] or "feuillage décoratif")}</dd></div><div><dt>Plantation</dt><dd>{periodes(p.get("mois_plantation") or [])}</dd></div><div><dt>Hiver</dt><dd>{e(p["hiver"])}</dd></div><div><dt>Entretien</dt><dd>{e(p["entretien"])}</dd></div></dl></div></article>''' for p in pl)
-    VERBE = {'cloture': 'Configurer ma clôture', 'pergola': 'Configurer ma pergola'}
+    VERBE = {'cloture': 'Configurer ma clôture', 'pergola': 'Configurer ma pergola', 'terrasse': 'Configurer ma terrasse'}
     prods = ''.join(f'''<div class="prod"><img src="/assets/refs/{p["photo"]}" alt=""><div><h3>{e(p["nom"])}</h3><p class="why">{e(p.get("placement"))}</p>
         <dl class="spec">{''.join(f'<div><dt>{e(k)}</dt><dd>{e(x)}</dd></div>' for k, x in p["detail"].items())}</dl></div>
         <div class="est"><small>Estimation</small><b>{eur(p["prix"][0])} à {eur(p["prix"][1])}</b><a class="cta reduit{"" if i == 0 else " sec"}" data-ev="cgp_configurer" data-produit="{p.get("cle", "")}" href="{p["lien"]}" target="_blank" rel="noopener">{VERBE.get(p.get("cle"), "Configurer")}</a></div></div>''' for i, p in enumerate(D['produits']))

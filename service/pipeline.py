@@ -74,6 +74,19 @@ BESOINS = {'intimite': "se sentir chez soi, à l'abri des regards", 'ombre': "pr
            'embellir': "embellir et mettre en valeur le jardin", 'sol': "un sol propre et agréable"}
 
 
+def choisir_produits(envies, ombre_maison=False):
+    # produits Cover Green du visuel, dans l'ordre des envies ; la terrasse dès que le client veut un sol propre ;
+    # pas de pergola brise-soleil sur une zone déjà à l'ombre l'essentiel de l'année
+    produits = []
+    for x in envies:
+        for p in PROD['besoins'].get(x, PROD['besoins']['_defaut']):
+            if p not in produits: produits.append(p)
+    # sauf si le client veut justement de l'ombre : la pergola ira alors dans la partie ensoleillée du jardin
+    if ombre_maison and 'pergola' in produits and 'ombre' not in envies: produits.remove('pergola')
+    if not produits: produits = ['cloture']
+    return produits[:3]
+
+
 def run(dossier, log=print):
     t0 = time.time(); P = json.load(open(f'{dossier}/projet.json')); etat = {'statut': 'en_cours', 'etapes': {}}
     def maj(**k):
@@ -96,10 +109,7 @@ def run(dossier, log=print):
     besoin = (P.get('project', {}).get('need') or P.get('need') or '_defaut'); style = (P.get('needs', {}).get('style') or P.get('style') or 'contemporain')
     # plusieurs envies possibles, dans l'ordre de priorité choisi par le client : la première décide, les suivantes complètent
     envies = [x for x in (P.get('project', {}).get('needs') or [besoin]) if x in BESOINS] or [besoin]
-    produits = []
-    for x in envies:
-        for p in PROD['besoins'].get(x, PROD['besoins']['_defaut']):
-            if p not in produits: produits.append(p)
+    produits = choisir_produits(envies)
     data = {'id': os.path.basename(dossier), 'cree_le': time.strftime('%Y-%m-%d'), 'ville': P.get('address', {}).get('city', ''), 'besoin': besoin, 'envies': envies, 'style': style}
     # 1. diagnostic depuis l'adresse (gratuit)
     if P.get('parcel') and P.get('building'):
@@ -124,23 +134,26 @@ def run(dossier, log=print):
         expo = 'soleil' if moy >= 7 else 'mi-ombre' if moy >= 3.5 else 'ombre'
     # contre la maison, à l'ombre l'essentiel de l'année : une pergola brise-soleil n'y aurait pas de sens
     ombre_maison = zm.get('soleil_equinoxe_h') is not None and zm['soleil_equinoxe_h'] < 4
-    if ombre_maison and 'pergola' in produits and len(produits) > 1:
-        produits.remove('pergola'); data['pergola_retiree'] = 'ombre contre la maison'
+    produits = choisir_produits(envies, ombre_maison)
+    if ombre_maison and 'pergola' in choisir_produits(envies): data['pergola_retiree'] = 'ombre contre la maison'
     subprocess.run(['python3', f'{DIAG}/saisons.py', f'{dossier}/projet.json', '-', f'{dossier}/plantes'], check=True, capture_output=True, timeout=60, env=dict(os.environ, SAISONS_VISUELS='0', EXPO=expo))
     data['plantes'] = json.load(open(f'{dossier}/plantes/plantes.json'))
     # 3. lecture de la photo par l'IA : atouts, pistes, placement des produits (texte)
     d = data.get('diag') or {}
     faits = {k: d.get(k) for k in ('surface_jardin_m2', 'soleil_ete_h_moyen', 'soleil_ete_apres14h_h', 'cote_jardin')} | {'vis_a_vis_proche': (d.get('vis_a_vis') or [None])[0],
              'zone_contre_la_maison': d.get('zone_maison')}
+    if (d.get('zone_maison') or {}).get('soleil_equinoxe_h', 99) < 4 and 'pergola' in produits:
+        faits['important'] = ("La zone contre la maison est à l'ombre l'essentiel de l'année : place la pergola plus loin, dans la partie ensoleillée du jardin, "
+                              "jamais collée à la façade ombragée.")
     if data.get('pergola_retiree'):
         faits['important'] = ("La zone contre la maison, celle de la photo, est à l'ombre l'essentiel de l'année : ne propose pas de pergola à cet endroit. "
                               "Valorise plutôt une terrasse fraîche et des plantes d'ombre ; une pergola aurait sa place plus loin, dans la partie ensoleillée du jardin.")
-    lecture = {} if im is None else gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, bardages en bois). Voici la photo du jardin d'un particulier.
+    lecture = {} if im is None else gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, terrasses et bardages en bois). Voici la photo du jardin d'un particulier.
 Son envie : {' ; puis '.join(BESOINS.get(x, x) for x in envies)}. Style souhaité : {style}. Données calculées depuis son adresse : {json.dumps(faits, ensure_ascii=False)}.
-Produits Cover Green à intégrer : {', '.join(PROD[p]['nom'] for p in produits)}.
+Produits Cover Green à intégrer (donne un placement pour chacun) : {', '.join(PROD[p]['nom'] for p in produits)}.
 Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans tiret cadratin :
 {{"atouts": ["2 ou 3 atouts réels visibles sur la photo"], "pistes": ["2 ou 3 améliorations concrètes, formulées positivement"],
- "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo, décollée de la façade si une fenêtre est derrière (ou null)"}},
+ "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo, décollée de la façade si une fenêtre est derrière (ou null)", "terrasse": "où poser la terrasse bois sur cette photo, sur la zone de vie au sol, en une phrase (ou null)"}},
  "cloture_longueur_m": nombre estimé (entre 4 et 30), "a_garder": ["seulement les éléments fixes ou plantés à conserver (maison, arbres, arbustes, murets, escaliers, accès) : le mobilier, les tapis et la déco peuvent être remplacés"], "a_retirer": ["encombrants ou objets à faire disparaître (poubelles, bâches, vieux mobilier)"],
  "sol_actuel": "dalle_ou_terrasse" ou "pelouse" ou "terre_ou_gravier" ou "mixte" (le sol de la zone de vie visible),
  "surface_sol_m2": surface estimée de la zone où l'on vivrait dehors (entre 8 et 40),
@@ -215,7 +228,11 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
     props = []
     for p in produits:
         c = PROD[p]
-        if p == 'cloture':
+        if p == 'terrasse':
+            S = int(max(8, min(40, float(lecture.get('surface_sol_m2') or 15))))
+            props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Surface': f'environ {S} m²', 'Pose': c['format']},
+                          'placement': (lecture.get('placement') or {}).get(p), 'prix': [r100(S * c['prix_m2'][0]), r100(S * c['prix_m2'][1])], 'm2': S})
+        elif p == 'cloture':
             L = max(4, min(30, round(float(lecture.get('cloture_longueur_m') or min(d.get('lineaire_limites_libres_m') or 10, 20)) / 2) * 2))
             props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Hauteur': c['hauteur'], 'Longueur': f'environ {L} m'},
                           'placement': (lecture.get('placement') or {}).get(p), 'prix': [r100(L * c['prix_m'][0]), r100(L * c['prix_m'][1])], 'longueur': L})
@@ -226,7 +243,7 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
     # 6. compléments Cover Green selon l'envie, la photo et le terrain (2 au plus)
     C = PROD.get('complements', {}); comp = []
     sol = lecture.get('sol_actuel') or ''
-    if 'terrasse' in C and ('sol' in envies or sol in ('pelouse', 'terre_ou_gravier', 'mixte')):
+    if 'terrasse' in C and 'terrasse' not in produits and ('sol' in envies or sol in ('pelouse', 'terre_ou_gravier', 'mixte')):
         S = int(max(8, min(40, float(lecture.get('surface_sol_m2') or 15))))
         comp.append({'cle': 'terrasse', 'm2': S, 'prix': [r100(S * C['terrasse']['prix_m2'][0]), r100(S * C['terrasse']['prix_m2'][1])],
                      'pourquoi': f"Un sol en bois d'environ {S} m² pour installer le coin salon de plain-pied, propre en toute saison."})

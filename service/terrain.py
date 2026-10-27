@@ -72,6 +72,11 @@ def terrain(lat, lon):
     if not maison and bats:
         maison = min(bats, key=lambda b: loc(b['ring']).distance(Point(0, 0)))
         if loc(maison['ring']).distance(Point(0, 0)) > 25: maison = None
+    if not par and maison:
+        # le point de l'adresse tombe souvent sur le trottoir ou l'entrée : on prend la parcelle sous la maison la plus proche
+        rp = loc(maison['ring']).buffer(0).representative_point()
+        try: par = parcelle(lat + rp.y / ky, lon + rp.x / kx)
+        except Exception: par = None
     if not par and not maison: raise ValueError('terrain introuvable')
     out = {'parcel': par, 'building': None, 'facades': [], 'apercu': {}}
     if maison:

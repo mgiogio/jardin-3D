@@ -93,6 +93,10 @@ for k in range(4):
     z = (_cote == k) & (_dist <= 6)
     if z.sum() >= 4: COTES[NOMS[k]] = {'soleil_ete_h': round(float(ete[z].mean()), 1), 'soleil_ete_apres14h_h': round(float(ete_apm[z].mean()), 1), 'soleil_equinoxe_h': round(float(mi[z].mean()), 1)}
 ZONE = dict(COTES.get(NOMS[_princ]) or {}, cote=NOMS[_princ])
+if 'soleil_ete_h' not in ZONE:      # côté principal trop étroit près de la maison : on prend tout ce qui est à moins de 6 m, puis tout le jardin
+    z = _dist <= 6
+    if z.sum() < 4: z = _dist >= 0
+    ZONE.update(soleil_ete_h=round(float(ete[z].mean()), 1), soleil_ete_apres14h_h=round(float(ete_apm[z].mean()), 1), soleil_equinoxe_h=round(float(mi[z].mean()), 1))
 # ---- vis-à-vis : étages voisins qui plongent sur le jardin ----
 vav = []
 for b in bats:

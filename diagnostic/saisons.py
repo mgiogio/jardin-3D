@@ -40,18 +40,24 @@ VOIS = {'soleil': ['soleil', 'mi-ombre'], 'mi-ombre': ['mi-ombre', 'soleil', 'om
 cands = filtre([expo])
 if len(cands) < 8: cands = filtre([expo], False)
 if len(cands) < 8: cands = filtre(VOIS.get(expo, [expo]), False)
-if upkeep == 'peu': cands = [p for p in cands if not re.search(r'taille 2|taille$', p['entretien'])]
+def entretien_ok(L): return [p for p in L if not re.search(r'taille 2|taille$', p['entretien'])] if upkeep == 'peu' else L
 quota = {'focal': 1, 'structure': 2, 'vivace': 1, 'graminee': 1, 'grimpante': 1}
 choix, couvert = [], {}
-for _ in range(sum(quota.values())):
-    best = None
-    for p in cands:
-        if p in choix or quota.get(p['role'], 0) <= sum(1 for c in choix if c['role'] == p['role']): continue
-        fl, s = profil(p)
-        sc = sum(1 / (1 + couvert.get(k, 0)) for k in s) + 0.1 * len(fl)
-        if best is None or sc > best[0]: best = (sc, p, s)
-    if not best: break
-    choix.append(best[1]); [couvert.__setitem__(k, couvert.get(k, 0) + 1) for k in best[2]]
+def completer(cands):
+    # ajoute, rôle par rôle, la plante qui couvre le mieux les saisons encore vides
+    for _ in range(sum(quota.values())):
+        best = None
+        for p in cands:
+            if p in choix or quota.get(p['role'], 0) <= sum(1 for c in choix if c['role'] == p['role']): continue
+            fl, s = profil(p)
+            sc = sum(1 / (1 + couvert.get(k, 0)) for k in s) + 0.1 * len(fl)
+            if best is None or sc > best[0]: best = (sc, p, s)
+        if not best: break
+        choix.append(best[1]); [couvert.__setitem__(k, couvert.get(k, 0) + 1) for k in best[2]]
+# du plus fidèle au plus large, jusqu'à 5 plantes au moins : style + exposition, puis sans le style, puis expositions voisines
+for L in (entretien_ok(cands), entretien_ok(filtre([expo], False)), entretien_ok(filtre(VOIS.get(expo, [expo]), False)), filtre(VOIS.get(expo, [expo]), False)):
+    if len(choix) >= 5: break
+    completer(L)
 # mois de plantation : en automne pour les plantes rustiques (meilleure reprise), au printemps pour les plantes frileuses et les graminées
 FRILEUSES = ('Olea', 'Lagerstroemia', 'Trachycarpus', 'Cistus', 'Phlomis', 'Rosmarinus', 'Teucrium', 'Perovskia', 'Lavandula', 'Ceanothus', 'Gaura',
              'Erigeron', 'Agapanthus', 'Euphorbia characias', 'Stipa', 'Pennisetum', 'Miscanthus', 'Muhlenbergia', 'Festuca', 'Trachelospermum',
