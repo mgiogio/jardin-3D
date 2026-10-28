@@ -41,13 +41,14 @@ def contenu(d, pid):
     P = json.load(open(f'{d}/projet.json')); D = json.load(open(f'{d}/data.json')) if os.path.exists(f'{d}/data.json') else {}
     g = D.get('diag') or {}; prenom = ((P.get('contact') or {}).get('firstName') or '').strip()
     url = lien(d, pid)
+    mot = 'terrasse' if g.get('mode') == 'etage' else 'jardin'
     faits = []
     if g.get('soleil_ete_h_moyen'): faits.append(f"{str(g['soleil_ete_h_moyen']).replace('.', ',')} h de soleil par jour en été")
     if g.get('surface_jardin_m2'): faits.append(f"{g['surface_jardin_m2']} m² de jardin")
     intro = ('Bonjour ' + e(prenom) + ',') if prenom else 'Bonjour,'
     ville = (P.get('address') or {}).get('city') or D.get('ville') or ''
     li = ''.join(f'<tr><td style="padding:6px 0;font-size:15px;color:#1E211F">&#10003;&nbsp; {x}</td></tr>' for x in
-                 ['Les plantes à planter chez vous, et quand', "Où créer de l'ombre et de l'intimité", 'Ce que coûte chaque idée', 'Votre jardin imaginé avec nos produits'])
+                 ['Les plantes à planter chez vous, et quand', "Où créer de l'ombre et de l'intimité", 'Ce que coûte chaque idée', f'Votre {mot} imaginé{"e" if mot == "terrasse" else ""} avec nos produits'])
     corps = f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Votre diagnostic jardin est prêt</title></head>
 <body style="margin:0;padding:0;background:#F4F6F7;font-family:Roboto,Arial,sans-serif">
 <div style="display:none;max-height:0;overflow:hidden">{e(', '.join(faits) + '. ' if faits else '')}Vos plantes, vos idées et leur budget vous attendent.</div>
@@ -55,7 +56,7 @@ def contenu(d, pid):
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px">
 <tr><td style="padding:28px 28px 8px"><span style="display:inline-block;background:#049E00;color:#fff;font-weight:800;font-size:15px;padding:6px 10px;border-radius:4px;letter-spacing:.02em">COVER GREEN</span></td></tr>
 <tr><td style="padding:8px 28px 0;font-size:16px;color:#1E211F">{intro}</td></tr>
-<tr><td style="padding:10px 28px 0"><h1 style="margin:0;font-size:26px;line-height:1.2;color:#1E211F">Le diagnostic de votre jardin{(' à ' + e(ville)) if ville else ''} est prêt.</h1></td></tr>
+<tr><td style="padding:10px 28px 0"><h1 style="margin:0;font-size:26px;line-height:1.2;color:#1E211F">Le diagnostic de votre {mot}{(' à ' + e(ville)) if ville else ''} est prêt.</h1></td></tr>
 {f'<tr><td style="padding:14px 28px 0"><div style="background:#EAF7E5;border-radius:10px;padding:12px 14px;font-size:15px;color:#1E211F">{e(" · ".join(faits))}</div></td></tr>' if faits else ''}
 <tr><td style="padding:16px 28px 0"><table role="presentation" cellpadding="0" cellspacing="0">{li}</table></td></tr>
 <tr><td style="padding:22px 28px 6px"><a href="{e(url)}" style="display:block;background:#EB5A00;color:#ffffff;text-decoration:none;text-align:center;font-weight:700;font-size:17px;padding:16px 20px;border-radius:8px">Voir mon diagnostic</a></td></tr>
@@ -63,7 +64,7 @@ def contenu(d, pid):
 </table>
 <p style="font-size:12px;color:#5B625E;margin:16px 0 0">Cover Green · 300 avenue de la Royale, 34160 Castries · <a href="https://www.cover.green/" style="color:#5B625E">www.cover.green</a></p>
 </td></tr></table></body></html>'''
-    texte = (f"{'Bonjour ' + prenom if prenom else 'Bonjour'},\n\nLe diagnostic de votre jardin est prêt.\n" + (' · '.join(faits) + '\n' if faits else '')
+    texte = (f"{'Bonjour ' + prenom if prenom else 'Bonjour'},\n\nLe diagnostic de votre {mot} est prêt.\n" + (' · '.join(faits) + '\n' if faits else '')
              + f"\nVoir mon diagnostic : {url}\n\nUne question ? Répondez simplement à cet email.\nCover Green, www.cover.green\n")
     return corps, texte
 

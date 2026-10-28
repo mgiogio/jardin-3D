@@ -41,7 +41,7 @@ def batiments(lat, lon, r=45):
         p = f.get('properties') or {}
         for ring in _anneaux(f['geometry']):
             out.append({'ring': [[round(x, 8), round(y, 8), *([round(z[0], 1)] if z else [])] for x, y, *z in ring],
-                        'height': p.get('hauteur'), 'floors': p.get('nombre_d_etages'), 'usage': p.get('usage_1')})
+                        'height': p.get('hauteur'), 'floors': p.get('nombre_d_etages'), 'usage': p.get('usage_1'), 'logements': p.get('nombre_de_logements')})
     return out
 
 
@@ -84,7 +84,10 @@ def terrain(lat, lon):
     if not par and not maison: raise ValueError('terrain introuvable')
     out = {'parcel': par, 'building': None, 'facades': [], 'apercu': {}}
     if maison:
-        out['building'] = {'ring': maison['ring'], 'height': maison.get('height') or 6, 'floors': maison.get('floors')}
+        out['building'] = {'ring': maison['ring'], 'height': maison.get('height') or 6, 'floors': maison.get('floors'), 'logements': maison.get('logements')}
+        # immeuble : plusieurs logements (BD TOPO) ; le questionnaire demande alors l'étage de la terrasse
+        lg, et = maison.get('logements') or 0, maison.get('floors') or 0
+        out['immeuble'] = bool(lg >= 3 or (lg >= 2 and et >= 4))
         out['facades'] = facades(maison['ring'], lat)
     if par:
         Pp = loc(par['ring']).buffer(0); M = loc(maison['ring']).buffer(0) if maison else None

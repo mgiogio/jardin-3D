@@ -89,7 +89,13 @@ BESOINS = {'intimite': "se sentir chez soi, à l'abri des regards", 'ombre': "pr
            'embellir': "embellir et mettre en valeur le jardin", 'sol': "un sol propre et agréable"}
 
 
-def choisir_produits(envies, ombre_maison=False):
+def choisir_produits(envies, ombre_maison=False, etage=None):
+    # terrasse ou balcon en étage : la terrasse bois sur plots (sans percer l'étanchéité) d'abord, jamais de clôture ;
+    # une pergola seulement sur un toit-terrasse, pour de l'ombre ou pour recevoir
+    if etage:
+        produits = ['terrasse']
+        if etage.get('toit') and ({'ombre', 'recevoir'} & set(envies)) and not (ombre_maison and 'ombre' not in envies): produits.append('pergola')
+        return produits
     # produits Cover Green du visuel, dans l'ordre des envies ; la terrasse dès que le client veut un sol propre ;
     # pas de pergola brise-soleil sur une zone déjà à l'ombre l'essentiel de l'année
     produits = []
@@ -126,8 +132,17 @@ def run(dossier, log=print):
     envies = [x for x in (P.get('project', {}).get('needs') or [besoin]) if x in BESOINS] or [besoin]
     produits = choisir_produits(envies)
     data = {'id': os.path.basename(dossier), 'cree_le': time.strftime('%Y-%m-%d'), 'ville': P.get('address', {}).get('city', ''), 'besoin': besoin, 'envies': envies, 'style': style}
-    # 1. diagnostic depuis l'adresse (gratuit)
-    if P.get('parcel') and P.get('building'):
+    # 1. diagnostic depuis l'adresse (gratuit) ; terrasse en étage : soleil et vis-à-vis calculés à la hauteur de la terrasse
+    lieu = P.get('lieu') or {}
+    en_etage = lieu.get('type') == 'appartement' and int(lieu.get('etage') or 0) >= 1
+    data['lieu'] = lieu if lieu else {'type': 'maison'}
+    if en_etage and P.get('building'):
+        try:
+            subprocess.run(['python3', f'{DIAG}/etage.py', f'{dossier}/projet.json', f'{dossier}/diag'], check=True, capture_output=True, timeout=240)
+            data['diag'] = json.load(open(f'{dossier}/diag/diagnostic.json'))
+        except Exception as e:
+            log('diagnostic étage en échec', e, getattr(e, 'stderr', b'')[-800:]); data['diag'] = None
+    elif P.get('parcel') and P.get('building'):
         try:
             subprocess.run(['python3', f'{DIAG}/diag.py', f'{dossier}/projet.json', f'{dossier}/diag'], check=True, capture_output=True, timeout=240)
             data['diag'] = json.load(open(f'{dossier}/diag/diagnostic.json'))
@@ -149,15 +164,21 @@ def run(dossier, log=print):
         expo = 'soleil' if moy >= 7 else 'mi-ombre' if moy >= 3.5 else 'ombre'
     # contre la maison, à l'ombre l'essentiel de l'année : une pergola brise-soleil n'y aurait pas de sens
     ombre_maison = zm.get('soleil_equinoxe_h') is not None and zm['soleil_equinoxe_h'] < 4
-    produits = choisir_produits(envies, ombre_maison)
-    if ombre_maison and 'pergola' in choisir_produits(envies): data['pergola_retiree'] = 'ombre contre la maison'
-    subprocess.run(['python3', f'{DIAG}/saisons.py', f'{dossier}/projet.json', '-', f'{dossier}/plantes'], check=True, capture_output=True, timeout=60, env=dict(os.environ, SAISONS_VISUELS='0', EXPO=expo))
+    ETG = {'n': int(lieu.get('etage') or 1), 'toit': bool((data.get('diag') or {}).get('toit_terrasse'))} if en_etage else None
+    produits = choisir_produits(envies, ombre_maison, ETG)
+    if not ETG and ombre_maison and 'pergola' in choisir_produits(envies): data['pergola_retiree'] = 'ombre contre la maison'
+    subprocess.run(['python3', f'{DIAG}/saisons.py', f'{dossier}/projet.json', '-', f'{dossier}/plantes'], check=True, capture_output=True, timeout=60,
+                   env=dict(os.environ, SAISONS_VISUELS='0', EXPO=expo, EN_BAC='1' if ETG else ''))
     data['plantes'] = json.load(open(f'{dossier}/plantes/plantes.json'))
     # 3. lecture de la photo par l'IA : atouts, pistes, placement des produits (texte)
     d = data.get('diag') or {}
     faits = {k: d.get(k) for k in ('surface_jardin_m2', 'soleil_ete_h_moyen', 'soleil_ete_apres14h_h', 'cote_jardin')} | {'vis_a_vis_proche': (d.get('vis_a_vis') or [None])[0],
              'zone_contre_la_maison': d.get('zone_maison')}
-    if (d.get('zone_maison') or {}).get('soleil_equinoxe_h', 99) < 4 and 'pergola' in produits:
+    if ETG:
+        faits['important'] = (f"C'est une terrasse ou un balcon d'appartement au {ETG['n']}e étage{' (toit-terrasse)' if ETG['toit'] else ''} : jamais de clôture ; "
+                              "la terrasse bois se pose sur plots, sans percer l'étanchéité ; le garde-corps reste ; les plantes vont en grands bacs. "
+                              "Le soleil donné est celui du côté le plus ensoleillé de l'immeuble.")
+    elif (d.get('zone_maison') or {}).get('soleil_equinoxe_h', 99) < 4 and 'pergola' in produits:
         faits['important'] = ("La zone contre la maison est à l'ombre l'essentiel de l'année : place la pergola plus loin, dans la partie ensoleillée du jardin, "
                               "jamais collée à la façade ombragée.")
     if data.get('pergola_retiree'):
@@ -180,7 +201,9 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
     if im is not None and lecture.get('photo_exploitable', True):
         refs = [Image.open(f'{ASSETS}/refs/{r}').convert('RGB') for p in produits for r in PROD[p]['refs']]
         noms = [p for p in produits if (lecture.get('placement') or {}).get(p)]
-        consigne = (f"La première image est la photo du jardin d'un client : garde exactement la même maison, le même cadrage, la même perspective et la même lumière. "
+        if ETG: consigne_lieu = "C'est une terrasse d'appartement en étage : garde le garde-corps et la façade, la terrasse bois est posée sur plots par-dessus le sol existant, les plantes sont en grands bacs. "
+        else: consigne_lieu = ''
+        consigne = consigne_lieu + (f"La première image est la photo du jardin d'un client : garde exactement la même maison, le même cadrage, la même perspective et la même lumière. "
                     f"Les images suivantes sont des photos de vrais produits Cover Green posés chez des clients. Reproduis CES produits à l'identique (proportions, sections, espacement des lames, connecteurs, teinte), jamais un modèle générique :\n"
                     + ''.join(f"- {PROD[p]['description_visuel']} : {lecture['placement'][p]}\n" for p in noms)
                     + f"Aménage autour dans un style {STYLES.get(style, style)}, très peu d'entretien, crédible pour un particulier : remplace le mobilier, les tapis et la déco existants par un aménagement neuf dans ce style, ajoute des plantations généreuses. "
@@ -247,7 +270,7 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
         c = PROD[p]
         if p == 'terrasse':
             S = int(max(8, min(40, float(lecture.get('surface_sol_m2') or 15))))
-            props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Surface': f'environ {S} m²', 'Pose': c['format']},
+            props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Surface': f'environ {S} m²', 'Pose': 'sur plots réglables, sans percer' if ETG else c['format']},
                           'placement': (lecture.get('placement') or {}).get(p), 'prix': [r100(S * c['prix_m2'][0]), r100(S * c['prix_m2'][1])], 'm2': S})
         elif p == 'cloture':
             L = max(4, min(30, round(float(lecture.get('cloture_longueur_m') or min(d.get('lineaire_limites_libres_m') or 10, 20)) / 2) * 2))

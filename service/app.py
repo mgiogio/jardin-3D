@@ -272,14 +272,23 @@ def rendre(pid, d):
         faits += f'''<div class="fact"><span class="k">Soleil le 21 juin</span><span class="val">{str(g["soleil_ete_h_moyen"]).replace(".", ",")} h <small>par jour</small></span>
           <div class="sunbar">{''.join(f'<i style="background:{soleil(f)}"></i>' for f in (g.get("soleil_ete_profil_8h_21h") or []))}</div>
           <div class="hours"><span>8 h</span><span>14 h</span><span>21 h</span></div><div class="sunleg"><span>ombre</span><i></i><span>plein soleil</span></div><p>Dont {str(g["soleil_ete_apres14h_h"]).replace(".", ",")} h après 14 h, au moment le plus chaud.</p></div>'''
+        if g.get('mode') == 'etage':
+            # terrasse en étage : le soleil est celui du côté le plus ensoleillé, les vis-à-vis sont les fenêtres plus hautes que la terrasse
+            if v:
+                faits += f'''<div class="fact"><span class="k">Vis-à-vis</span><span class="val">{v["au_dessus_m"]:.0f} m <small>au-dessus de vous, à {str(v["distance_m"]).replace(".", ",")} m</small></span>
+          <p>Un immeuble côté {e(v["direction"])} a des fenêtres plus hautes que votre terrasse : de quoi penser à un écran de verdure ou à une toiture.</p></div>'''
+            C = g.get('cotes_maison') or {}
+            lignes = ' · '.join(f'{k} {str(x["soleil_ete_h"]).replace(".", ",")} h' for k, x in sorted(C.items(), key=lambda kv: -kv[1]['soleil_ete_h']))
+            faits += f'''<div class="fact"><span class="k">Votre terrasse</span><span class="val">{g["etage"]}<sup>e</sup> <small>étage{', toit-terrasse' if g.get('toit_terrasse') else ''}</small></span>
+          <p>Soleil en été selon le côté de l'immeuble : {e(lignes)}. Nous avons retenu le côté {e(g.get("cote_jardin"))}.</p></div>'''
         # l'œil est mesuré depuis le niveau de votre jardin (relief compris) : une maison en contrebas n'est plus comptée
-        if v and v.get('oeil_m', 0) >= 3 and ('denivele_m' in v or v['hauteur_m'] >= 5):
+        elif v and v.get('oeil_m', 0) >= 3 and ('denivele_m' in v or v['hauteur_m'] >= 5):
             dist = 'en limite de terrain' if v['distance_m'] < 1 else f'à {str(v["distance_m"]).replace(".", ",")} m'
             dz = v.get('denivele_m') or 0
             relief = ' Elle est construite plus haut que votre terrain, ce qui renforce la vue.' if dz >= 1 else ''
             faits += f'''<div class="fact"><span class="k">Vis-à-vis</span><span class="val">{v["oeil_m"]:.0f} m <small>de hauteur de vue, {dist}</small></span>
           <p>Depuis son étage, une maison voisine côté {e(v["direction"])} voit votre jardin d'environ {v["oeil_m"]:.0f} m de haut.{relief}</p></div>'''
-        faits += f'''<div class="fact"><span class="k">Votre terrain</span><span class="val">{g["surface_parcelle_m2"]} m² <small>dont {g["surface_jardin_m2"]} de jardin</small></span>
+        if g.get('mode') != 'etage': faits += f'''<div class="fact"><span class="k">Votre terrain</span><span class="val">{g["surface_parcelle_m2"]} m² <small>dont {g["surface_jardin_m2"]} de jardin</small></span>
           <p>{g["part_jardin_plus_6h_ete"]} % du jardin a plus de 6 h de soleil en été.</p></div>'''
     atouts = ''.join(f'<li>{e(a)}</li>' for a in L.get('atouts') or []); pistes = ''.join(f'<li>{e(a)}</li>' for a in L.get('pistes') or [])
     visuel = (f'''<div class="cmp" id="cmp" style="--p:50%"><img src="/fichiers/{pid}/visuel.jpg" alt="Idée d'aménagement avec nos produits"><img class="av" src="/fichiers/{pid}/photo.jpg" alt="Votre photo">
@@ -340,6 +349,13 @@ def rendre(pid, d):
            'CAL': cal, 'MOIS': ''.join(f'<th scope="col">{m}</th>' for m in M), 'PRODUITS': prods, 'COMPLEMENTS': compl, 'BUDGET': budget}
     out = GABARIT
     for k, x in rep.items(): out = out.replace('{{' + k + '}}', x)
+    if g.get('mode') == 'etage':
+        for x, y in (('Le diagnostic de votre <span class="v">jardin</span>', 'Le diagnostic de votre <span class="v">terrasse</span>'), ('>Votre jardin demain<', '>Votre terrasse demain<'),
+                     ('<h2>Votre jardin, demain</h2>', '<h2>Votre terrasse, demain</h2>'), ('Ce que votre adresse dit de votre jardin', 'Ce que votre adresse dit de votre terrasse'),
+                     ('la photo de mon jardin', 'la photo de ma terrasse'), ('Votre jardin aménagé', 'Votre terrasse aménagée'), ('une photo de votre jardin', 'une photo de votre terrasse'),
+                     ('des maisons voisines', 'des immeubles voisins'), ('Prise depuis la maison ou la terrasse, de jour', 'Prise depuis la porte-fenêtre, de jour'),
+                     ('pour votre jardin, avec nos produits', 'pour votre terrasse, avec nos produits')):
+            out = out.replace(x, y)
     if not os.path.exists(f'{d}/photo.jpg'):
         out = out.replace('à partir de votre adresse et de votre photo', 'à partir de votre adresse').replace('<h2>Votre jardin, demain</h2>', '<h2>Votre jardin imaginé avec nos produits</h2>')
     return out

@@ -37,6 +37,8 @@ SK = STYLES_KB.get(style, [style])
 PHOTOS = os.path.join(ICI, '..', 'service', 'assets', 'plantes')
 _slug = lambda t: re.sub(r'[^a-z0-9]+', '-', t.lower()).strip('-')[:50]
 AVEC_PHOTO = [p for p in KB['plantes'] if not os.path.isdir(PHOTOS) or os.path.exists(os.path.join(PHOTOS, _slug(p['latin']) + '.jpg'))]
+# terrasse en étage : seulement des plantes qui vivent bien en grand bac (4 m au plus adulte)
+if os.environ.get('EN_BAC'): AVEC_PHOTO = [p for p in AVEC_PHOTO if float(p.get('hauteur_m') or 0) <= 4]
 def filtre(expos, avec_style=True):
     return [p for p in AVEC_PHOTO if clim in p['climats'] and set(expos) & set(p['expo']) and (not avec_style or set(SK) & set(p['styles']))]
 # du plus précis au plus large : jamais de liste vide (style, puis exposition voisine)

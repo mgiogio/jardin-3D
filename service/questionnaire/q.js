@@ -268,8 +268,10 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   var E = {};
   E.envie = function () {
     var L = S.envies || [];
-    return '<h2>Qu\'est-ce qui vous ferait plaisir dans ce jardin ?</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
-      + '<div class="cartes deux multi">' + ENVIES.map(function (o) {
+    var haut = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0;
+    var LISTE = haut ? ENVIES.map(function (o) { return { embellir: ['embellir', 'Une terrasse dont je suis fier', 'Embellir et mettre en valeur'], sol: ['sol', 'Un sol agréable', 'Un vrai sol bois à la place du carrelage'] }[o[0]] || o; }) : ENVIES;
+    return '<h2>Qu\'est-ce qui vous ferait plaisir ' + (haut ? 'sur cette terrasse' : 'dans ce jardin') + ' ?</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
+      + '<div class="cartes deux multi">' + LISTE.map(function (o) {
         var k = L.indexOf(o[0]);
         return '<button type="button" class="c' + (k >= 0 ? ' on' : '') + '" data-envie="' + o[0] + '" aria-pressed="' + (k >= 0) + '">'
           + '<span class="ic" aria-hidden="true">' + (k >= 0 ? '<span class="rang">' + (k + 1) + '</span>' : ICO[o[0]]) + '</span>'
@@ -303,7 +305,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       + '<button type="button" class="lien" data-a="photo-sans">Je n\'ai pas de photo sous la main</button></div>';
   };
   E.contact = function () {
-    var rec = [S.adresse && S.adresse.city ? 'Votre terrain à ' + S.adresse.city : 'Votre terrain', (S.envies || []).length > 1 ? 'Vos ' + S.envies.length + ' envies' : 'Votre envie', 'Votre style', S.photo || S.photoUrl ? 'Votre photo' : null].filter(Boolean);
+    var lieuNom = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0 ? 'Votre terrasse' : 'Votre terrain';
+    var rec = [S.adresse && S.adresse.city ? lieuNom + ' à ' + S.adresse.city : lieuNom, (S.envies || []).length > 1 ? 'Vos ' + S.envies.length + ' envies' : 'Votre envie', 'Votre style', S.photo || S.photoUrl ? 'Votre photo' : null].filter(Boolean);
     return '<h2>Dernière étape : où vous envoyer votre diagnostic ?</h2><ul class="recap">' + rec.map(function (t) { return '<li>' + h(t) + '</li>'; }).join('') + '</ul><p class="sous">' + (S.photo || S.photoUrl ? 'Tout est prêt. Votre page projet arrive par email dans 2 à 3 minutes.' : 'Tout est prêt. Votre page projet arrive par email dans 2 minutes, vous pourrez y ajouter une photo.') + '</p>'
       + '<form id="cgq-form" novalidate><label class="ch" for="cgq-mail">Votre email</label><input id="cgq-mail" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Ex. marie.dupont@gmail.com" value="' + h(S.email) + '" required><p class="msg" id="cgq-mmsg" role="status"></p>'
       + '<label class="case"><input type="checkbox" id="cgq-opt"' + (S.optin ? ' checked' : '') + '><span>Recevoir aussi nos idées et offres jardin, 2 emails par mois au plus</span></label>'
@@ -356,6 +359,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (a === 'geo') return geolocaliser(b);
     if (a === 'adresse-ok') return aller('terrain');
     if (a === 'terrain-ok') return aller('envie');
+    if (a === 'etage') { var n = +b.getAttribute('data-e'); S.lieu = { type: 'appartement', etage: n }; garder(); ev('cgp_q_etage_choisi', { reponse: String(n) }); return aller('envie'); }
+    if (a === 'etage-maison') { S.lieu = { type: 'maison' }; garder(); ev('cgp_q_etage_choisi', { reponse: 'maison' }); return rendre(); }
     if (a === 'terrain-viser') return viser();
     if (a === 'terrain-ici') return confirmerRepere();
     if (a === 'terrain-adresse') { if (carteL) { carteL.remove(); carteL = null; } return aller('adresse'); }
@@ -441,7 +446,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   function choisir(a) {
     if (!a) return;
     S.adresse = { label: a.label, city: a.city, postcode: a.postcode, citycode: a.citycode, lat: a.lat, lon: a.lon, score: a.score };
-    S.terrain = null; S.corrections = 0;
+    S.terrain = null; S.lieu = null; S.corrections = 0;
     ev('cgp_q_adresse', { reponse: a.type || '' });
     aller('terrain');
   }
@@ -460,13 +465,13 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   /* ---------- terrain : « c'est bien chez vous ? » ---------- */
   var vue = null;   // cadrage de la photo aérienne : { lat0, lon0, kx, ky, w, h }
   function terrain() {
-    if (S.terrain) return dessiner();
+    if (S.terrain) return S.terrain.immeuble && !S.lieu ? etage() : dessiner();
     chercherTerrain(S.adresse.lat, S.adresse.lon);
   }
   function chercherTerrain(lat, lon) {
     var sous = M.querySelector('#cgq-tsous');
     fetch(API + '/api/terrain?lat=' + lat + '&lon=' + lon).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (t) { S.terrain = t; S.adresse.lat = lat; S.adresse.lon = lon; garder(); dessiner(); })
+      .then(function (t) { S.terrain = t; S.adresse.lat = lat; S.adresse.lon = lon; garder(); if (t.immeuble && !S.lieu) etage(); else dessiner(); })
       .catch(function () {
         S.terrain = null;
         if (sous) sous.textContent = 'Nous n\'avons pas trouvé le plan de ce terrain. Ce n\'est pas grave : nous continuerons avec votre photo.';
@@ -474,6 +479,20 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
         var act = M.querySelector('#cgq-tact'); if (act) { act.hidden = false; act.innerHTML = '<button type="button" class="cta" data-a="terrain-continuer">Continuer</button><button type="button" class="cta sec" data-a="terrain-viser">Montrer ma maison sur la carte</button>'; }
         ev('cgp_q_terrain', { reponse: 'non' });
       });
+  }
+  // adresse dans un immeuble (plusieurs logements au cadastre) : au lieu de « c'est bien votre maison ? », on demande l'étage
+  function etage() {
+    var h2 = M.querySelector('h2'), sous = M.querySelector('#cgq-tsous'), c = M.querySelector('#cgq-carte'), act = M.querySelector('#cgq-tact');
+    if (h2) h2.textContent = 'Vous êtes en appartement ?';
+    if (sous) sous.textContent = 'Votre adresse correspond à un immeuble. À quel étage se trouve votre terrasse ou votre balcon ?';
+    if (c) c.remove();
+    var E_ = [['0', 'Rez-de-chaussée, avec jardin'], ['1', '1er étage'], ['2', '2e étage'], ['3', '3e étage'], ['4', '4e étage'], ['5', '5e étage'], ['6', '6e ou plus haut']];
+    if (act) {
+      act.hidden = false;
+      act.innerHTML = '<div class="cartes mini">' + E_.map(function (o) { return '<button type="button" class="c" data-a="etage" data-e="' + o[0] + '"><b>' + o[1] + '</b></button>'; }).join('') + '</div>'
+        + '<button type="button" class="lien" data-a="etage-maison">Non, c\'est une maison</button>';
+    }
+    ev('cgp_q_immeuble', {});
   }
   function dessiner() {
     var t = S.terrain, c = M.querySelector('#cgq-carte'); if (!c || !t) return;
@@ -539,7 +558,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var p = carteL.getCenter(); carteL.remove(); carteL = null;
     var c = M.querySelector('#cgq-carte'); c.className = 'carte squelette'; c.innerHTML = '';
     var act = M.querySelector('#cgq-tact'); if (act) { act.hidden = true; act.innerHTML = '<button type="button" class="cta" data-a="terrain-ok">Oui, c\'est bien ça</button><button type="button" class="cta sec" data-a="terrain-viser">Non, je la cherche sur la carte</button>'; }
-    S.terrain = null; S.corrections = (S.corrections || 0) + 1;
+    S.terrain = null; S.lieu = null; S.corrections = (S.corrections || 0) + 1;
     chercherTerrain(p.lat, p.lng);
   }
 
@@ -627,6 +646,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       version: 2, createdAt: new Date().toISOString(), source: 'questionnaire',
       address: S.adresse, parcel: T.parcel || null, building: T.building || null, facades: T.facades || [],
       page_projet: /^https?:/.test(PROJET) ? PROJET : '',
+      lieu: S.lieu || { type: 'maison' },
       project: { need: S.envie, needs: S.envies || [S.envie] }, needs: { style: S.style || 'contemporain', upkeep: S.entretien || 'peu' },
       contact: { firstName: S.prenom || '', email: S.email, optin: !!S.optin, consent: true },
       suivi: Object.assign({}, S.suivi, {
