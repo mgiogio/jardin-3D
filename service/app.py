@@ -330,7 +330,7 @@ def rendre(pid, d):
     if comp:
         c0, c1 = b0 + sum(c['prix'][0] for c in comp), b1 + sum(c['prix'][1] for c in comp)
         budget += f'''<div class="r"><span>Avec les compléments</span><span><b>{eur(c0)} à {eur(c1)}</b></span></div>'''
-    budget += '''<div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div><div class="r"><span>Paiement</span><span>en 1x à 4x sans frais</span></div>
+    budget += '''<div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div>
       <p class="note" style="margin:4px 0 0">Prix exact dans chaque configurateur, selon vos choix.</p>'''
     R = D.get('reste')
     if R:
