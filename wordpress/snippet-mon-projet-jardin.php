@@ -36,7 +36,9 @@ add_filter('rank_math/frontend/robots', function ($r) {
 // La page est en gabarit Elementor Canvas, comme les autres pages du site : on y met l'en-tête charte v2 et le pied de page (modèle 1545)
 function cg_projet_jardin_cadre($html) {
     $hdr = (function_exists('cg_hdr_enabled') && cg_hdr_enabled() && function_exists('cg_hdr_render')) ? cg_hdr_render() : '';
-    return $hdr . $html . do_shortcode('[elementor-template id="1545"]');
+    // comme sur les pages du diagnostic : pas de bandeau promo du haut, ni newsletter ni bloc PRO du pied de page
+    $calme = '<style>.cgh-tick,.elementor-1545 .elementor-element-e81fbcd,.elementor-1545 .elementor-element-4ba903e{display:none!important}</style>';
+    return $calme . $hdr . $html . do_shortcode('[elementor-template id="1545"]');
 }
 
 add_shortcode('cg_projet_jardin', function () {
