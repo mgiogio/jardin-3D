@@ -311,7 +311,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       + '<form id="cgq-form" novalidate><label class="ch" for="cgq-mail">Votre email</label><input id="cgq-mail" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Ex. marie.dupont@gmail.com" value="' + h(S.email) + '" required><p class="msg" id="cgq-mmsg" role="status"></p>'
       + '<label class="case"><input type="checkbox" id="cgq-opt"' + (S.optin ? ' checked' : '') + '><span>Recevoir aussi nos idées et offres jardin, 2 emails par mois au plus</span></label>'
       + '<div class="pile"><button type="submit" class="cta">Recevoir mon diagnostic</button></div></form>'
-      + '<p class="confiance"><b>Gratuit et sans engagement</b> · ★ 4,6/5 sur Trustpilot, plus de 300 avis</p>'
+      + '<p class="confiance"><b>Gratuit et sans engagement</b> - ★ 4,6/5 sur Trustpilot, plus de 300 avis</p>'
       + '<p class="mention">Vos réponses servent uniquement à préparer votre diagnostic et à vous l\'envoyer. Elles ne sont jamais revendues. Voir notre <a href="https://www.cover.green/politique-de-confidentialite/" target="_blank" rel="noopener">politique de confidentialité</a>.</p>';
   };
   E.attente = function () {
@@ -698,7 +698,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       + '<p class="qb" style="margin:14px 0 8px">À découvrir dans l\'email</p><ul class="verrou">' + ['Les plantes à planter chez vous, et quand', 'Où créer de l\'ombre et de l\'intimité', 'Ce que coûte chaque idée', 'Votre jardin imaginé avec nos produits']
         .map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul></div>'
       + (b ? '<a class="cta" href="' + b.url + '" target="_blank" rel="noopener" data-a="boite">Ouvrir ' + b.nom + '</a>' : '')
-      + '<div class="pasrecu" id="cgq-pr"><p>Pas reçu ? Regardez dans les spams ou l\'onglet Promotions, ou <button type="button" class="lien" data-a="mail-renvoi">renvoyer l\'email</button> · <button type="button" class="lien" data-a="mail-corriger">corriger mon adresse</button></p></div>';
+      + '<div class="pasrecu" id="cgq-pr"><p>Pas reçu ? Regardez dans les spams ou l\'onglet Promotions, ou <button type="button" class="lien" data-a="mail-renvoi">renvoyer l\'email</button> ou <button type="button" class="lien" data-a="mail-corriger">corriger mon adresse</button></p></div>';
   }
   function renvoyerMail(m) {
     var P = M.querySelector('#cgq-pr'); if (!P) return;

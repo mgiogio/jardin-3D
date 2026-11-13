@@ -57,14 +57,14 @@ def contenu(d, pid):
 <tr><td style="padding:28px 28px 8px"><span style="display:inline-block;background:#049E00;color:#fff;font-weight:800;font-size:15px;padding:6px 10px;border-radius:4px;letter-spacing:.02em">COVER GREEN</span></td></tr>
 <tr><td style="padding:8px 28px 0;font-size:16px;color:#1E211F">{intro}</td></tr>
 <tr><td style="padding:10px 28px 0"><h1 style="margin:0;font-size:26px;line-height:1.2;color:#1E211F">Le diagnostic de votre {mot}{(' à ' + e(ville)) if ville else ''} est prêt.</h1></td></tr>
-{f'<tr><td style="padding:14px 28px 0"><div style="background:#EAF7E5;border-radius:10px;padding:12px 14px;font-size:15px;color:#1E211F">{e(" · ".join(faits))}</div></td></tr>' if faits else ''}
+{f'<tr><td style="padding:14px 28px 0"><div style="background:#EAF7E5;border-radius:10px;padding:12px 14px;font-size:15px;color:#1E211F">{e(", ".join(faits))}</div></td></tr>' if faits else ''}
 <tr><td style="padding:16px 28px 0"><table role="presentation" cellpadding="0" cellspacing="0">{li}</table></td></tr>
 <tr><td style="padding:22px 28px 6px"><a href="{e(url)}" style="display:block;background:#EB5A00;color:#ffffff;text-decoration:none;text-align:center;font-weight:700;font-size:17px;padding:16px 20px;border-radius:8px">Voir mon diagnostic</a></td></tr>
 <tr><td style="padding:6px 28px 24px;font-size:13px;color:#5B625E">Votre page reste disponible à tout moment depuis ce lien. Une question ? Répondez simplement à cet email.</td></tr>
 </table>
-<p style="font-size:12px;color:#5B625E;margin:16px 0 0">Cover Green · 300 avenue de la Royale, 34160 Castries · <a href="https://www.cover.green/" style="color:#5B625E">www.cover.green</a></p>
+<p style="font-size:12px;color:#5B625E;margin:16px 0 0">Cover Green - 300 avenue de la Royale, 34160 Castries - <a href="https://www.cover.green/" style="color:#5B625E">www.cover.green</a></p>
 </td></tr></table></body></html>'''
-    texte = (f"{'Bonjour ' + prenom if prenom else 'Bonjour'},\n\nLe diagnostic de votre {mot} est prêt.\n" + (' · '.join(faits) + '\n' if faits else '')
+    texte = (f"{'Bonjour ' + prenom if prenom else 'Bonjour'},\n\nLe diagnostic de votre {mot} est prêt.\n" + (', '.join(faits) + '\n' if faits else '')
              + f"\nVoir mon diagnostic : {url}\n\nUne question ? Répondez simplement à cet email.\nCover Green, www.cover.green\n")
     return corps, texte
 

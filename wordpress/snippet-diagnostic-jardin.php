@@ -147,7 +147,7 @@ background:var(--orange);color:#fff;font:600 17px/1 var(--f);cursor:pointer;marg
 <button type="submit" class="cta">Voir le potentiel de mon jardin</button>
 <button type="button" class="geo" id="cglp-geo" hidden>Je suis dans mon jardin : me localiser</button>
 </form>
-<span class="petit"><b>Gratuit</b> · plan, plantes et budget par email en 3 minutes · votre adresse sert uniquement au calcul</span>
+<span class="petit"><b>Gratuit</b> : plan, plantes et budget par email en 3 minutes. Votre adresse sert uniquement au calcul.</span>
 <a class="reprise" id="cglp-reprise" href="{{QUESTIONNAIRE}}" hidden>Reprendre mon diagnostic en cours</a>
 </div></div>
 <div class="atouts">
