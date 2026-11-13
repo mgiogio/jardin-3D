@@ -673,7 +673,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   /* ---------- fin : le diagnostic complet s'ouvre depuis l'email (adresse confirmée, meilleure délivrabilité) ---------- */
   function faits(D) {
     var g = (D && D.diag) || {}, f = [];
-    if (g.soleil_ete_h_moyen) f.push(String(g.soleil_ete_h_moyen).replace('.', ',') + ' h de soleil par jour en été');
+    if (g.soleil_ete_h_moyen) f.push(Math.max(1, Math.round(g.soleil_ete_h_moyen)) + ' h de soleil par jour en été');
     if (g.surface_jardin_m2) f.push(g.surface_jardin_m2 + ' m² de jardin');
     if (g.part_jardin_plus_6h_ete != null) f.push(g.part_jardin_plus_6h_ete + ' % du jardin au soleil plus de 6 h');
     return f;

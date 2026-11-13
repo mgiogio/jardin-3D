@@ -174,6 +174,7 @@ def run(dossier, log=print):
     d = data.get('diag') or {}
     faits = {k: d.get(k) for k in ('surface_jardin_m2', 'soleil_ete_h_moyen', 'soleil_ete_apres14h_h', 'cote_jardin')} | {'vis_a_vis_proche': (d.get('vis_a_vis') or [None])[0],
              'zone_contre_la_maison': d.get('zone_maison')}
+    faits = json.loads(json.dumps(faits), parse_float=lambda x: round(float(x)))     # heures et mètres arrondis : l'IA les recopie dans ses textes
     if ETG:
         faits['important'] = (f"C'est une terrasse ou un balcon d'appartement au {ETG['n']}e étage{' (toit-terrasse)' if ETG['toit'] else ''} : jamais de clôture ; "
                               "la terrasse bois se pose sur plots, sans percer l'étanchéité ; le garde-corps reste ; les plantes vont en grands bacs. "
