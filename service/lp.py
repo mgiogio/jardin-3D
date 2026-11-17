@@ -5,7 +5,7 @@ import html
 
 e = lambda s: html.escape(str(s or ''))
 # visuels : le jardin imaginé par l'outil pour un vrai projet et les photos de la banque de plantes ; dans la médiathèque WordPress (pas dans ce dépôt public)
-IMG = 'https://cover.green/wp-content/uploads/diagnostic/'
+IMG = 'https://cover.green/wp-content/uploads/2026/11/diagnostic-'
 # vitrine : un vrai diagnostic lancé dans l'outil (photo libre de droits Pexels, adresse de démonstration dans l'Hérault)
 PLANTES = [('abelia-x-grandiflora', 'Abélia'), ('viburnum-tinus', 'Laurier-tin'), ('clematis-armandii', 'Clématite')]
 PLANTES_EN_PLUS = ('geranium-macrorrhizum', 3)           # photo floutée sous le « ? », nombre de plantes non montrées
