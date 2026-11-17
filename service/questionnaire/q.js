@@ -138,15 +138,18 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   css += [
     'html.cgq-plein,html.cgq-plein body{background:#F4F6F7!important}',
     'html.cgq-plein #cgh,html.cgq-plein .elementor-1545{display:none!important}',
-    '.cgq{max-width:960px;padding:0 20px 8px;text-align:center}',
-    '.cgq .haut{position:relative;top:auto;background:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:18px 0 6px}',
-    '.cgq .gauche{display:flex;align-items:center;gap:14px;justify-self:start}',
-    '.cgq .gauche a{display:block;line-height:0}.cgq .gauche img{height:40px;width:auto;display:block}',
-    '.cgq .ret{min-width:0;padding:8px 2px;font-size:15px}.cgq .ret:before{content:"‹ "}',
-    '.cgq .fil{font-size:14px;color:var(--muted);white-space:nowrap}.cgq .fil b{color:var(--txt);font-weight:700}.cgq .fil .chev{margin:0 8px;color:#9AA1A6}',
-    '.cgq .fil .barre{width:min(300px,56vw);height:5px;margin:10px auto 0;background:#fff;flex:none}',
+    // le conteneur de la page WordPress centre son contenu à sa taille : on prend toute la largeur pour que rien ne bouge d'une étape à l'autre
+    '#cg-diag{width:100%;align-self:stretch}.cgq{width:100%;box-sizing:border-box;max-width:none;padding:0 20px 8px;text-align:center}',
+    '.cgq button,.cgq .c{white-space:normal}',
+    '.cgq .haut{position:relative;top:auto;display:block;height:76px;margin:0 -20px;padding:0;background:none}',
+    '.cgq .haut .logo{position:absolute;left:32px;top:22px;line-height:0}.cgq .haut .logo img{height:40px;width:auto;display:block}',
+    '.cgq .fil{position:absolute;left:50%;top:22px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:14px;color:var(--muted);white-space:nowrap}',
+    '.cgq .fil .ph{display:flex;gap:0}.cgq .fil .ph span{display:inline-block}.cgq .fil .ph .on{color:var(--txt);font-weight:700}.cgq .fil .chev{margin:0 10px;color:#9AA1A6}',
+    '.cgq .fil .barre{width:320px;height:4px;margin:10px 0 0;background:#E3E6E8;border-radius:2px;flex:none}',
+    '.cgq .nav{max-width:760px;height:36px;margin:0 auto;display:flex;align-items:center}',
+    '.cgq .nav .ret{visibility:visible;padding:6px 0;font-size:15px;color:var(--muted)}.cgq .nav .ret[hidden]{display:block;visibility:hidden}.cgq .nav .ret:before{content:"‹ "}',
     '.cgq .reste,.cgq .bas{display:none}',
-    '.cgq .ecran{max-width:880px;margin:0 auto;padding-top:clamp(20px,6vh,64px)}',
+    '.cgq .ecran{max-width:880px;margin:0 auto;padding-top:clamp(8px,4vh,48px)}',
     '@media (min-width:900px){.cgq .ecran .cartes.tuiles{grid-template-columns:repeat(5,minmax(0,1fr))}}',
     '.cgq h2{font:800 clamp(28px,4.4vw,44px)/1.15 var(--f);letter-spacing:0;margin:6px auto 0;max-width:760px}',
     '.cgq .sous{max-width:560px;margin:14px auto 26px}',
@@ -165,14 +168,15 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     '.cgq .ecran .pile{position:sticky;bottom:0;z-index:6;max-width:none;justify-items:center;margin-top:18px;padding:18px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(244,246,247,0),#F4F6F7 20px)}',
     '.cgq .ecran .pile>*{width:100%;max-width:380px}.cgq .ecran .pile>.lien{width:auto}',
     '.cgq .ecran .pile[hidden]{display:none}',
-    '.cgq .cta{font-size:16px}.cgq .cta[disabled]{opacity:1;background:#F4F6F7;border-color:#F4F6F7;color:#9AA1A6}',
+    '.cgq .cta{font-size:16px}.cgq .cta[disabled]{opacity:1;background:#fff;border:1px solid var(--ligne);color:#9AA1A6;cursor:not-allowed}',
     '.cgq .cta.sec{background:#fff}',
     '.cgq .cartes{max-width:680px;margin:0 auto}',
     '.cgq .c{border-color:#fff;border-width:2px}.cgq .c.on{box-shadow:none}',
     '.cgq .cartes.tuiles{max-width:none;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}',
-    '.cgq .tuiles .c{flex-direction:column;justify-content:flex-start;text-align:center;gap:8px;padding:22px 12px 18px;min-height:156px;border-radius:16px}',
+    '.cgq .cartes>*{min-width:0}.cgq .tuiles .c{flex-direction:column;justify-content:flex-start;align-items:stretch;text-align:center;gap:10px;padding:20px 12px 18px;min-height:150px;border-radius:16px}',
+    '.cgq .tuiles .c>span:last-child{min-width:0;overflow-wrap:break-word;hyphens:auto}.cgq .tuiles .c .ic{align-self:center}.cgq .tuiles .c .rang{align-self:center}',
     '.cgq .tuiles .c .ic{width:52px;height:52px;background:none;color:var(--txt)}.cgq .tuiles .c .ic svg{width:44px;height:44px}',
-    '.cgq .tuiles .c.on .ic{background:none}.cgq .tuiles .c b{font-size:16px}.cgq .tuiles .c small{font-size:13px}',
+    '.cgq .tuiles .c.on .ic{background:none}.cgq .tuiles .c b{font-size:15px;line-height:1.25}.cgq .tuiles .c small{font-size:13px;margin-top:4px}',
     '.cgq .carte,.cgq .chiffres,.cgq .zone,.cgq .apercu,.cgq .conseils{max-width:640px;margin-left:auto;margin-right:auto}',
     '.cgq .carte,.cgq .apercu{max-width:min(640px,calc(42vh * 4 / 3))}',
     '.cgq .chiffres{max-width:min(640px,max(320px,calc(42vh * 4 / 3)))}',
@@ -184,8 +188,9 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     '.cgq .apercu-fin,.cgq .merci,.cgq .erreur{max-width:640px;margin-left:auto;margin-right:auto;text-align:left}',
     '.cgq .bonus{max-width:640px;margin-left:auto;margin-right:auto}.cgq .bonus h3{font-size:22px}.cgq .bonus .points{justify-content:center}',
     '.cgq .apercu-fin{background:#fff;border-color:#fff}',
-    '@media (max-width:640px){.cgq{padding:0 16px 8px}.cgq .ecran{padding-top:14px}.cgq .sous{margin:10px auto 16px}.cgq .chiffres div{padding:8px 10px}.cgq .info{margin-bottom:8px;font-size:13px}.cgq .zone{min-height:150px}.cgq .haut{grid-template-columns:auto 1fr;padding-top:12px}.cgq .gauche img{height:34px}.cgq .fil{justify-self:end;text-align:right}',
-    '.cgq .fil span:not(.on),.cgq .fil .chev{display:none}.cgq .fil .barre{width:120px;margin:8px 0 0 auto}.cgq .cartes.tuiles{grid-template-columns:1fr 1fr;gap:10px}.cgq .tuiles .c{min-height:0;padding:14px 8px 12px;gap:6px}.cgq .tuiles .c small{display:none}.cgq .tuiles .c .ic{width:40px;height:40px}.cgq .tuiles .c .ic svg{width:34px;height:34px}}'
+    '@media (max-width:640px){.cgq{padding:0 16px 8px}.cgq .ecran{padding-top:6px}.cgq .sous{margin:10px auto 16px}.cgq .chiffres div{padding:8px 10px}.cgq .info{margin-bottom:8px;font-size:13px}.cgq .zone{min-height:150px}',
+    '.cgq .haut{height:60px;margin:0 -16px}.cgq .haut .logo{left:16px;top:14px}.cgq .haut .logo img{height:32px}.cgq .fil{left:auto;right:16px;top:16px;transform:none;align-items:flex-end;font-size:13px}.cgq .fil .ph span:not(.on),.cgq .fil .chev{display:none}.cgq .fil .barre{width:110px;margin-top:8px}',
+    '.cgq .nav{height:30px}.cgq .cartes.tuiles{grid-template-columns:1fr 1fr;gap:10px}.cgq .tuiles .c{min-height:0;padding:14px 8px 12px;gap:6px}.cgq .tuiles .c small{display:none}.cgq .tuiles .c .ic{width:40px;height:40px}.cgq .tuiles .c .ic svg{width:34px;height:34px}}'
   ].join('');
   try { document.documentElement.classList.add('cgq-plein'); } catch (e) { }
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -308,12 +313,13 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   });
 
   var PHASES = [['Mon jardin', ['adresse', 'terrain']], ['Mes envies', ['envie', 'style', 'entretien', 'photo']], ['Mon diagnostic', ['contact']]];
-  function entete() {
-    var p = AVANCE[S.etape] || 100, prev = precedente();
-    var fil = PHASES.map(function (ph) { var on = ph[1].indexOf(S.etape) >= 0; return '<span' + (on ? ' class="on"' : '') + '>' + (on ? '<b>' + ph[0] + '</b>' : ph[0]) + '</span>'; }).join('<span class="chev">›</span>');
-    return '<div class="haut"><div class="gauche"><a href="https://www.cover.green/" aria-label="Cover Green, accueil"><img src="' + LOGO + '" alt="Cover Green" width="90" height="40"></a>'
-      + '<button type="button" class="ret" data-a="retour"' + (prev || (S.etape === 'adresse' && (ACC || R.dataset.accueil)) ? '' : ' hidden') + '>Retour</button></div>'
-      + '<div class="fil">' + fil + '<div class="barre" role="progressbar" aria-label="Avancement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div></div><span></span></div>';
+  function entete(fin) {
+    var p = fin ? 100 : (AVANCE[S.etape] || 100), prev = fin ? null : precedente();
+    var ph = PHASES.map(function (x, i) { var on = fin ? i === 2 : x[1].indexOf(S.etape) >= 0; return '<span' + (on ? ' class="on"' : '') + '>' + x[0] + '</span>'; }).join('<span class="chev">›</span>');
+    var retour = prev || (!fin && S.etape === 'adresse' && (ACC || R.dataset.accueil));
+    return '<div class="haut"><a class="logo" href="https://www.cover.green/" aria-label="Cover Green, accueil"><img src="' + LOGO + '" alt="Cover Green" width="90" height="40"></a>'
+      + '<div class="fil"><div class="ph">' + ph + '</div><div class="barre" role="progressbar" aria-label="Avancement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div></div></div>'
+      + '<div class="nav"><button type="button" class="ret" data-a="retour"' + (retour ? '' : ' hidden') + '>Retour</button></div>';
   }
   function cartes(liste, choisi, cls) {
     return '<div class="cartes ' + (cls || '') + '">' + liste.map(function (o) {
@@ -330,7 +336,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var haut = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0;
     var LISTE = haut ? ENVIES.map(function (o) { return { embellir: ['embellir', 'Une terrasse dont je suis fier', 'Embellir et mettre en valeur'], sol: ['sol', 'Un sol agréable', 'Un vrai sol bois à la place du carrelage'] }[o[0]] || o; }) : ENVIES;
     var ap = (S.terrain && S.terrain.apercu) || {}, ville = S.adresse && S.adresse.city;
-    var info = !haut && ap.jardin_m2 ? '<p class="info"><i>☀</i><span>Votre jardin' + (ville ? ' à ' + h(ville) : '') + ' : <b>' + ap.jardin_m2 + ' m²' + (ap.jardin_cote ? ', surtout côté ' + h(ap.jardin_cote) : '') + '</b></span></p>' : '';
+    var info = !haut && ap.jardin_m2 ? '<p class="info"><i>☀</i><span>' + (ville ? h(ville) + ' : ' : '') + '<b>' + ap.jardin_m2 + ' m² de jardin' + (ap.jardin_cote ? ', côté ' + h(ap.jardin_cote) : '') + '</b></span></p>' : '';
     return info + '<h2>' + (haut ? 'Sur cette terrasse' : 'Dans ce jardin') + ', j\'aimerais surtout…</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
       + '<div class="cartes tuiles multi">' + LISTE.map(function (o) {
         var k = L.indexOf(o[0]);
@@ -375,7 +381,6 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       + '<p class="aide">' + (S.photo || S.photoUrl ? 'Plan, plantes, budget et votre ' + (haut ? 'terrasse' : 'jardin') + ' imaginé' + (haut ? 'e' : '') + ' : tout arrive par email dans 2 à 3 minutes.' : 'Plan, plantes et budget : tout arrive par email dans 2 minutes. Vous pourrez y ajouter une photo.') + '</p>'
       + '<label class="case"><input type="checkbox" id="cgq-opt"' + (S.optin ? ' checked' : '') + '><span>Recevoir aussi nos idées et offres jardin, 2 emails par mois au plus</span></label>'
       + '<div class="pile"><button type="submit" class="cta">Recevoir mon diagnostic</button></div></form>'
-      + '<p class="confiance"><b>Gratuit et sans engagement</b> - ★ 4,6/5 sur Trustpilot, plus de 300 avis</p>'
       + '<p class="mention">Vos réponses servent uniquement à préparer votre diagnostic et à vous l\'envoyer. Elles ne sont jamais revendues. Voir notre <a href="https://www.cover.green/politique-de-confidentialite/" target="_blank" rel="noopener">politique de confidentialité</a>.</p>';
   };
   E.attente = function () {
@@ -391,8 +396,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 
   function rendre() {
     if (S.id || S.envoi) {
-      M.innerHTML = '<div class="haut"><div class="gauche"><a href="https://www.cover.green/" aria-label="Cover Green, accueil"><img src="' + LOGO + '" alt="Cover Green" width="90" height="40"></a></div>'
-        + '<div class="fil">' + PHASES.map(function (ph, i) { return i === 2 ? '<span class="on"><b>' + ph[0] + '</b></span>' : '<span>' + ph[0] + '</span>'; }).join('<span class="chev">›</span>') + '<div class="barre"><i style="width:100%"></i></div></div><span></span></div>'
+      M.innerHTML = entete(true)
         + '<div class="fin">' + E.attente() + '</div>';
       attente(); bonus(); return;
     }

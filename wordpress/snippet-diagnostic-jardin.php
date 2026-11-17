@@ -60,11 +60,11 @@ add_shortcode('cg_diagnostic_accueil', function () {
 .cglp .entree{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(30,33,31,.08),0 8px 30px rgba(30,33,31,.06)}
 .cglp .apercu{position:relative;min-height:560px;background:#DDE3DF;overflow:hidden}
 .cglp .apercu .photo{position:absolute;inset:0;overflow:hidden}.cglp .apercu .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:42% 60%;display:block}
-.cglp .apercu .photo img.ap{opacity:0;animation:cglp-fondu 11s ease-in-out 1.2s infinite}
-@keyframes cglp-fondu{0%,12%{opacity:0}24%,88%{opacity:1}100%{opacity:0}}
-@keyframes cglp-fondu-inv{0%,12%{opacity:1}24%,88%{opacity:0}100%{opacity:1}}
+.cglp .apercu .photo img.ap{opacity:0;animation:cglp-fondu 9s ease-in-out infinite}
+@keyframes cglp-fondu{0%,8%{opacity:0}17%,90%{opacity:1}100%{opacity:0}}
+@keyframes cglp-fondu-inv{0%,8%{opacity:1}17%,90%{opacity:0}100%{opacity:1}}
 .cglp .apercu .tag{position:absolute;z-index:2;right:18px;bottom:18px;padding:6px 11px;border-radius:7px;background:rgba(30,33,31,.72);color:#fff;font-size:13px;font-weight:600}
-.cglp .apercu .t-av{animation:cglp-fondu-inv 11s ease-in-out 1.2s infinite}.cglp .apercu .t-ap{opacity:0;background:var(--vert);animation:cglp-fondu 11s ease-in-out 1.2s infinite}
+.cglp .apercu .t-av{animation:cglp-fondu-inv 9s ease-in-out infinite}.cglp .apercu .t-ap{opacity:0;background:var(--vert);animation:cglp-fondu 9s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.cglp .apercu .photo img.ap,.cglp .apercu .t-ap{animation:none;opacity:1}.cglp .apercu .t-av{display:none}}
 .cglp .apercu .v-pla .plus i{position:relative;display:block;width:50px;height:50px;margin:0 auto 5px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--brume)}
 .cglp .apercu .v-pla .plus img{width:100%;height:100%;margin:0;box-shadow:none;filter:blur(3px) saturate(.85);transform:scale(1.2)}
@@ -127,8 +127,8 @@ background:var(--orange);color:#fff;font:600 17px/1 var(--f);cursor:pointer;marg
 </style><div class="cglp" id="cglp-accueil">
 <div class="entree">
 <div class="apercu">
-<div class="photo"><img class="av" src="https://cover.green/wp-content/uploads/2026/11/diagnostic-jardin-avant.webp" width="1200" height="800" alt="Le jardin avant : une pelouse et une terrasse couverte derrière la maison" decoding="async">
-<img class="ap" src="https://cover.green/wp-content/uploads/2026/11/diagnostic-jardin-apres.webp" width="1200" height="800" alt="Le même jardin imaginé par notre outil : terrasse bois, pergola, clôture et massifs fleuris" decoding="async">
+<div class="photo"><img class="av" src="https://cover.green/wp-content/uploads/2026/11/diagnostic-jardin-avant.webp" width="1200" height="815" fetchpriority="high" alt="Le jardin avant : une pelouse et une terrasse couverte derrière la maison" decoding="async">
+<img class="ap" src="https://cover.green/wp-content/uploads/2026/11/diagnostic-jardin-apres.webp" width="1200" height="815" fetchpriority="high" alt="Le même jardin imaginé par notre outil : terrasse bois, pergola, clôture et massifs fleuris" decoding="async">
 <span class="tag t-av">Avant</span><span class="tag t-ap">Après, imaginé par notre outil</span></div>
 <div class="vu v-sol"><small>Votre soleil<span class="long">, heure par heure</span></small><strong>11 h <span>le 21 juin</span></strong><div class="sol"><i style="background:#f9db8f"></i><i style="background:#fcd180"></i><i style="background:#f8be6f"></i><i style="background:#f4ad5f"></i><i style="background:#f2a355"></i><i style="background:#f19c4f"></i><i style="background:#ef9649"></i><i style="background:#ee9043"></i><i style="background:#ed8b40"></i><i style="background:#ec873c"></i><i style="background:#ec853a"></i><i style="background:#eb8136"></i><i style="background:#eb8136"></i><i style="background:#ea7f34"></i><i style="background:#ea7c32"></i><i style="background:#ea7f34"></i><i style="background:#eb8338"></i><i style="background:#ec873c"></i><i style="background:#ed8b40"></i><i style="background:#ee9245"></i><i style="background:#ef9649"></i><i style="background:#ef9649"></i><i style="background:#ef9649"></i><i style="background:#ef9649"></i><i style="background:#ef9447"></i><i style="background:#ee9245"></i></div><div class="heures"><span>8 h</span><span>14 h</span><span>21 h</span></div></div>
 <div class="vu v-bud"><small>Votre budget<span class="long">, idée par idée</span></small><div><span>Terrasse bois, 32 m²</span><b>1 900 à 2 600 €</b></div><div><span>Pergola 3 x 3 m</span><b>1 100 à 1 400 €</b></div><div><span>Clôture, 22 m</span><b>2 500 à 3 100 €</b></div></div>

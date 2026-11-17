@@ -19,12 +19,12 @@ add_action( 'wp_footer', function () {
 .cgda a.cgda-carte{display:flex;flex-wrap:wrap;background:#EAF7E5;border-radius:16px;overflow:hidden;text-decoration:none;color:#1E211F}
 .cgda .cgda-photo{position:relative;flex:1 1 420px;min-height:300px;overflow:hidden}
 .cgda .cgda-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.cgda .cgda-photo img.cgda-ap{opacity:0;animation:cgda-fondu 10s ease-in-out 1s infinite}
+.cgda .cgda-photo img.cgda-ap{opacity:0;animation:cgda-fondu 9s ease-in-out infinite}
 .cgda .cgda-tag{position:absolute;left:16px;bottom:16px;padding:6px 11px;border-radius:7px;font-size:13px;font-weight:700;color:#fff;background:rgba(30,33,31,.72)}
-.cgda .cgda-tag.cgda-ap{opacity:0;background:#049E00;animation:cgda-fondu 10s ease-in-out 1s infinite}
-.cgda .cgda-tag.cgda-av{animation:cgda-fondu-inv 10s ease-in-out 1s infinite}
-@keyframes cgda-fondu{0%,15%{opacity:0}27%,88%{opacity:1}100%{opacity:0}}
-@keyframes cgda-fondu-inv{0%,15%{opacity:1}27%,88%{opacity:0}100%{opacity:1}}
+.cgda .cgda-tag.cgda-ap{opacity:0;background:#049E00;animation:cgda-fondu 9s ease-in-out infinite}
+.cgda .cgda-tag.cgda-av{animation:cgda-fondu-inv 9s ease-in-out infinite}
+@keyframes cgda-fondu{0%,8%{opacity:0}17%,90%{opacity:1}100%{opacity:0}}
+@keyframes cgda-fondu-inv{0%,8%{opacity:1}17%,90%{opacity:0}100%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.cgda .cgda-ap{animation:none!important;opacity:1!important}.cgda .cgda-tag.cgda-av{display:none}}
 .cgda .cgda-texte{flex:1 1 380px;padding:36px 36px 38px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:14px}
 .cgda .cgda-nouveau{font-size:14px;font-weight:700;color:#049E00}

@@ -347,7 +347,6 @@ def rendre(pid, d):
                    + '<p class="note" style="margin:4px 0 0">Mobilier, plantes et finitions : estimation indicative aux prix moyens des jardineries et enseignes de mobilier, à choisir où vous voulez.</p></div>')
     else:
         budget += '<p class="note" style="margin:0">Le mobilier, les plantes et le sol du visuel sont là pour l\'ambiance : ils ne sont pas compris.</p>'
-    budget += '<p class="confiance"><b>★ 4,6/5</b> sur Trustpilot, plus de 300 avis, plus de 3 000 clients équipés en kit</p>'
     planbloc = (f'''<div class="planrow"><div class="carte plan"><img src="/fichiers/{pid}/plan.png" alt="Votre parcelle vue du ciel"></div><div><h3>Votre parcelle vue du ciel</h3>
       <ul class="legend"><li><span class="sw" style="background:linear-gradient(90deg,#96acc4,#ffde8c,#e8742a)"></span>Heures de soleil le 21 juin, de l'ombre au plein soleil</li><li><span class="sw" style="background:#344239"></span>Votre maison</li><li><span class="sw" style="background:#d6dad2;border:1px solid #b0b6ac"></span>Maisons voisines, avec leur hauteur</li><li><span class="sw" style="background:#c43428;border-radius:50%"></span>Voisin qui a vue sur votre jardin</li></ul></div></div>''' if D.get('plan') else '')
     rep = {'ID': e(pid), 'VILLE': e(D.get('ville')), 'DATE': e(D.get('cree_le')), 'VISUEL': visuel, 'FAITS': faits, 'ATOUTS': atouts, 'PISTES': pistes,

@@ -27,11 +27,11 @@ CSS = '''<style>
 .cglp .entree{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(30,33,31,.08),0 8px 30px rgba(30,33,31,.06)}
 .cglp .apercu{position:relative;min-height:560px;background:#DDE3DF;overflow:hidden}
 .cglp .apercu .photo{position:absolute;inset:0;overflow:hidden}.cglp .apercu .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:42% 60%;display:block}
-.cglp .apercu .photo img.ap{opacity:0;animation:cglp-fondu 11s ease-in-out 1.2s infinite}
-@keyframes cglp-fondu{0%,12%{opacity:0}24%,88%{opacity:1}100%{opacity:0}}
-@keyframes cglp-fondu-inv{0%,12%{opacity:1}24%,88%{opacity:0}100%{opacity:1}}
+.cglp .apercu .photo img.ap{opacity:0;animation:cglp-fondu 9s ease-in-out infinite}
+@keyframes cglp-fondu{0%,8%{opacity:0}17%,90%{opacity:1}100%{opacity:0}}
+@keyframes cglp-fondu-inv{0%,8%{opacity:1}17%,90%{opacity:0}100%{opacity:1}}
 .cglp .apercu .tag{position:absolute;z-index:2;right:18px;bottom:18px;padding:6px 11px;border-radius:7px;background:rgba(30,33,31,.72);color:#fff;font-size:13px;font-weight:600}
-.cglp .apercu .t-av{animation:cglp-fondu-inv 11s ease-in-out 1.2s infinite}.cglp .apercu .t-ap{opacity:0;background:var(--vert);animation:cglp-fondu 11s ease-in-out 1.2s infinite}
+.cglp .apercu .t-av{animation:cglp-fondu-inv 9s ease-in-out infinite}.cglp .apercu .t-ap{opacity:0;background:var(--vert);animation:cglp-fondu 9s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.cglp .apercu .photo img.ap,.cglp .apercu .t-ap{animation:none;opacity:1}.cglp .apercu .t-av{display:none}}
 .cglp .apercu .v-pla .plus i{position:relative;display:block;width:50px;height:50px;margin:0 auto 5px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--brume)}
 .cglp .apercu .v-pla .plus img{width:100%;height:100%;margin:0;box-shadow:none;filter:blur(3px) saturate(.85);transform:scale(1.2)}
@@ -135,8 +135,8 @@ def rendre(base='', questionnaire='', api=''):
     return CSS + f'''<div class="cglp" id="cglp-accueil">
 <div class="entree">
 <div class="apercu">
-<div class="photo"><img class="av" src="{IMG}jardin-avant.webp" width="1200" height="800" alt="Le jardin avant : une pelouse et une terrasse couverte derrière la maison" decoding="async">
-<img class="ap" src="{IMG}jardin-apres.webp" width="1200" height="800" alt="Le même jardin imaginé par notre outil : terrasse bois, pergola, clôture et massifs fleuris" decoding="async">
+<div class="photo"><img class="av" src="{IMG}jardin-avant.webp" width="1200" height="815" fetchpriority="high" alt="Le jardin avant : une pelouse et une terrasse couverte derrière la maison" decoding="async">
+<img class="ap" src="{IMG}jardin-apres.webp" width="1200" height="815" fetchpriority="high" alt="Le même jardin imaginé par notre outil : terrasse bois, pergola, clôture et massifs fleuris" decoding="async">
 <span class="tag t-av">Avant</span><span class="tag t-ap">Après, imaginé par notre outil</span></div>
 <div class="vu v-sol"><small>Votre soleil<span class="long">, heure par heure</span></small><strong>{SOLEIL['heures']} h <span>le 21 juin</span></strong><div class="sol">{''.join(f'<i style="background:{couleur_soleil(f)}"></i>' for f in SOLEIL['profil'])}</div><div class="heures"><span>8 h</span><span>14 h</span><span>21 h</span></div></div>
 <div class="vu v-bud"><small>Votre budget<span class="long">, idée par idée</span></small>{''.join(f'<div><span>{e(n)}</span><b>{e(x)}</b></div>' for n, x in BUDGET)}</div>
