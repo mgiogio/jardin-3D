@@ -190,7 +190,7 @@ Son envie : {' ; puis '.join(BESOINS.get(x, x) for x in envies)}. Style souhait�
 Produits Cover Green à intégrer (donne un placement pour chacun) : {', '.join(PROD[p]['nom'] for p in produits)}.
 Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans tiret cadratin :
 {{"atouts": ["2 ou 3 atouts réels visibles sur la photo"], "pistes": ["2 ou 3 améliorations concrètes, formulées positivement"],
- "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo, décollée de la façade si une fenêtre est derrière (ou null)", "terrasse": "où poser la terrasse bois sur cette photo, sur la zone de vie au sol, en une phrase (ou null)"}},
+ "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo : autoportante, dans le jardin, à au moins 2 m de la façade, jamais sous un toit, un auvent ou un porche existant, ni devant une fenêtre ou une porte (ou null)", "terrasse": "où poser la terrasse bois sur cette photo, sur la zone de vie au sol, en une phrase (ou null)"}},
  "cloture_longueur_m": nombre estimé (entre 4 et 30), "a_garder": ["seulement les éléments fixes ou plantés à conserver (maison, arbres, arbustes, murets, escaliers, accès) : le mobilier, les tapis et la déco peuvent être remplacés"], "a_retirer": ["encombrants ou objets à faire disparaître (poubelles, bâches, vieux mobilier)"],
  "sol_actuel": "dalle_ou_terrasse" ou "pelouse" ou "terre_ou_gravier" ou "mixte" (le sol de la zone de vie visible),
  "surface_sol_m2": surface estimée de la zone où l'on vivrait dehors (entre 8 et 40),
@@ -212,8 +212,10 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
                        + ', '.join(f"{x['nom']} ({x['latin']})" for x in (data.get('plantes') or {}).get('plantes', [])) + " ; aucune autre espèce. " if (data.get('plantes') or {}).get('plantes') else '')
                     + (f"Retire : {', '.join(lecture.get('a_retirer') or [])}. " if lecture.get('a_retirer') else '')
                     + (f"Conserve : {', '.join(lecture.get('a_garder') or [])}. " if lecture.get('a_garder') else '')
-                    + "Les passages et l'accès à la maison restent libres : aucun poteau, aucune poutre ni clôture ne passe devant une fenêtre ou une porte, les poteaux se posent à côté des ouvertures. Photo réaliste de smartphone, aucun texte.")
-        retour = ''
+                    + "Les passages et l'accès à la maison restent libres : aucun poteau, aucune poutre ni clôture ne passe devant une fenêtre ou une porte, les poteaux se posent à côté des ouvertures. "
+                    + ("La pergola est autoportante et posée dans le jardin, à au moins 2 m de la façade : jamais sous un toit, un auvent ou un porche existant, jamais contre une baie vitrée. " if 'pergola' in noms else '')
+                    + "Garde telles quelles les terrasses, marches et murets existants de la maison. Photo réaliste de smartphone, aucun texte.")
+        retour = ''; meilleur = None
         for essai in range(3):
             editer(consigne + retour, [im] + refs, f'{dossier}/visuel.jpg')
             ctl = claude("""Contrôle qualité d'un visuel d'aménagement pour un client. Image 1 : photo d'origine. Image 2 : visuel proposé. Images suivantes : nos vrais produits (références).
@@ -224,8 +226,15 @@ Liste uniquement les "defauts" GRAVES (qui empêchent de montrer l'image au clie
             data['controle'] = ctl
             if ctl['ressemblance'] >= 7 and ctl['maison'] >= 7 and ctl['credibilite'] >= 7 and not ctl.get('defauts'):
                 data['visuel'] = 'visuel.jpg'; break
+            notes = [ctl.get(k) or 0 for k in ('ressemblance', 'maison', 'credibilite')]
+            if meilleur is None or (min(notes), sum(notes)) > meilleur[0]: meilleur = ((min(notes), sum(notes)), essai, ctl)
             os.replace(f'{dossier}/visuel.jpg', f'{dossier}/visuel_refuse_{essai}.jpg')
             retour = "\nCorrige ces défauts de la première tentative : " + ' ; '.join(ctl.get('defauts') or ['produits pas assez fidèles aux références'])
+        # 3 essais refusés : on garde le meilleur si ses trois notes atteignent 7, plutôt que de laisser le client sans visuel
+        if not data['visuel'] and meilleur and meilleur[0][0] >= 7:
+            import shutil
+            shutil.copyfile(f'{dossier}/visuel_refuse_{meilleur[1]}.jpg', f'{dossier}/visuel.jpg')
+            data['visuel'] = 'visuel.jpg'; data['controle'] = dict(meilleur[2], secours=True)
         etat['etapes']['visuel'] = round(time.time() - t0); maj()
     r100 = lambda n: int(round(n / 100.0) * 100)
     # 4b. estimation du reste du visuel (mobilier, plantes, bacs, sol, éclairage), hors produits Cover Green

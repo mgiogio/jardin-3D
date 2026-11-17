@@ -160,7 +160,11 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     '.cgq .msg{max-width:620px;margin:8px auto 0}',
     '.cgq .sug{max-width:620px;margin:8px auto 0;text-align:left;background:#fff;box-shadow:0 8px 24px rgba(30,33,31,.10)}',
     '.cgq .geo{display:block;margin:14px auto 0}',
+    // le bouton pour continuer reste toujours visible en bas de l'écran : on ne défile jamais pour aller cliquer sur « Continuer »
     '.cgq .pile{max-width:380px;margin:30px auto 0}',
+    '.cgq .ecran .pile{position:sticky;bottom:0;z-index:6;max-width:none;justify-items:center;margin-top:18px;padding:18px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(244,246,247,0),#F4F6F7 20px)}',
+    '.cgq .ecran .pile>*{width:100%;max-width:380px}.cgq .ecran .pile>.lien{width:auto}',
+    '.cgq .ecran .pile[hidden]{display:none}',
     '.cgq .cta{font-size:16px}.cgq .cta[disabled]{opacity:1;background:#F4F6F7;border-color:#F4F6F7;color:#9AA1A6}',
     '.cgq .cta.sec{background:#fff}',
     '.cgq .cartes{max-width:680px;margin:0 auto}',
@@ -170,15 +174,17 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     '.cgq .tuiles .c .ic{width:52px;height:52px;background:none;color:var(--txt)}.cgq .tuiles .c .ic svg{width:44px;height:44px}',
     '.cgq .tuiles .c.on .ic{background:none}.cgq .tuiles .c b{font-size:16px}.cgq .tuiles .c small{font-size:13px}',
     '.cgq .carte,.cgq .chiffres,.cgq .zone,.cgq .apercu,.cgq .conseils{max-width:640px;margin-left:auto;margin-right:auto}',
+    '.cgq .carte,.cgq .apercu{max-width:min(640px,calc(42vh * 4 / 3))}',
+    '.cgq .chiffres{max-width:min(640px,max(320px,calc(42vh * 4 / 3)))}',
     '.cgq .chiffres div{background:#fff;text-align:left}.cgq .zone{background:#fff}',
     '.cgq .conseils{text-align:left;width:max-content;max-width:100%}',
     '.cgq .case{max-width:560px;margin:18px auto 0;text-align:left}',
     '.cgq .confiance,.cgq .mention{max-width:560px;margin-left:auto;margin-right:auto}',
-    '.cgq .etapes{max-width:440px;margin:22px auto;text-align:left}',
+    '.cgq .etapes{max-width:440px;margin:22px auto;text-align:left}.cgq .fin{max-width:780px;margin:0 auto;padding-top:clamp(16px,5vh,56px)}',
     '.cgq .apercu-fin,.cgq .merci,.cgq .erreur{max-width:640px;margin-left:auto;margin-right:auto;text-align:left}',
     '.cgq .bonus{max-width:640px;margin-left:auto;margin-right:auto}.cgq .bonus h3{font-size:22px}.cgq .bonus .points{justify-content:center}',
     '.cgq .apercu-fin{background:#fff;border-color:#fff}',
-    '@media (max-width:640px){.cgq{padding:0 16px 8px}.cgq .haut{grid-template-columns:auto 1fr;padding-top:12px}.cgq .gauche img{height:34px}.cgq .fil{justify-self:end;text-align:right}',
+    '@media (max-width:640px){.cgq{padding:0 16px 8px}.cgq .ecran{padding-top:14px}.cgq .sous{margin:10px auto 16px}.cgq .chiffres div{padding:8px 10px}.cgq .info{margin-bottom:8px;font-size:13px}.cgq .zone{min-height:150px}.cgq .haut{grid-template-columns:auto 1fr;padding-top:12px}.cgq .gauche img{height:34px}.cgq .fil{justify-self:end;text-align:right}',
     '.cgq .fil span:not(.on),.cgq .fil .chev{display:none}.cgq .fil .barre{width:120px;margin:8px 0 0 auto}.cgq .cartes.tuiles{grid-template-columns:1fr 1fr;gap:10px}.cgq .tuiles .c{min-height:0;padding:14px 8px 12px;gap:6px}.cgq .tuiles .c small{display:none}.cgq .tuiles .c .ic{width:40px;height:40px}.cgq .tuiles .c .ic svg{width:34px;height:34px}}'
   ].join('');
   try { document.documentElement.classList.add('cgq-plein'); } catch (e) { }
@@ -384,7 +390,12 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   };
 
   function rendre() {
-    if (S.id || S.envoi) { M.innerHTML = E.attente(); attente(); bonus(); return; }
+    if (S.id || S.envoi) {
+      M.innerHTML = '<div class="haut"><div class="gauche"><a href="https://www.cover.green/" aria-label="Cover Green, accueil"><img src="' + LOGO + '" alt="Cover Green" width="90" height="40"></a></div>'
+        + '<div class="fil">' + PHASES.map(function (ph, i) { return i === 2 ? '<span class="on"><b>' + ph[0] + '</b></span>' : '<span>' + ph[0] + '</span>'; }).join('<span class="chev">›</span>') + '<div class="barre"><i style="width:100%"></i></div></div><span></span></div>'
+        + '<div class="fin">' + E.attente() + '</div>';
+      attente(); bonus(); return;
+    }
     var p = AVANCE[S.etape] || 100;
     M.innerHTML = entete() + '<div class="ecran">' + E[S.etape]() + '</div>';
     caler();
