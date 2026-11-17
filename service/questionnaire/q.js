@@ -133,10 +133,10 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 .cgq .erreur{background:var(--orange-pale);border-radius:10px;padding:14px 16px;margin:0 0 14px;font-size:15px}\
 @media (min-width:600px){.cgq h2{font-size:32px}.cgq .cartes.deux{grid-template-columns:1fr 1fr}.cgq .cartes.deux .c{min-height:84px}}\
 @media (prefers-reduced-motion:reduce){.cgq .ecran{animation:none}.cgq .barre i{transition:none}}';
-  // plein écran façon conversation : fond Vert brume de la charte, sans l'en-tête ni le pied de page du site,
+  // plein écran façon conversation : fond Gris clair de la charte, sans l'en-tête ni le pied de page du site,
   // une grande question centrée par écran, champs soulignés, fil des étapes en haut et les plantes en bas
   css += [
-    'html.cgq-plein,html.cgq-plein body{background:#EAF7E5!important}',
+    'html.cgq-plein,html.cgq-plein body{background:#F4F6F7!important}',
     'html.cgq-plein #cgh,html.cgq-plein .elementor-1545{display:none!important}',
     '.cgq{max-width:960px;padding:0 20px 8px;text-align:center}',
     '.cgq .haut{position:relative;top:auto;background:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:18px 0 6px}',
