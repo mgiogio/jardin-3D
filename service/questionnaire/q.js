@@ -13,6 +13,7 @@
   var CLE = 'cg_diag_v1';
   var ACC = null;
   var VERT = '#049E00';
+  var LOGO = 'https://cover.green/wp-content/uploads/cg-header/1.0.0/cover-green-logo-charte.svg';
 
   /* ---------- styles ---------- */
   var css = '\
@@ -132,6 +133,55 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
 .cgq .erreur{background:var(--orange-pale);border-radius:10px;padding:14px 16px;margin:0 0 14px;font-size:15px}\
 @media (min-width:600px){.cgq h2{font-size:32px}.cgq .cartes.deux{grid-template-columns:1fr 1fr}.cgq .cartes.deux .c{min-height:84px}}\
 @media (prefers-reduced-motion:reduce){.cgq .ecran{animation:none}.cgq .barre i{transition:none}}';
+  // plein écran façon conversation : fond Vert brume de la charte, sans l'en-tête ni le pied de page du site,
+  // une grande question centrée par écran, champs soulignés, fil des étapes en haut et les plantes en bas
+  css += [
+    'html.cgq-plein,html.cgq-plein body{background:#EAF7E5!important}',
+    'html.cgq-plein #cgh,html.cgq-plein .elementor-1545{display:none!important}',
+    '.cgq{max-width:960px;padding:0 20px 8px;text-align:center}',
+    '.cgq .haut{position:relative;top:auto;background:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:18px 0 6px}',
+    '.cgq .gauche{display:flex;align-items:center;gap:14px;justify-self:start}',
+    '.cgq .gauche a{display:block;line-height:0}.cgq .gauche img{height:40px;width:auto;display:block}',
+    '.cgq .ret{min-width:0;padding:8px 2px;font-size:15px}.cgq .ret:before{content:"‹ "}',
+    '.cgq .fil{font-size:14px;color:var(--muted);white-space:nowrap}.cgq .fil b{color:var(--txt);font-weight:700}.cgq .fil .chev{margin:0 8px;color:#9AA1A6}',
+    '.cgq .fil .barre{width:min(300px,56vw);height:5px;margin:10px auto 0;background:#fff;flex:none}',
+    '.cgq .reste,.cgq .bas{display:none}',
+    '.cgq .ecran{max-width:880px;margin:0 auto;padding-top:clamp(20px,6vh,64px)}',
+    '@media (min-width:900px){.cgq .ecran .cartes.tuiles{grid-template-columns:repeat(5,minmax(0,1fr))}}',
+    '.cgq h2{font:800 clamp(28px,4.4vw,44px)/1.15 var(--f);letter-spacing:0;margin:6px auto 0;max-width:760px}',
+    '.cgq .sous{max-width:560px;margin:14px auto 26px}',
+    '.cgq .aide{max-width:520px;margin:16px auto 0;font-size:15px;color:var(--muted)}',
+    '.cgq .info{display:inline-flex;align-items:center;gap:10px;margin:0 auto 14px;background:#fff;border-radius:999px;padding:8px 16px 8px 9px;font-size:14px;color:var(--muted);text-align:left}',
+    '.cgq .info i{flex:none;width:26px;height:26px;border-radius:50%;background:var(--brume);display:grid;place-items:center;color:var(--vert);font-style:normal}.cgq .info b{color:var(--txt)}',
+    '.cgq label.ch{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}',
+    '.cgq input.t{display:block;width:100%;max-width:620px;margin:22px auto 0;height:auto;border:0;border-bottom:3px solid var(--vert);border-radius:0;background:transparent;text-align:center;font:600 clamp(22px,3.2vw,32px)/1.3 var(--f);color:var(--vert);padding:6px 4px 8px;box-shadow:none}',
+    '.cgq input.t::placeholder{color:#9AA1A6;font-weight:500;opacity:1}',
+    '.cgq input.t:focus{box-shadow:none;border-bottom-color:var(--vert)}.cgq input.t.err{border-bottom-color:#C62828}',
+    '.cgq .msg{max-width:620px;margin:8px auto 0}',
+    '.cgq .sug{max-width:620px;margin:8px auto 0;text-align:left;background:#fff;box-shadow:0 8px 24px rgba(30,33,31,.10)}',
+    '.cgq .geo{display:block;margin:14px auto 0}',
+    '.cgq .pile{max-width:380px;margin:30px auto 0}',
+    '.cgq .cta{font-size:16px}.cgq .cta[disabled]{opacity:1;background:#F4F6F7;border-color:#F4F6F7;color:#9AA1A6}',
+    '.cgq .cta.sec{background:#fff}',
+    '.cgq .cartes{max-width:680px;margin:0 auto}',
+    '.cgq .c{border-color:#fff;border-width:2px}.cgq .c.on{box-shadow:none}',
+    '.cgq .cartes.tuiles{max-width:none;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}',
+    '.cgq .tuiles .c{flex-direction:column;justify-content:flex-start;text-align:center;gap:8px;padding:22px 12px 18px;min-height:156px;border-radius:16px}',
+    '.cgq .tuiles .c .ic{width:52px;height:52px;background:none;color:var(--txt)}.cgq .tuiles .c .ic svg{width:44px;height:44px}',
+    '.cgq .tuiles .c.on .ic{background:none}.cgq .tuiles .c b{font-size:16px}.cgq .tuiles .c small{font-size:13px}',
+    '.cgq .carte,.cgq .chiffres,.cgq .zone,.cgq .apercu,.cgq .conseils{max-width:640px;margin-left:auto;margin-right:auto}',
+    '.cgq .chiffres div{background:#fff;text-align:left}.cgq .zone{background:#fff}',
+    '.cgq .conseils{text-align:left;width:max-content;max-width:100%}',
+    '.cgq .case{max-width:560px;margin:18px auto 0;text-align:left}',
+    '.cgq .confiance,.cgq .mention{max-width:560px;margin-left:auto;margin-right:auto}',
+    '.cgq .etapes{max-width:440px;margin:22px auto;text-align:left}',
+    '.cgq .apercu-fin,.cgq .merci,.cgq .erreur{max-width:640px;margin-left:auto;margin-right:auto;text-align:left}',
+    '.cgq .bonus{max-width:640px;margin-left:auto;margin-right:auto}.cgq .bonus h3{font-size:22px}.cgq .bonus .points{justify-content:center}',
+    '.cgq .apercu-fin{background:#fff;border-color:#fff}',
+    '@media (max-width:640px){.cgq{padding:0 16px 8px}.cgq .haut{grid-template-columns:auto 1fr;padding-top:12px}.cgq .gauche img{height:34px}.cgq .fil{justify-self:end;text-align:right}',
+    '.cgq .fil span:not(.on),.cgq .fil .chev{display:none}.cgq .fil .barre{width:120px;margin:8px 0 0 auto}.cgq .cartes.tuiles{grid-template-columns:1fr 1fr;gap:10px}.cgq .tuiles .c{min-height:0;padding:14px 8px 12px;gap:6px}.cgq .tuiles .c small{display:none}.cgq .tuiles .c .ic{width:40px;height:40px}.cgq .tuiles .c .ic svg{width:34px;height:34px}}'
+  ].join('');
+  try { document.documentElement.classList.add('cgq-plein'); } catch (e) { }
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   /* ---------- petits outils ---------- */
@@ -162,9 +212,9 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     ['champetre', 'Champêtre', 'Fleurs généreuses, bois brut', ['#B85C7A', '#6E8B3D', '#E4C46A', '#A3784E']]
   ];
   var ENTRETIEN = [
-    ['peu', 'Le moins possible', 'Des plantes qui se débrouillent seules'],
-    ['moyen', 'Un peu le week-end', 'Tailler une ou deux fois par an, ça me va'],
-    ['passion', 'J\'adore jardiner', 'Plus il y a de fleurs, plus je suis content']
+    ['peu', 'Très peu de temps', 'Des plantes qui se débrouillent seules'],
+    ['moyen', 'Un peu de temps le week-end', 'Tailler une ou deux fois par an, ça me va'],
+    ['passion', 'La passion du jardin', 'Plus il y a de fleurs, plus je suis content']
   ];
   // l'adresse d'abord (souvent saisie sur la page d'accueil) : la récompense arrive tout de suite, avec la vue de son terrain
   var ETAPES = ['adresse', 'terrain', 'envie', 'style', 'entretien', 'photo', 'contact'];
@@ -251,10 +301,13 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     else if (S.etape !== 'adresse') aller(precedente() || 'adresse', true);
   });
 
+  var PHASES = [['Mon jardin', ['adresse', 'terrain']], ['Mes envies', ['envie', 'style', 'entretien', 'photo']], ['Mon diagnostic', ['contact']]];
   function entete() {
     var p = AVANCE[S.etape] || 100, prev = precedente();
-    return '<div class="haut"><button type="button" class="ret" data-a="retour"' + (prev || (S.etape === 'adresse' && (ACC || R.dataset.accueil)) ? '' : ' hidden') + '>Retour</button>'
-      + '<span class="reste">' + (RESTE[S.etape] || '') + '</span></div>';
+    var fil = PHASES.map(function (ph) { var on = ph[1].indexOf(S.etape) >= 0; return '<span' + (on ? ' class="on"' : '') + '>' + (on ? '<b>' + ph[0] + '</b>' : ph[0]) + '</span>'; }).join('<span class="chev">›</span>');
+    return '<div class="haut"><div class="gauche"><a href="https://www.cover.green/" aria-label="Cover Green, accueil"><img src="' + LOGO + '" alt="Cover Green" width="90" height="40"></a>'
+      + '<button type="button" class="ret" data-a="retour"' + (prev || (S.etape === 'adresse' && (ACC || R.dataset.accueil)) ? '' : ' hidden') + '>Retour</button></div>'
+      + '<div class="fil">' + fil + '<div class="barre" role="progressbar" aria-label="Avancement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div></div><span></span></div>';
   }
   function cartes(liste, choisi, cls) {
     return '<div class="cartes ' + (cls || '') + '">' + liste.map(function (o) {
@@ -270,8 +323,10 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var L = S.envies || [];
     var haut = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0;
     var LISTE = haut ? ENVIES.map(function (o) { return { embellir: ['embellir', 'Une terrasse dont je suis fier', 'Embellir et mettre en valeur'], sol: ['sol', 'Un sol agréable', 'Un vrai sol bois à la place du carrelage'] }[o[0]] || o; }) : ENVIES;
-    return '<h2>Qu\'est-ce qui vous ferait plaisir ' + (haut ? 'sur cette terrasse' : 'dans ce jardin') + ' ?</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
-      + '<div class="cartes deux multi">' + LISTE.map(function (o) {
+    var ap = (S.terrain && S.terrain.apercu) || {}, ville = S.adresse && S.adresse.city;
+    var info = !haut && ap.jardin_m2 ? '<p class="info"><i>☀</i><span>Votre jardin' + (ville ? ' à ' + h(ville) : '') + ' : <b>' + ap.jardin_m2 + ' m²' + (ap.jardin_cote ? ', surtout côté ' + h(ap.jardin_cote) : '') + '</b></span></p>' : '';
+    return info + '<h2>' + (haut ? 'Sur cette terrasse' : 'Dans ce jardin') + ', j\'aimerais surtout…</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
+      + '<div class="cartes tuiles multi">' + LISTE.map(function (o) {
         var k = L.indexOf(o[0]);
         return '<button type="button" class="c' + (k >= 0 ? ' on' : '') + '" data-envie="' + o[0] + '" aria-pressed="' + (k >= 0) + '">'
           + '<span class="ic" aria-hidden="true">' + (k >= 0 ? '<span class="rang">' + (k + 1) + '</span>' : ICO[o[0]]) + '</span>'
@@ -279,12 +334,13 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       }).join('') + '</div>'
       + '<div class="pile"><button type="button" class="cta" data-a="envie-ok"' + (L.length ? '' : ' disabled') + '>' + (L.length > 1 ? 'Continuer avec ces ' + L.length + ' envies' : 'Continuer') + '</button></div>';
   };
-  E.style = function () { return '<h2>Quel style vous ressemble ?</h2><p class="sous">Nous habillerons votre idée d\'aménagement dans ce style.</p>' + cartes(STYLES, S.style, 'deux'); };
-  E.entretien = function () { return '<h2>Et côté entretien des plantes ?</h2><p class="sous">Nous choisirons des plantes adaptées à votre climat et à votre temps.</p>' + cartes(ENTRETIEN, S.entretien); };
+  E.style = function () { return '<h2>Mon style, c\'est plutôt…</h2><p class="sous">Nous habillerons votre aménagement dans ce style.</p>' + cartes(STYLES, S.style, 'deux'); };
+  E.entretien = function () { return '<h2>Pour l\'entretien des plantes, j\'ai…</h2><p class="sous">Nous choisirons des plantes adaptées à votre climat et à votre temps.</p>' + cartes(ENTRETIEN, S.entretien); };
   E.adresse = function () {
-    return '<h2>Où se trouve ce jardin ?</h2><p class="sous">Avec l\'adresse, nous calculons le soleil de chaque coin du jardin et les vues des voisins.</p>'
-      + '<label class="ch" for="cgq-adr">Adresse</label><input id="cgq-adr" class="t" type="text" autocomplete="street-address" placeholder="Ex. 12 rue des Lilas, Nantes" value="' + h(S.adresse ? S.adresse.label : '') + '" aria-autocomplete="list" aria-controls="cgq-sug">'
+    return '<h2>Mon jardin se trouve</h2>'
+      + '<label class="ch" for="cgq-adr">Adresse de votre jardin</label><input id="cgq-adr" class="t" type="text" autocomplete="street-address" placeholder="12 rue des Lilas, Nantes" value="' + h(S.adresse ? S.adresse.label : '') + '" aria-autocomplete="list" aria-controls="cgq-sug">'
       + '<ul class="sug" id="cgq-sug" role="listbox" hidden></ul><p class="msg" id="cgq-amsg" role="status"></p>'
+      + '<p class="aide">Pour calculer le soleil de chaque coin du jardin et les vues des voisins. Rien d\'autre.</p>'
       + ('geolocation' in navigator ? '<button type="button" class="geo" data-a="geo">Je suis dans le jardin : utiliser ma position</button>' : '')
       + (S.adresse ? '<div class="pile"><button type="button" class="cta" data-a="adresse-ok">Continuer</button></div>' : '');
   };
@@ -296,7 +352,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   };
   E.photo = function () {
     var a = S.photoUrl;
-    return '<h2>Une photo de votre jardin</h2><p class="sous">Nous y placerons nos produits pour vous montrer le résultat chez vous.</p>'
+    var haut = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0;
+    return '<h2>Voici ' + (haut ? 'ma terrasse' : 'mon jardin') + ' en photo</h2><p class="sous">Nous y placerons nos produits pour vous montrer le résultat chez vous.</p>'
       + (a ? '<div class="apercu"><img src="' + a + '" alt="Votre photo"><button type="button" data-a="photo-choisir">Changer</button></div>'
         : '<button type="button" class="zone" data-a="photo-choisir">' + ICO.photo + '<b>Prendre ou choisir une photo</b><small>' + (FIN ? 'Glissez-la ici, ou cliquez pour la choisir' : 'Depuis votre téléphone ou votre galerie') + '</small></button>'
         + '<ul class="conseils"><li>Prise depuis la maison ou la terrasse</li><li>De jour, téléphone à l\'horizontale</li><li>Le plus de jardin possible dans le cadre</li></ul>')
@@ -305,10 +362,11 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       + '<button type="button" class="lien" data-a="photo-sans">Je n\'ai pas de photo sous la main</button></div>';
   };
   E.contact = function () {
-    var lieuNom = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0 ? 'Votre terrasse' : 'Votre terrain';
-    var rec = [S.adresse && S.adresse.city ? lieuNom + ' à ' + S.adresse.city : lieuNom, (S.envies || []).length > 1 ? 'Vos ' + S.envies.length + ' envies' : 'Votre envie', 'Votre style', S.photo || S.photoUrl ? 'Votre photo' : null].filter(Boolean);
-    return '<h2>Dernière étape : où vous envoyer votre diagnostic ?</h2><ul class="recap">' + rec.map(function (t) { return '<li>' + h(t) + '</li>'; }).join('') + '</ul><p class="sous">' + (S.photo || S.photoUrl ? 'Tout est prêt. Votre page projet arrive par email dans 2 à 3 minutes.' : 'Tout est prêt. Votre page projet arrive par email dans 2 minutes, vous pourrez y ajouter une photo.') + '</p>'
-      + '<form id="cgq-form" novalidate><label class="ch" for="cgq-mail">Votre email</label><input id="cgq-mail" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Ex. marie.dupont@gmail.com" value="' + h(S.email) + '" required><p class="msg" id="cgq-mmsg" role="status"></p>'
+    var haut = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0, ap = (S.terrain && S.terrain.apercu) || {};
+    var quoi = haut ? 'votre terrasse' : 'votre jardin' + (ap.jardin_m2 ? ' de ' + ap.jardin_m2 + ' m²' : '');
+    return '<h2>J\'envoie le diagnostic de ' + quoi + ' à…</h2>'
+      + '<form id="cgq-form" novalidate><label class="ch" for="cgq-mail">Votre email</label><input id="cgq-mail" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="votre adresse email" value="' + h(S.email) + '" required><p class="msg" id="cgq-mmsg" role="status"></p>'
+      + '<p class="aide">' + (S.photo || S.photoUrl ? 'Plan, plantes, budget et votre ' + (haut ? 'terrasse' : 'jardin') + ' imaginé' + (haut ? 'e' : '') + ' : tout arrive par email dans 2 à 3 minutes.' : 'Plan, plantes et budget : tout arrive par email dans 2 minutes. Vous pourrez y ajouter une photo.') + '</p>'
       + '<label class="case"><input type="checkbox" id="cgq-opt"' + (S.optin ? ' checked' : '') + '><span>Recevoir aussi nos idées et offres jardin, 2 emails par mois au plus</span></label>'
       + '<div class="pile"><button type="submit" class="cta">Recevoir mon diagnostic</button></div></form>'
       + '<p class="confiance"><b>Gratuit et sans engagement</b> - ★ 4,6/5 sur Trustpilot, plus de 300 avis</p>'
@@ -328,8 +386,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   function rendre() {
     if (S.id || S.envoi) { M.innerHTML = E.attente(); attente(); bonus(); return; }
     var p = AVANCE[S.etape] || 100;
-    M.innerHTML = entete() + '<div class="ecran">' + E[S.etape]() + '</div>'
-      + '<div class="bas"><div class="barre" role="progressbar" aria-label="Avancement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div></div>';
+    M.innerHTML = entete() + '<div class="ecran">' + E[S.etape]() + '</div>';
     caler();
     if (S.etape === 'adresse') adresse();
     if (S.etape === 'terrain') terrain();
@@ -762,8 +819,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (!S.id) { B.innerHTML = ''; return; }
     if (!('prenom' in S.infos)) {
       // le prénom n'est plus demandé avant l'envoi : on le demande ici, pendant l'attente, pour personnaliser l'email et la page
-      B.innerHTML = '<h3>Comment vous appelle-t-on ?</h3><p class="sous" style="margin-bottom:12px">Pour personnaliser votre diagnostic et l\'email qui l\'accompagne.</p>'
-        + '<form id="cgq-fp" novalidate><label class="ch" for="cgq-pre">Prénom</label><input id="cgq-pre" class="t" type="text" autocomplete="given-name" autocapitalize="words" enterkeyhint="done">'
+      B.innerHTML = '<h3>En attendant : je m\'appelle…</h3><p class="sous" style="margin-bottom:0">Pour personnaliser votre diagnostic et l\'email qui l\'accompagne.</p>'
+        + '<form id="cgq-fp" novalidate><label class="ch" for="cgq-pre">Prénom</label><input id="cgq-pre" class="t" type="text" autocomplete="given-name" autocapitalize="words" enterkeyhint="done" placeholder="votre prénom">'
         + '<div class="pile"><button type="submit" class="cta sec">Valider</button><button type="button" class="lien" data-a="info-passer" data-q="prenom">Passer</button></div></form>';
       B.querySelector('#cgq-fp').onsubmit = function (e) {
         e.preventDefault(); var I = B.querySelector('#cgq-pre'), v = I.value.trim().slice(0, 60);
@@ -812,7 +869,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   function accueil(voir) {
     if (!ACC) return;
     ACC.hidden = !voir; M.hidden = !!voir;
-    R.style.background = voir ? '#F4F6F7' : '';        // même fond gris que la page d'entrée, jusqu'aux plantes du bas
+    R.style.background = '';
     setTimeout(etirer, 0);
   }
   function commencer() {
