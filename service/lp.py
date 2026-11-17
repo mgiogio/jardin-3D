@@ -20,10 +20,24 @@ CSS = '''<style>
 .cglp .apercu .trait:after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff no-repeat center/24px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E211F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l-6 6 6 6M15 6l6 6-6 6'/%3E%3C/svg%3E");box-shadow:0 2px 10px rgba(0,0,0,.3)}
 .cglp .apercu .tag{position:absolute;top:16px;padding:5px 10px;border-radius:6px;background:rgba(30,33,31,.62);color:#fff;font-size:13px;font-weight:600;pointer-events:none;transition:opacity .2s}
 .cglp .apercu .t-av{left:16px}.cglp .apercu .t-ap{right:16px;background:var(--vert)}
-.cglp .apercu .bas{position:absolute;left:0;right:0;bottom:0;padding:48px 20px 18px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.62));color:#fff;text-align:left;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.45)}
-.cglp .apercu .bas b{display:block;font-size:16px;line-height:1.3;font-weight:700}
-.cglp .apercu .bas span{display:inline-block;text-shadow:none;margin-top:8px;padding:5px 10px;border-radius:6px;background:#fff;color:var(--txt);font-size:14px}
-.cglp .apercu .bas span strong{color:var(--orange)}
+.cglp .apercu .bas{position:absolute;left:0;bottom:0;max-width:64%;padding:40px 18px 16px;color:#fff;text-align:left;pointer-events:none;font-size:15px;line-height:1.3;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.cglp .apercu:before{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.5));pointer-events:none;z-index:1}
+.cglp .apercu .bas,.cglp .apercu .trait,.cglp .apercu .tag{z-index:2}.cglp .apercu .pt{z-index:3}.cglp .apercu .fiche{z-index:4}
+.cglp .apercu .pt{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:0;padding:0;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;opacity:0;transform:scale(.3);transition:opacity .35s,transform .35s}
+.cglp .apercu .pt:before{content:"";position:absolute;inset:9px;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.4);transition:background .2s}
+.cglp .apercu .pt:after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid #fff;animation:cglp-pouls 2s ease-out infinite}
+@keyframes cglp-pouls{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.cglp .apercu.points .pt{opacity:1;transform:none}.cglp .apercu .pt.cache{opacity:0;pointer-events:none}
+.cglp .apercu .pt.on:before{background:var(--orange)}.cglp .apercu .pt:focus-visible{outline:3px solid var(--vert);outline-offset:2px}
+.cglp .apercu .fiche{position:absolute;width:256px;background:#fff;border-radius:10px;padding:12px 14px 13px;box-shadow:0 10px 28px rgba(0,0,0,.28);font-size:13.5px;line-height:1.4;color:var(--muted);text-align:left;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;pointer-events:none;cursor:default}
+.cglp .apercu .fiche.on{opacity:1;transform:none}
+.cglp .apercu .fiche b{display:block;font-size:15px;line-height:1.3;color:var(--txt);margin-bottom:8px}
+.cglp .apercu .fiche p{margin:8px 0 0}
+.cglp .apercu .fiche .prix{margin-top:8px;color:var(--txt);font-weight:600}.cglp .apercu .fiche .prix strong{color:var(--orange)}
+.cglp .apercu .sol{display:flex;gap:1px;height:10px}.cglp .apercu .sol i{flex:1;border-radius:1px}
+.cglp .apercu .heures{display:flex;justify-content:space-between;font-size:11px;margin-top:3px}
+.cglp .apercu .mois{display:grid;grid-template-columns:repeat(12,1fr);gap:2px}
+.cglp .apercu .mois i{font-style:normal;font-size:10.5px;line-height:18px;text-align:center;border-radius:3px;background:var(--vert);color:#fff}
 .cglp .apercu input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .cglp .apercu:focus-within .trait:after{outline:3px solid var(--vert);outline-offset:2px}
 .cglp .boite{margin:20px;border:2px dashed #9AA29E;border-radius:12px;padding:36px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
@@ -58,7 +72,8 @@ background:var(--orange);color:#fff;font:600 17px/1 var(--f);cursor:pointer;marg
 .cglp .atouts b{display:block;font-size:17px;margin-bottom:4px}.cglp .atouts p{margin:0;color:var(--muted);font-size:14px}
 @media (max-width:980px){.cglp .atouts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:820px){.cglp{padding-top:16px}.cglp .entree{grid-template-columns:1fr}.cglp .boite{order:-1;margin:14px;padding:26px 18px}
-.cglp .apercu{min-height:0;aspect-ratio:4/5;margin:0 14px 14px;border-radius:12px}.cglp .apercu .bas b{font-size:15px}
+.cglp .apercu{min-height:0;aspect-ratio:4/5;margin:0 14px 14px;border-radius:12px}.cglp .apercu .bas{font-size:14px;max-width:70%}
+.cglp .apercu .fiche{width:min(232px,66%);font-size:12.5px;padding:10px 12px 11px}.cglp .apercu .fiche b{font-size:14px}
 .cglp h1{font-size:28px}.cglp .cta{width:100%;min-width:0;padding:0 14px;font-size:16px;white-space:nowrap}}
 @media (max-width:520px){.cglp .atouts{grid-template-columns:1fr}}
 </style>'''
@@ -96,16 +111,28 @@ if(A&&Q)try{fetch(A+"/q/q.js",{mode:"no-cors"}).catch(function(){})}catch(e){}
 ev("cgp_q_vue",{etape:"accueil"})})()</script>'''
 
 
-# avant / après : glisser (souris ou doigt) ou clavier, et un premier balayage automatique quand l'image apparaît
-JSBA = r'''<script>(function(){var B=document.getElementById("cglp-ba");if(!B)return;var R=B.querySelector("input"),p=82,touche=false,vu=false;
-function pose(v){p=Math.max(0,Math.min(100,v));B.style.setProperty("--p",p+"%");R.value=Math.round(p)}
+# avant / après : premier balayage automatique quand l'image apparaît, puis 3 points qui expliquent le projet (soleil, vis-à-vis, plantes)
+# avec les vrais chiffres de ce diagnostic ; glisser (souris ou doigt) ou clavier pour comparer
+JSBA = r'''<script>(function(){var B=document.getElementById("cglp-ba");if(!B)return;var R=B.querySelector("input"),P=[].slice.call(B.querySelectorAll(".pt")),F=[].slice.call(B.querySelectorAll(".fiche")),TA=B.querySelector(".t-av"),TP=B.querySelector(".t-ap"),p=82,touche=false,vu=false,act=-1,tc=null;
+function ev(n,o){try{window.dataLayer=window.dataLayer||[];var x={event:n};for(var k in o)x[k]=o[k];dataLayer.push(x)}catch(e){}}
+function pose(v){p=Math.max(0,Math.min(100,v));B.style.setProperty("--p",p+"%");R.value=Math.round(p);TA.style.opacity=p<14?0:1;TP.style.opacity=p>86?0:1;
+P.forEach(function(d,i){var c=(+d.getAttribute("data-xc")||0)<p+3;d.classList.toggle("cache",c);if(c&&act===i)montre(-1)})}
+function place(){var cw=B.clientWidth,ch=B.clientHeight,iw=+B.getAttribute("data-l"),ih=+B.getAttribute("data-h"),s=Math.max(cw/iw,ch/ih),dw=iw*s,dh=ih*s,ox=(cw-dw)/2,oy=(ch-dh)*(+B.getAttribute("data-oy"))/100;
+P.forEach(function(d,i){var X=ox+d.getAttribute("data-x")/100*dw,Y=oy+d.getAttribute("data-y")/100*dh;d.style.left=X+"px";d.style.top=Y+"px";d.setAttribute("data-xc",X/cw*100);
+var f=F[i],fw=f.offsetWidth,fh=f.offsetHeight;if(X>cw*.55){f.style.left="";f.style.right=Math.max(8,cw-X+24)+"px"}else{f.style.right="";f.style.left=Math.min(cw-fw-8,X+24)+"px"}
+f.style.top=Math.max(12,Math.min(ch-fh-12,Y-fh/2))+"px"});pose(p)}
+function montre(i){act=i;P.forEach(function(d,k){d.classList.toggle("on",k===i)});F.forEach(function(f,k){f.classList.toggle("on",k===i)})}
+function stopCycle(){if(tc){clearInterval(tc);tc=null}}
+function stop(){stopCycle();if(!touche){touche=true;ev("cgp_lp_avant_apres",{})}}
+var bouge=false;B.addEventListener("pointerdown",function(e){if(e.target.closest(".pt,.fiche"))return;bouge=true;stop();montre(-1);pose(x(e))});
 function x(e){var r=B.getBoundingClientRect();return(e.clientX-r.left)/r.width*100}
-function stop(){if(!touche){touche=true;try{window.dataLayer=window.dataLayer||[];dataLayer.push({event:"cgp_lp_avant_apres"})}catch(e){}}}
-var bouge=false,x0=0,y0=0;B.addEventListener("pointerdown",function(e){bouge=true;x0=e.clientX;y0=e.clientY;stop();pose(x(e))});
 addEventListener("pointermove",function(e){if(bouge)pose(x(e))});addEventListener("pointerup",function(){bouge=false});addEventListener("pointercancel",function(){bouge=false});
 R.addEventListener("input",function(){stop();pose(+R.value)});
-function anime(){if(touche||vu)return;vu=true;if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){pose(50);return}
-var t0=null,K=[[0,82],[700,82],[2100,14],[2900,38]];function f(t){if(touche)return;if(!t0)t0=t;var d=t-t0,i=1;while(i<K.length-1&&d>K[i][0])i++;var a=K[i-1],b=K[i],u=Math.max(0,Math.min(1,(d-a[0])/(b[0]-a[0])));u=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;pose(a[1]+(b[1]-a[1])*u);if(d<K[K.length-1][0])requestAnimationFrame(f)}requestAnimationFrame(f)}
+P.forEach(function(d,i){d.addEventListener("click",function(){stopCycle();montre(act===i?-1:i);ev("cgp_lp_point",{point:i+1})})});
+function points(){B.classList.add("points");place();if(touche)return;var i=0;montre(0);tc=setInterval(function(){i=(i+1)%P.length;montre(i)},4200)}
+function anime(){if(touche||vu)return;vu=true;if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){pose(4);B.classList.add("points");place();montre(0);return}
+var t0=null,K=[[0,82],[700,82],[2200,4]];function f(t){if(touche)return;if(!t0)t0=t;var d=t-t0,i=1;while(i<K.length-1&&d>K[i][0])i++;var a=K[i-1],b=K[i],u=Math.max(0,Math.min(1,(d-a[0])/(b[0]-a[0])));u=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;pose(a[1]+(b[1]-a[1])*u);if(d<K[K.length-1][0])requestAnimationFrame(f);else setTimeout(points,250)}requestAnimationFrame(f)}
+addEventListener("resize",place);place();
 var im=B.querySelector(".apres");function go(){if("IntersectionObserver" in window){var o=new IntersectionObserver(function(z){if(z[0].isIntersecting){o.disconnect();anime()}},{threshold:.5});o.observe(B)}else anime()}
 if(im.complete)go();else im.addEventListener("load",go)})()</script>'''
 
@@ -113,12 +140,18 @@ if(im.complete)go();else im.addEventListener("load",go)})()</script>'''
 def rendre(base='', questionnaire='', api=''):
     return CSS + f'''<div class="cglp" id="cglp-accueil">
 <div class="entree">
-<div class="apercu" id="cglp-ba" style="--p:82%">
+<div class="apercu" id="cglp-ba" style="--p:82%" data-l="720" data-h="960" data-oy="55">
 <img class="apres" src="{e(APRES)}" width="720" height="960" alt="Le même jardin imaginé avec une pergola, une clôture, du gravier et des plantes" decoding="async">
 <img class="avant" src="{e(AVANT)}" width="720" height="960" alt="Le jardin avant : de la terre nue devant la maison" decoding="async">
 <span class="trait"></span><span class="tag t-av">Avant</span><span class="tag t-ap">Après</span>
 <input type="range" min="0" max="100" value="82" aria-label="Comparer le jardin avant et après">
-<div class="bas"><b>Un vrai jardin, imaginé par notre outil à partir d'une simple photo.</b><span>Pergola et clôture : <strong>2 500 à 3 100 €</strong></span></div>
+<div class="bas">Un vrai jardin, imaginé par notre outil à partir d'une photo.</div>
+<button type="button" class="pt" data-x="45" data-y="34" aria-label="Pourquoi une pergola"></button>
+<button type="button" class="pt" data-x="18" data-y="50" aria-label="Pourquoi une clôture"></button>
+<button type="button" class="pt" data-x="81" data-y="80" aria-label="Pourquoi ces plantes"></button>
+<div class="fiche" role="note"><b>11 h de soleil le 21 juin</b><div class="sol"><i style="background:#ef9447"></i><i style="background:#ed8b40"></i><i style="background:#ed893e"></i><i style="background:#ec873c"></i><i style="background:#ed893e"></i><i style="background:#ed8b40"></i><i style="background:#ee8d42"></i><i style="background:#ee8d42"></i><i style="background:#ee9043"></i><i style="background:#ed8b40"></i><i style="background:#ed893e"></i><i style="background:#ec873c"></i><i style="background:#ec873c"></i><i style="background:#ec853a"></i><i style="background:#ed893e"></i><i style="background:#ee8d42"></i><i style="background:#ee9043"></i><i style="background:#ee9245"></i><i style="background:#ef9447"></i><i style="background:#ef9447"></i><i style="background:#ef9649"></i><i style="background:#f09a4d"></i><i style="background:#f2a355"></i><i style="background:#f5af61"></i><i style="background:#f8bc6d"></i><i style="background:#fccf7e"></i></div><div class="heures"><span>8 h</span><span>21 h</span></div><p>Dont 6 h après 14 h : la pergola garde la table à l'ombre.</p><div class="prix">Pergola 3 x 3 m : <strong>1 100 à 1 400 €</strong></div></div>
+<div class="fiche" role="note"><b>Un voisin voit le jardin depuis 5 m de haut</b><p>Côté ouest : la clôture occultante de 1,80 m coupe la vue.</p><div class="prix">Clôture, 12 m : <strong>1 400 à 1 700 €</strong></div></div>
+<div class="fiche" role="note"><b>6 plantes choisies pour ce soleil</b><div class="mois"><i>J</i><i>F</i><i>M</i><i>A</i><i>M</i><i>J</i><i>J</i><i>A</i><i>S</i><i>O</i><i>N</i><i>D</i></div><p>Quelque chose en fleur chaque mois, pour un entretien minimal.</p><div class="prix">Toutes à planter en avril</div></div>
 </div>
 <div class="boite">
 <h1>Le diagnostic gratuit de votre <span class="v">jardin</span><span class="o">.</span></h1>
