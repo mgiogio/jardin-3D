@@ -220,7 +220,7 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
             editer(consigne + retour, [im] + refs, f'{dossier}/visuel.jpg')
             ctl = claude("""Contrôle qualité d'un visuel d'aménagement pour un client. Image 1 : photo d'origine. Image 2 : visuel proposé. Images suivantes : nos vrais produits (références).
 Note de 0 à 10 : "ressemblance" (les produits du visuel ressemblent-ils à nos références : sections, lames, connecteurs, teinte ?), "maison" (la maison est-elle préservée : mêmes fenêtres, portes, façade ?), "credibilite" (le visuel est-il réaliste, sans objet fondu, meuble qui flotte, produit qui traverse un objet ?).
-Regarde en particulier chaque fenêtre et chaque porte de la maison : si un poteau, une poutre, une clôture ou un meuble passe devant l'une d'elles ou en bloque l'accès, c'est un défaut grave.
+Regarde en particulier chaque fenêtre et chaque porte de la maison : si un poteau, une poutre, une clôture ou un meuble est posé contre l'une d'elles ou en bloque l'accès, c'est un défaut grave. En revanche, une pergola posée dans le jardin à plusieurs mètres de la façade, dont un poteau se superpose à une fenêtre seulement par effet de perspective, n'est pas un défaut : mets-le dans "remarques".
 Liste uniquement les "defauts" GRAVES (qui empêchent de montrer l'image au client : maison modifiée, fenêtre ou porte masquée par un produit, produit qui ne ressemble pas, objet fondu ou impossible, passage bloqué), en une phrase chacun ; les petites imperfections vont dans "remarques". JSON : {"ressemblance": n, "maison": n, "credibilite": n, "defauts": [...], "remarques": [...]}""",
                          [im, Image.open(f'{dossier}/visuel.jpg')] + refs[:4])
             data['controle'] = ctl
