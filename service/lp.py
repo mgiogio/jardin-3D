@@ -1,30 +1,31 @@
-# Page d'entrée du « Diagnostic jardin » : un vrai exemple de carte de soleil (diagnostic calculé sur une adresse, épuré), l'encadré avec la question de l'adresse, quatre cartes.
+# Page d'entrée du « Diagnostic jardin » : un avant / après réel (photo d'un jardin et visuel produit par l'outil), l'encadré avec la question de l'adresse, quatre cartes.
 # Rendu côté serveur (indexable), inséré par le shortcode [cg_diagnostic_jardin] au-dessus du questionnaire, qui reste caché
 # jusqu'au clic sur « Je commence ». Styles préfixés .cglp. On ne dévoile pas ici le contenu du diagnostic (plantes, produits).
 import html
 
 e = lambda s: html.escape(str(s or ''))
+# avant / après : un vrai projet passé dans l'outil ; images dans la médiathèque WordPress (pas dans ce dépôt public)
+AVANT = 'https://cover.green/wp-content/uploads/diagnostic/jardin-avant.webp'
+APRES = 'https://cover.green/wp-content/uploads/diagnostic/jardin-apres.webp'
 
 CSS = '''<style>
 .cglp{--vert:#049E00;--orange:#EB5A00;--orange-survol:#C84800;--brume:#EAF7E5;--gris:#F4F6F7;--ligne:#E1E5E3;--txt:#1E211F;--muted:#5B625E;
 --f:"Roboto","Roboto Secours",Arial,sans-serif;font:400 16px/1.55 var(--f);color:var(--txt);max-width:1080px;margin:0 auto;padding:32px 16px 8px}
 .cglp *,.cglp *:before,.cglp *:after{box-sizing:border-box}
 .cglp .entree{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(30,33,31,.08),0 8px 30px rgba(30,33,31,.06)}
-.cglp .apercu{position:relative;min-height:440px;background:var(--gris);padding:28px 32px;display:flex;flex-direction:column;justify-content:center;gap:18px}
-.cglp .ex-titre{margin:0;font-size:14px;color:var(--muted);text-align:left}.cglp .ex-titre b{color:var(--txt);font-weight:600}
-.cglp .carte{position:relative;margin:64px 0 70px}
-.cglp .carte img{display:block;width:100%;height:auto}
-.cglp .carte .maison{position:absolute;transform:translate(-50%,-50%);font-size:12px;font-weight:600;color:#fff;pointer-events:none}
-.cglp .note{position:absolute;width:0;border-left:1.5px solid var(--txt);font-size:13.5px;line-height:1.35;color:var(--txt);text-align:left}
-.cglp .note:after{content:"";position:absolute;left:-5.5px;width:8px;height:8px;border-radius:50%;background:var(--txt);box-shadow:0 0 0 2px #fff}
-.cglp .note.haut{top:-62px;height:calc(var(--y) + 62px)}.cglp .note.haut:after{bottom:-4px}
-.cglp .note.bas{top:var(--y);bottom:-66px}.cglp .note.bas:after{top:-4px}
-.cglp .note span{position:absolute;white-space:nowrap;padding:0 0 0 8px}
-.cglp .note.haut span{top:-4px}.cglp .note.bas span{bottom:-4px}
-.cglp .note.g span{right:0;padding:0 8px 0 0;text-align:right}
-.cglp .note b{display:block;font-weight:700}
-.cglp .legende{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
-.cglp .legende i{width:96px;height:8px;border-radius:2px;background:linear-gradient(90deg,#96acc4,#c4d2c8,#ffde8c,#f7aa3c,#e8742a)}
+.cglp .apercu{position:relative;min-height:520px;background:#DDE3DF;overflow:hidden;touch-action:pan-y;cursor:ew-resize;user-select:none;-webkit-user-select:none}
+.cglp .apercu img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 55%;display:block;pointer-events:none}
+.cglp .apercu .avant{clip-path:inset(0 calc(100% - var(--p)) 0 0)}
+.cglp .apercu .trait{position:absolute;top:0;bottom:0;left:var(--p);width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 8px rgba(0,0,0,.35);pointer-events:none}
+.cglp .apercu .trait:after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff no-repeat center/24px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E211F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l-6 6 6 6M15 6l6 6-6 6'/%3E%3C/svg%3E");box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.cglp .apercu .tag{position:absolute;top:16px;padding:5px 10px;border-radius:6px;background:rgba(30,33,31,.62);color:#fff;font-size:13px;font-weight:600;pointer-events:none;transition:opacity .2s}
+.cglp .apercu .t-av{left:16px}.cglp .apercu .t-ap{right:16px;background:var(--vert)}
+.cglp .apercu .bas{position:absolute;left:0;right:0;bottom:0;padding:48px 20px 18px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.62));color:#fff;text-align:left;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+.cglp .apercu .bas b{display:block;font-size:16px;line-height:1.3;font-weight:700}
+.cglp .apercu .bas span{display:inline-block;text-shadow:none;margin-top:8px;padding:5px 10px;border-radius:6px;background:#fff;color:var(--txt);font-size:14px}
+.cglp .apercu .bas span strong{color:var(--orange)}
+.cglp .apercu input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.cglp .apercu:focus-within .trait:after{outline:3px solid var(--vert);outline-offset:2px}
 .cglp .boite{margin:20px;border:2px dashed #9AA29E;border-radius:12px;padding:36px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
 .cglp h1{font:800 34px/1.12 var(--f);margin:0;letter-spacing:-.01em;color:var(--txt)}
 .cglp h1 .v{color:var(--vert)}.cglp h1 .o{color:var(--orange)}
@@ -57,7 +58,7 @@ background:var(--orange);color:#fff;font:600 17px/1 var(--f);cursor:pointer;marg
 .cglp .atouts b{display:block;font-size:17px;margin-bottom:4px}.cglp .atouts p{margin:0;color:var(--muted);font-size:14px}
 @media (max-width:980px){.cglp .atouts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:820px){.cglp{padding-top:16px}.cglp .entree{grid-template-columns:1fr}.cglp .boite{order:-1;margin:14px;padding:26px 18px}
-.cglp .apercu{min-height:0;padding:20px 16px 22px;gap:10px}.cglp .note{font-size:12.5px}
+.cglp .apercu{min-height:0;aspect-ratio:4/5;margin:0 14px 14px;border-radius:12px}.cglp .apercu .bas b{font-size:15px}
 .cglp h1{font-size:28px}.cglp .cta{width:100%;min-width:0;padding:0 14px;font-size:16px;white-space:nowrap}}
 @media (max-width:520px){.cglp .atouts{grid-template-columns:1fr}}
 </style>'''
@@ -95,18 +96,29 @@ if(A&&Q)try{fetch(A+"/q/q.js",{mode:"no-cors"}).catch(function(){})}catch(e){}
 ev("cgp_q_vue",{etape:"accueil"})})()</script>'''
 
 
+# avant / après : glisser (souris ou doigt) ou clavier, et un premier balayage automatique quand l'image apparaît
+JSBA = r'''<script>(function(){var B=document.getElementById("cglp-ba");if(!B)return;var R=B.querySelector("input"),p=82,touche=false,vu=false;
+function pose(v){p=Math.max(0,Math.min(100,v));B.style.setProperty("--p",p+"%");R.value=Math.round(p)}
+function x(e){var r=B.getBoundingClientRect();return(e.clientX-r.left)/r.width*100}
+function stop(){if(!touche){touche=true;try{window.dataLayer=window.dataLayer||[];dataLayer.push({event:"cgp_lp_avant_apres"})}catch(e){}}}
+var bouge=false,x0=0,y0=0;B.addEventListener("pointerdown",function(e){bouge=true;x0=e.clientX;y0=e.clientY;stop();pose(x(e))});
+addEventListener("pointermove",function(e){if(bouge)pose(x(e))});addEventListener("pointerup",function(){bouge=false});addEventListener("pointercancel",function(){bouge=false});
+R.addEventListener("input",function(){stop();pose(+R.value)});
+function anime(){if(touche||vu)return;vu=true;if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){pose(50);return}
+var t0=null,K=[[0,82],[700,82],[2100,14],[2900,38]];function f(t){if(touche)return;if(!t0)t0=t;var d=t-t0,i=1;while(i<K.length-1&&d>K[i][0])i++;var a=K[i-1],b=K[i],u=Math.max(0,Math.min(1,(d-a[0])/(b[0]-a[0])));u=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;pose(a[1]+(b[1]-a[1])*u);if(d<K[K.length-1][0])requestAnimationFrame(f)}requestAnimationFrame(f)}
+var im=B.querySelector(".apres");function go(){if("IntersectionObserver" in window){var o=new IntersectionObserver(function(z){if(z[0].isIntersecting){o.disconnect();anime()}},{threshold:.5});o.observe(B)}else anime()}
+if(im.complete)go();else im.addEventListener("load",go)})()</script>'''
+
+
 def rendre(base='', questionnaire='', api=''):
     return CSS + f'''<div class="cglp" id="cglp-accueil">
 <div class="entree">
-<div class="apercu">
-<p class="ex-titre"><b>Exemple réel</b> : le soleil d'un jardin le 21 juin, calculé depuis son adresse.</p>
-<div class="carte" role="img" aria-label="Carte d'exemple : l'ombre de la maison et le jardin en plein soleil">
-<img src="{e(base)}/q/exemple-soleil.webp" width="1438" height="526" alt="" loading="eager" decoding="async">
-<span class="maison" style="left:26%;top:50%">Maison</span>
-<span class="note haut g" style="left:74%;--y:52%"><span>Plein soleil : la place d'une pergola<b>1 100 à 1 400 €</b></span></span>
-<span class="note bas" style="left:9%;--y:80%"><span>À l'ombre de la maison<b>hortensias, fougères</b></span></span>
-</div>
-<div class="legende"><span>ombre</span><i></i><span>plein soleil</span></div>
+<div class="apercu" id="cglp-ba" style="--p:82%">
+<img class="apres" src="{e(APRES)}" width="720" height="960" alt="Le même jardin imaginé avec une pergola, une clôture, du gravier et des plantes" decoding="async">
+<img class="avant" src="{e(AVANT)}" width="720" height="960" alt="Le jardin avant : de la terre nue devant la maison" decoding="async">
+<span class="trait"></span><span class="tag t-av">Avant</span><span class="tag t-ap">Après</span>
+<input type="range" min="0" max="100" value="82" aria-label="Comparer le jardin avant et après">
+<div class="bas"><b>Un vrai jardin, imaginé par notre outil à partir d'une simple photo.</b><span>Pergola et clôture : <strong>2 500 à 3 100 €</strong></span></div>
 </div>
 <div class="boite">
 <h1>Le diagnostic gratuit de votre <span class="v">jardin</span><span class="o">.</span></h1>
@@ -126,4 +138,4 @@ def rendre(base='', questionnaire='', api=''):
 <div><i>{ICO['soleil']}</i><b>Le potentiel de votre jardin</b><p>Le soleil heure par heure, les vis-à-vis, les coins à valoriser : ce que votre jardin peut devenir.</p></div>
 <div><i>{ICO['plan']}</i><b>Votre jardin imaginé</b><p>À partir de votre photo, nos produits posés chez vous, au bon endroit.</p></div>
 <div><i>{ICO['euro']}</i><b>Le budget, chiffré</b><p>Ce que coûte chaque idée, de la plus simple à la plus ambitieuse, pour avancer à votre rythme.</p></div>
-</div></div>''' + JS
+</div></div>''' + JS + JSBA
