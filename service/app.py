@@ -134,46 +134,6 @@ def api_terrain(lat: float, lon: float, request: Request):
     except Exception: raise HTTPException(404, 'Terrain introuvable.')
 
 
-# analyse rapide du terrain pendant le questionnaire (soleil, vis-à-vis, place) : lancée dès que le client voit son terrain,
-# elle sert à poser la question des priorités à partir de ce qu'on a mesuré chez lui. Gratuite (données IGN), mise en cache.
-_apercus = collections.OrderedDict(); _vus_a = collections.defaultdict(list); _calculs = threading.BoundedSemaphore(3)
-
-
-@app.get('/api/apercu')
-def api_apercu(lat: float, lon: float, request: Request):
-    if not (41 < lat < 51.5 and -5.5 < lon < 10): raise HTTPException(400, 'Adresse hors de France métropolitaine.')
-    k = f'{lat:.5f},{lon:.5f}'
-    with _verrou:
-        if k in _apercus: _apercus.move_to_end(k); return _apercus[k]
-        ip = (request.headers.get('x-forwarded-for') or '').split(',')[-1].strip(); t = time.time()
-        _vus_a[ip] = [x for x in _vus_a[ip] if t - x < 3600]
-        if len(_vus_a[ip]) >= 20: raise HTTPException(429, 'Trop de recherches, réessayez dans un moment.')
-        _vus_a[ip].append(t)
-    if not _calculs.acquire(timeout=20): raise HTTPException(503, 'Service occupé.')
-    try:
-        import terrain, tempfile, subprocess
-        T = terrain.terrain(lat, lon)
-        if not (T.get('parcel') and T.get('building')): raise ValueError('terrain incomplet')
-        with tempfile.TemporaryDirectory() as tmp:
-            json.dump({'address': {'lat': lat, 'lon': lon}, 'parcel': T['parcel'], 'building': T['building'], 'facades': T.get('facades') or []}, open(f'{tmp}/projet.json', 'w'))
-            subprocess.run(['python3', f'{pipeline.DIAG}/diag.py', f'{tmp}/projet.json', f'{tmp}/diag'], check=True, capture_output=True, timeout=60)
-            g = json.load(open(f'{tmp}/diag/diagnostic.json'))
-    except Exception:
-        raise HTTPException(404, 'Analyse indisponible.')
-    finally:
-        _calculs.release()
-    v = (g.get('vis_a_vis') or [None])[0]
-    vu = v if v and v.get('oeil_m', 0) >= 3 and ('denivele_m' in v or v.get('hauteur_m', 0) >= 5) else None   # même règle que la page projet
-    jm2 = g.get('surface_jardin_m2') or 0
-    out = {'jardin_m2': jm2, 'soleil_ete_h': round(g.get('soleil_ete_h_moyen') or 0), 'soleil_apres14h_h': round(g.get('soleil_ete_apres14h_h') or 0),
-           'cote': g.get('cote_jardin'), 'limites_m': round(g.get('lineaire_limites_libres_m') or 0),
-           'terrasse_m2': max(10, min(30, round(jm2 * 0.12 / 2) * 2)),
-           'vis_a_vis': {'direction': vu['direction'], 'oeil_m': round(vu['oeil_m']), 'distance_m': round(vu['distance_m'])} if vu else None}
-    with _verrou:
-        _apercus[k] = out
-        while len(_apercus) > 500: _apercus.popitem(last=False)
-    return out
-
 
 @app.get('/q/{nom}')
 def questionnaire_fichier(nom: str):

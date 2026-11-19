@@ -152,8 +152,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     '.cgq .ecran{max-width:880px;margin:0 auto;padding-top:clamp(8px,4vh,48px)}',
     '@media (min-width:641px){.cgq .ecran .cartes.tuiles{grid-template-columns:repeat(3,minmax(0,1fr));max-width:720px}}',
     // précision écrite facultative, sous les tuiles
-    '.cgq .tuiles .c small.fait.vu{color:var(--vert);font-weight:600}.cgq .tuiles .c small.fait.att{color:#9AA1A6;animation:cgq-att 1.2s ease-in-out infinite}@keyframes cgq-att{50%{opacity:.35}}',
-    '@media (prefers-reduced-motion:reduce){.cgq .tuiles .c small.fait.att{animation:none}}',
+    '.cgq .tuiles .c.off{opacity:.45}.cgq .tuiles .c.off:hover{border-color:#fff}.cgq .c .ic .rang svg{width:18px!important;height:18px!important}.cgq .sous.rappel{color:var(--txt);font-weight:600}',
     '.cgq .prec{max-width:720px;margin:12px auto 0}.cgq .prec .lien{margin:0 auto;padding:8px 0}',
     '.cgq .prec textarea{display:block;width:100%;box-sizing:border-box;min-height:66px;margin:4px 0 0;padding:12px 14px;border:1px solid var(--ligne);border-radius:8px;background:#fff;font:400 16px/1.45 var(--f);color:var(--txt);text-align:left;resize:vertical;box-shadow:none}',
     '.cgq .prec textarea::placeholder{color:#9AA1A6;opacity:1}.cgq .prec textarea:focus{outline:2px solid var(--vert);outline-offset:1px;border-color:var(--vert)}.cgq .prec textarea[hidden]{display:none}',
@@ -219,8 +218,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     sol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 16l9-5 9 5-9 5zM7.5 13.5l9 5M16.5 13.5l-9 5"/></svg>',
     photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'
   };
-  // priorités du client : des résultats concrets ; chaque choix montre ce qu'on a mesuré chez lui (analyse rapide du terrain)
-  // [clé lue par le service, titre, titre en appartement, texte quand on n'a pas de mesure]
+  // priorités du client : des résultats concrets, 2 au plus (ça oblige à choisir, sans rien à classer)
+  // [clé lue par le service, titre, titre en appartement, exemple]
   var ENVIES = [
     ['intimite', 'Cacher la vue des voisins', 'Cacher la vue des voisins', 'Un vis-à-vis à couper'],
     ['ombre', 'De l\'ombre aux heures chaudes', 'De l\'ombre aux heures chaudes', 'Pour profiter dehors en été'],
@@ -229,57 +228,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     ['embellir', 'Habiller un mur ou un grillage', 'Habiller un mur ou un garde-corps', 'Parpaings, grillage, cabanon'],
     ['plantes', 'Des massifs qui fleurissent', 'Des bacs fleuris', 'Des plantes faciles à vivre']
   ];
-  function heuresTxt(n) { return n < 1 ? 'moins d\'1 h' : n + ' h'; }
-  function cleAdresse() { return S.adresse && S.adresse.lat != null ? (+S.adresse.lat).toFixed(5) + ',' + (+S.adresse.lon).toFixed(5) : ''; }
-  // état de l'analyse rapide : 'ok' (mesures dispo), 'attente' (en cours), 'aucune' (appartement, terrain introuvable ou échec)
-  function etatApercu() {
-    if (S.lieu && S.lieu.type === 'appartement') return 'aucune';
-    if (!S.terrain || !S.terrain.building) return 'aucune';
-    var d = S.apercuDiag; if (!d || d.k !== cleAdresse()) return 'attente';
-    return d.echec ? 'aucune' : 'ok';
-  }
-  // le fait affiché sous chaque choix : [texte, mesuré chez le client ?]
-  function fait(cle) {
-    var e_ = etatApercu(), d = S.apercuDiag || {}, v = d.vis_a_vis, o = ENVIES.filter(function (x) { return x[0] === cle; })[0];
-    if (e_ === 'attente' && cle !== 'sol') return ['Mesure en cours…', false, true];
-    if (e_ === 'ok') {
-      if (cle === 'intimite') return v ? ['Maison voisine côté ' + v.direction + ', vue à ' + v.oeil_m + ' m de haut', true] : ['Aucune maison ne domine votre jardin', true];
-      if (cle === 'ombre') return [heuresTxt(d.soleil_ete_h) + ' de soleil en juin, dont ' + heuresTxt(d.soleil_apres14h_h) + ' après 14 h', true];
-      if (cle === 'recevoir') return ['De la place pour une terrasse de ' + d.terrasse_m2 + ' m²', true];
-      if (cle === 'plantes') return ['Choisies pour vos ' + heuresTxt(d.soleil_ete_h) + ' de soleil', true];
-    }
-    return [o[3], false];
-  }
-  // ordre : ce que les mesures rendent le plus utile en premier (fixé au premier affichage, pour que rien ne bouge ensuite)
-  function ordreEnvies() {
-    if (S.ordreEnvies && S.ordreEnvies.k === cleAdresse()) return S.ordreEnvies.l;
-    var cles = ENVIES.map(function (x) { return x[0]; });
-    if (etatApercu() === 'attente') { S.ordreEnvies = { k: cleAdresse(), l: cles }; garder(); }
-    if (etatApercu() !== 'ok') return cles;
-    var d = S.apercuDiag, v = d.vis_a_vis;
-    var sc = { intimite: v ? (v.oeil_m >= 4 ? 3 : 2) : 0.5, ombre: d.soleil_ete_h >= 8 ? 2.8 : d.soleil_ete_h >= 5 ? 1.8 : 0.4, recevoir: 2, sol: 1.5, embellir: 1, plantes: 1 };
-    var l = cles.slice().sort(function (a, b) { return sc[b] - sc[a]; });
-    S.ordreEnvies = { k: cleAdresse(), l: l }; garder(); return l;
-  }
-  var apercuEnCours = '';
-  function lancerApercu() {
-    var k = cleAdresse();
-    if (!k || etatApercu() !== 'attente' || apercuEnCours === k) return;
-    apercuEnCours = k;
-    fetch(API + '/api/apercu?lat=' + S.adresse.lat + '&lon=' + S.adresse.lon).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (j) { j.k = k; return j; }, function () { return { k: k, echec: true }; })
-      .then(function (j) { apercuEnCours = ''; if (j.k !== cleAdresse()) return; S.apercuDiag = j; garder(); if (S.etape === 'envie') majFaits(); ev('cgp_q_apercu', { reponse: j.echec ? 'echec' : 'ok' }); });
-  }
-  // mesures arrivées pendant que le client est sur la question : on remplit les textes sur place, sans redessiner
-  function majFaits() {
-    [].forEach.call(M.querySelectorAll('[data-fait]'), function (x) { var f = fait(x.getAttribute('data-fait')); x.textContent = f[0]; x.className = 'fait' + (f[1] ? ' vu' : '') + (f[2] ? ' att' : ''); });
-    var so = M.querySelector('#cgq-esous'); if (so) so.textContent = sousEnvies();
-  }
-  function sousEnvies() {
-    var e_ = etatApercu();
-    return e_ === 'ok' ? 'En vert, ce que nous avons mesuré chez vous. Cochez ce qui compte, le plus important en premier.'
-      : e_ === 'attente' ? 'Nous mesurons votre terrain. Cochez ce qui compte, le plus important en premier.' : 'Cochez ce qui compte, le plus important en premier.';
-  }
+  var MAX_ENVIES = 2;
+  var COCHE = '<span class="rang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
   var STYLES = [
     ['contemporain', 'Contemporain', 'Lignes droites, gris et blanc', ['#3A3F3C', '#D9D9D6', '#8A8F8C', '#F4F4F0']],
     ['naturel', 'Naturel', 'Bois, lin et graminées', ['#A0764B', '#D8C7A6', '#7D8F5A', '#EFE6D6']],
@@ -396,17 +346,16 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   /* ---------- écrans ---------- */
   var E = {};
   E.envie = function () {
-    var L = S.envies || [];
+    var L = S.envies || [], plein = L.length >= MAX_ENVIES;
     var haut = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0;
     var ap = (S.terrain && S.terrain.apercu) || {}, ville = S.adresse && S.adresse.city;
     var info = !haut && ap.jardin_m2 ? '<p class="info"><i>☀</i><span>' + (ville ? h(ville) + ' : ' : '') + '<b>' + ap.jardin_m2 + ' m² de jardin' + (ap.jardin_cote ? ', côté ' + h(ap.jardin_cote) : '') + '</b></span></p>' : '';
-    var O = {}; ENVIES.forEach(function (x) { O[x[0]] = x; });
-    return info + '<h2>' + (haut ? 'Sur ma terrasse' : 'Dans mon jardin') + ', je veux d\'abord…</h2><p class="sous" id="cgq-esous">' + sousEnvies() + '</p>'
-      + '<div class="cartes tuiles multi prio">' + ordreEnvies().map(function (cle) {
-        var o = O[cle], k = L.indexOf(cle), f = fait(cle);
-        return '<button type="button" class="c' + (k >= 0 ? ' on' : '') + '" data-envie="' + cle + '" aria-pressed="' + (k >= 0) + '">'
-          + '<span class="ic" aria-hidden="true">' + (k >= 0 ? '<span class="rang">' + (k + 1) + '</span>' : ICO[cle]) + '</span>'
-          + '<span><b>' + h(haut ? o[2] : o[1]) + '</b><small class="fait' + (f[1] ? ' vu' : '') + (f[2] ? ' att' : '') + '" data-fait="' + cle + '">' + h(f[0]) + '</small></span></button>';
+    return info + '<h2>' + (haut ? 'Sur ma terrasse' : 'Dans mon jardin') + ', je veux d\'abord…</h2><p class="sous" id="cgq-esous">Choisissez 1 ou 2 priorités.</p>'
+      + '<div class="cartes tuiles multi prio">' + ENVIES.map(function (o) {
+        var on = L.indexOf(o[0]) >= 0, off = plein && !on;
+        return '<button type="button" class="c' + (on ? ' on' : '') + (off ? ' off' : '') + '" data-envie="' + o[0] + '" aria-pressed="' + on + '"' + (off ? ' aria-disabled="true"' : '') + '>'
+          + '<span class="ic" aria-hidden="true">' + (on ? COCHE : ICO[o[0]]) + '</span>'
+          + '<span><b>' + h(haut ? o[2] : o[1]) + '</b><small>' + h(o[3]) + '</small></span></button>';
       }).join('') + '</div>'
       // une précision écrite, facultative : elle part telle quelle à l'IA (lecture de la photo et visuel)
       + '<div class="prec">' + (S.precision ? '' : '<button type="button" class="lien" data-a="prec">Ajouter une précision (facultatif)</button>')
@@ -474,7 +423,6 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (S.etape === 'terrain') terrain();
     if (S.etape === 'contact') contact();
     if (S.etape === 'photo') photo();
-    if (S.etape === 'envie') lancerApercu();
   }
 
   /* ---------- clics ---------- */
@@ -493,7 +441,10 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var en = b.getAttribute('data-envie');
     if (en && S.etape === 'envie') {
       S.envies = S.envies || []; var k = S.envies.indexOf(en);
-      if (k >= 0) S.envies.splice(k, 1); else S.envies.push(en);
+      if (k >= 0) S.envies.splice(k, 1);
+      else if (S.envies.length >= MAX_ENVIES) { var so = M.querySelector('#cgq-esous'); if (so) { so.textContent = '2 priorités au plus : décochez-en une pour changer.'; so.classList.add('rappel'); } return; }
+      else S.envies.push(en);
+      var so2 = M.querySelector('#cgq-esous'); if (so2) { so2.textContent = 'Choisissez 1 ou 2 priorités.'; so2.classList.remove('rappel'); }
       S.envie = S.envies[0] || null; garder(); majEnvies(); return;
     }
     if (a === 'prec') { var t = M.querySelector('#cgq-prec'); b.remove(); if (t) { t.hidden = false; try { t.focus(); } catch (x) { } } return; }
@@ -532,9 +483,10 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   function majEnvies() {
     var L = S.envies || [];
     [].forEach.call(M.querySelectorAll('[data-envie]'), function (c) {
-      var k = L.indexOf(c.getAttribute('data-envie')), ic = c.querySelector('.ic');
-      c.classList.toggle('on', k >= 0); c.setAttribute('aria-pressed', k >= 0);
-      ic.innerHTML = k >= 0 ? '<span class="rang">' + (k + 1) + '</span>' : ICO[c.getAttribute('data-envie')];
+      var on = L.indexOf(c.getAttribute('data-envie')) >= 0, off = L.length >= MAX_ENVIES && !on;
+      c.classList.toggle('on', on); c.classList.toggle('off', off); c.setAttribute('aria-pressed', on);
+      if (off) c.setAttribute('aria-disabled', 'true'); else c.removeAttribute('aria-disabled');
+      c.querySelector('.ic').innerHTML = on ? COCHE : ICO[c.getAttribute('data-envie')];
     });
     var b = M.querySelector('[data-a=envie-ok]');
     if (b) b.disabled = !L.length;
@@ -659,7 +611,6 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (info) info.innerHTML = a.parcelle_m2 ? '<div class="chiffres"><div><b>' + a.parcelle_m2 + ' m²</b><span>de terrain</span></div><div><b>' + (a.jardin_m2 || '?') + ' m²</b><span>de jardin' + (a.jardin_cote ? ', surtout côté ' + h(a.jardin_cote) : '') + '</span></div></div>' : '';
     var act = M.querySelector('#cgq-tact'); if (act) act.hidden = false;
     ev('cgp_q_terrain', { reponse: 'oui' });
-    lancerApercu();                 // mesures du terrain pour la question suivante, pendant que le client regarde sa carte
   }
   // carte déplaçable (photo aérienne IGN) avec un repère fixe au centre : on amène sa maison sous le repère, même si elle était hors du cadre
   var LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
