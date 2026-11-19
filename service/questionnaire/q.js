@@ -150,7 +150,11 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     '.cgq .nav .ret{visibility:visible;padding:6px 0;font-size:15px;color:var(--muted)}.cgq .nav .ret[hidden]{display:block;visibility:hidden}.cgq .nav .ret:before{content:"‹ "}',
     '.cgq .reste,.cgq .bas{display:none}',
     '.cgq .ecran{max-width:880px;margin:0 auto;padding-top:clamp(8px,4vh,48px)}',
-    '@media (min-width:900px){.cgq .ecran .cartes.tuiles{grid-template-columns:repeat(5,minmax(0,1fr))}}',
+    '@media (min-width:641px){.cgq .ecran .cartes.tuiles{grid-template-columns:repeat(3,minmax(0,1fr));max-width:720px}}',
+    // précision écrite facultative, sous les tuiles
+    '.cgq .prec{max-width:720px;margin:12px auto 0}.cgq .prec .lien{margin:0 auto;padding:8px 0}',
+    '.cgq .prec textarea{display:block;width:100%;box-sizing:border-box;min-height:66px;margin:4px 0 0;padding:12px 14px;border:1px solid var(--ligne);border-radius:8px;background:#fff;font:400 16px/1.45 var(--f);color:var(--txt);text-align:left;resize:vertical;box-shadow:none}',
+    '.cgq .prec textarea::placeholder{color:#9AA1A6;opacity:1}.cgq .prec textarea:focus{outline:2px solid var(--vert);outline-offset:1px;border-color:var(--vert)}.cgq .prec textarea[hidden]{display:none}',
     '.cgq h2{font:800 clamp(28px,4.4vw,44px)/1.15 var(--f);letter-spacing:0;margin:6px auto 0;max-width:760px}',
     '.cgq .sous{max-width:560px;margin:14px auto 26px}',
     '.cgq .aide{max-width:520px;margin:16px auto 0;font-size:15px;color:var(--muted)}',
@@ -168,6 +172,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     '.cgq .ecran .pile{position:sticky;bottom:0;z-index:6;max-width:none;justify-items:center;margin-top:18px;padding:18px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(244,246,247,0),#F4F6F7 20px)}',
     '.cgq .ecran .pile>*{width:100%;max-width:380px}.cgq .ecran .pile>.lien{width:auto}',
     '.cgq .ecran .pile[hidden]{display:none}',
+    // deux choix de même poids (oui / non) : côte à côte sur ordinateur
+    '@media (min-width:700px){.cgq .ecran .pile.duo{grid-template-columns:repeat(2,minmax(0,330px));justify-content:center;justify-items:stretch}.cgq .ecran .pile.duo>*{max-width:none}}',
     '.cgq .cta{font-size:16px}.cgq .cta[disabled]{opacity:1;background:#fff;border:1px solid var(--ligne);color:#9AA1A6;cursor:not-allowed}',
     '.cgq .cta.sec{background:#fff}',
     '.cgq .cartes{max-width:680px;margin:0 auto}',
@@ -205,16 +211,19 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     intimite: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 21V8M9 21V5M14 21V8M19 21V5M2 12h20M2 17h20"/></svg>',
     ombre: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9h18M4 9l2-4h12l2 4M6 9v12M18 9v12M9 9v4M12 9v4M15 9v4"/></svg>',
     recevoir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h16M6 12v8M18 12v8M8 8h8l1 4H7z"/><circle cx="12" cy="4" r="1.5"/></svg>',
-    embellir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21v-8M12 13c-4 0-6-3-6-7 4 0 6 3 6 7zM12 13c4 0 6-3 6-7-4 0-6 3-6 7zM7 21h10"/></svg>',
+    embellir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v14H3zM3 9.7h18M3 14.3h18M8 5v4.7M15 5v4.7M11.5 9.7v4.6M6 14.3V19M17 14.3V19"/></svg>',
+    plantes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21v-8M12 13c-4 0-6-3-6-7 4 0 6 3 6 7zM12 13c4 0 6-3 6-7-4 0-6 3-6 7zM7 21h10"/></svg>',
     sol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 16l9-5 9 5-9 5zM7.5 13.5l9 5M16.5 13.5l-9 5"/></svg>',
     photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'
   };
+  // ce qui gêne aujourd'hui : du concret, qu'on ne coche pas tout (les clés restent celles lues par le service)
   var ENVIES = [
-    ['intimite', 'Être tranquille chez moi', 'À l\'abri des regards des voisins'],
-    ['ombre', 'Profiter de l\'ombre', 'Ne plus subir le soleil en été'],
-    ['recevoir', 'Recevoir famille et amis', 'Un vrai coin pour se retrouver dehors'],
-    ['embellir', 'Un jardin dont je suis fier', 'Embellir et mettre en valeur'],
-    ['sol', 'Un sol propre et agréable', 'Fini la boue et la pelouse abîmée']
+    ['intimite', 'Les voisins me voient', 'Un vis-à-vis à cacher'],
+    ['ombre', 'Trop de soleil l\'été', 'Pas d\'ombre aux heures chaudes'],
+    ['recevoir', 'Pas de coin repas', 'Pour manger dehors à plusieurs'],
+    ['sol', 'Le sol est abîmé', 'Boue, pelouse pelée, vieux dallage'],
+    ['embellir', 'Un mur ou un coin pas joli', 'Parpaings, grillage, cabanon'],
+    ['plantes', 'Il manque de la verdure', 'Des fleurs et des plantes faciles']
   ];
   var STYLES = [
     ['contemporain', 'Contemporain', 'Lignes droites, gris et blanc', ['#3A3F3C', '#D9D9D6', '#8A8F8C', '#F4F4F0']],
@@ -334,17 +343,20 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   E.envie = function () {
     var L = S.envies || [];
     var haut = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0;
-    var LISTE = haut ? ENVIES.map(function (o) { return { embellir: ['embellir', 'Une terrasse dont je suis fier', 'Embellir et mettre en valeur'], sol: ['sol', 'Un sol agréable', 'Un vrai sol bois à la place du carrelage'] }[o[0]] || o; }) : ENVIES;
+    var LISTE = haut ? ENVIES.map(function (o) { return { embellir: ['embellir', 'Un mur ou une vue pas jolie', 'Façade, garde-corps, voisins'], sol: ['sol', 'Le sol est triste', 'Carrelage ou béton fatigué'] }[o[0]] || o; }) : ENVIES;
     var ap = (S.terrain && S.terrain.apercu) || {}, ville = S.adresse && S.adresse.city;
     var info = !haut && ap.jardin_m2 ? '<p class="info"><i>☀</i><span>' + (ville ? h(ville) + ' : ' : '') + '<b>' + ap.jardin_m2 + ' m² de jardin' + (ap.jardin_cote ? ', côté ' + h(ap.jardin_cote) : '') + '</b></span></p>' : '';
-    return info + '<h2>' + (haut ? 'Sur cette terrasse' : 'Dans ce jardin') + ', j\'aimerais surtout…</h2><p class="sous">Choisissez-en une ou plusieurs, la plus importante en premier.</p>'
+    return info + '<h2>Aujourd\'hui, ' + (haut ? 'sur ma terrasse' : 'dans mon jardin') + '…</h2><p class="sous">Cochez ce qui vous gêne, le plus important en premier.</p>'
       + '<div class="cartes tuiles multi">' + LISTE.map(function (o) {
         var k = L.indexOf(o[0]);
         return '<button type="button" class="c' + (k >= 0 ? ' on' : '') + '" data-envie="' + o[0] + '" aria-pressed="' + (k >= 0) + '">'
           + '<span class="ic" aria-hidden="true">' + (k >= 0 ? '<span class="rang">' + (k + 1) + '</span>' : ICO[o[0]]) + '</span>'
           + '<span><b>' + h(o[1]) + '</b><small>' + h(o[2]) + '</small></span></button>';
       }).join('') + '</div>'
-      + '<div class="pile"><button type="button" class="cta" data-a="envie-ok"' + (L.length ? '' : ' disabled') + '>' + (L.length > 1 ? 'Continuer avec ces ' + L.length + ' envies' : 'Continuer') + '</button></div>';
+      // une précision écrite, facultative : elle part telle quelle à l'IA (lecture de la photo et visuel)
+      + '<div class="prec">' + (S.precision ? '' : '<button type="button" class="lien" data-a="prec">Ajouter une précision (facultatif)</button>')
+      + '<label class="ch" for="cgq-prec">Une précision sur votre projet</label><textarea id="cgq-prec" maxlength="300" rows="2" placeholder="Par exemple : garder la pelouse pour les enfants, cacher le cabanon du fond…"' + (S.precision ? '' : ' hidden') + '>' + h(S.precision || '') + '</textarea></div>'
+      + '<div class="pile"><button type="button" class="cta" data-a="envie-ok"' + (L.length ? '' : ' disabled') + '>Continuer</button></div>';
   };
   E.style = function () { return '<h2>Mon style, c\'est plutôt…</h2><p class="sous">Nous habillerons votre aménagement dans ce style.</p>' + cartes(STYLES, S.style, 'deux'); };
   E.entretien = function () { return '<h2>Pour l\'entretien des plantes, j\'ai…</h2><p class="sous">Nous choisirons des plantes adaptées à votre climat et à votre temps.</p>' + cartes(ENTRETIEN, S.entretien); };
@@ -359,7 +371,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   E.terrain = function () {
     return '<h2>C\'est bien votre maison ?</h2><p class="sous" id="cgq-tsous">Nous cherchons votre terrain sur le cadastre…</p>'
       + '<div class="carte squelette" id="cgq-carte"></div><div id="cgq-tinfo"></div>'
-      + '<div class="pile" id="cgq-tact" hidden><button type="button" class="cta" data-a="terrain-ok">Oui, c\'est bien ça</button>'
+      + '<div class="pile duo" id="cgq-tact" hidden><button type="button" class="cta" data-a="terrain-ok">Oui, c\'est bien ça</button>'
       + '<button type="button" class="cta sec" data-a="terrain-viser">Non, je la cherche sur la carte</button></div>';
   };
   E.photo = function () {
@@ -410,6 +422,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   }
 
   /* ---------- clics ---------- */
+  M.addEventListener('input', function (e) { if (e.target && e.target.id === 'cgq-prec') { S.precision = e.target.value.slice(0, 300); garder(); } });
   M.addEventListener('click', function (e) {
     var b = e.target.closest('button,a'); if (!b || !M.contains(b)) return;
     var a = b.getAttribute('data-a'), v = b.getAttribute('data-v');
@@ -427,7 +440,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       if (k >= 0) S.envies.splice(k, 1); else S.envies.push(en);
       S.envie = S.envies[0] || null; garder(); majEnvies(); return;
     }
-    if (a === 'envie-ok') { if (!(S.envies || []).length) return; ev('cgp_q_envies', { envie: S.envies.join(','), reponse: String(S.envies.length) }); return aller('style'); }
+    if (a === 'prec') { var t = M.querySelector('#cgq-prec'); b.remove(); if (t) { t.hidden = false; try { t.focus(); } catch (x) { } } return; }
+    if (a === 'envie-ok') { if (!(S.envies || []).length) return; ev('cgp_q_envies', { envie: S.envies.join(','), reponse: String(S.envies.length), precision: S.precision ? 'oui' : 'non' }); return aller('style'); }
     if (a === 'geo') return geolocaliser(b);
     if (a === 'adresse-ok') return aller('terrain');
     if (a === 'terrain-ok') return aller('envie');
@@ -467,7 +481,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       ic.innerHTML = k >= 0 ? '<span class="rang">' + (k + 1) + '</span>' : ICO[c.getAttribute('data-envie')];
     });
     var b = M.querySelector('[data-a=envie-ok]');
-    if (b) { b.disabled = !L.length; b.textContent = L.length > 1 ? 'Continuer avec ces ' + L.length + ' envies' : 'Continuer'; }
+    if (b) b.disabled = !L.length;
   }
 
   /* ---------- adresse ---------- */
@@ -560,7 +574,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (c) c.remove();
     var E_ = [['0', 'Rez-de-chaussée, avec jardin'], ['1', '1er étage'], ['2', '2e étage'], ['3', '3e étage'], ['4', '4e étage'], ['5', '5e étage'], ['6', '6e ou plus haut']];
     if (act) {
-      act.hidden = false;
+      act.hidden = false; act.classList.remove('duo');
       act.innerHTML = '<div class="cartes mini">' + E_.map(function (o) { return '<button type="button" class="c" data-a="etage" data-e="' + o[0] + '"><b>' + o[1] + '</b></button>'; }).join('') + '</div>'
         + '<button type="button" class="lien" data-a="etage-maison">Non, c\'est une maison</button>';
     }
@@ -607,7 +621,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     c.className = 'carte squelette'; c.innerHTML = '';
     if (sous) sous.innerHTML = '<b>Déplacez la carte pour mettre le repère sur votre maison.</b> Zoomez ou dézoomez si besoin.';
     if (info) info.innerHTML = '';
-    if (act) { act.hidden = false; act.innerHTML = '<button type="button" class="cta" data-a="terrain-ici" disabled>Ma maison est sous le repère</button><button type="button" class="lien" data-a="terrain-adresse">Changer l\'adresse</button>'; }
+    if (act) { act.hidden = false; act.classList.remove('duo'); act.innerHTML = '<button type="button" class="cta" data-a="terrain-ici" disabled>Ma maison est sous le repère</button><button type="button" class="lien" data-a="terrain-adresse">Changer l\'adresse</button>'; }
     c.scrollIntoView({ behavior: 'smooth', block: 'center' });
     ev('cgp_q_correction', { etape: 'carte' });
     chargerLeaflet().then(function (L) {
@@ -629,7 +643,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (!carteL) return;
     var p = carteL.getCenter(); carteL.remove(); carteL = null;
     var c = M.querySelector('#cgq-carte'); c.className = 'carte squelette'; c.innerHTML = '';
-    var act = M.querySelector('#cgq-tact'); if (act) { act.hidden = true; act.innerHTML = '<button type="button" class="cta" data-a="terrain-ok">Oui, c\'est bien ça</button><button type="button" class="cta sec" data-a="terrain-viser">Non, je la cherche sur la carte</button>'; }
+    var act = M.querySelector('#cgq-tact'); if (act) { act.hidden = true; act.classList.add('duo'); act.innerHTML = '<button type="button" class="cta" data-a="terrain-ok">Oui, c\'est bien ça</button><button type="button" class="cta sec" data-a="terrain-viser">Non, je la cherche sur la carte</button>'; }
     S.terrain = null; S.lieu = null; S.corrections = (S.corrections || 0) + 1;
     chercherTerrain(p.lat, p.lng);
   }
@@ -719,7 +733,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       address: S.adresse, parcel: T.parcel || null, building: T.building || null, facades: T.facades || [],
       page_projet: /^https?:/.test(PROJET) ? PROJET : '',
       lieu: S.lieu || { type: 'maison' },
-      project: { need: S.envie, needs: S.envies || [S.envie] }, needs: { style: S.style || 'contemporain', upkeep: S.entretien || 'peu' },
+      project: { need: S.envie, needs: S.envies || [S.envie], precision: (S.precision || '').slice(0, 300) }, needs: { style: S.style || 'contemporain', upkeep: S.entretien || 'peu' },
       contact: { firstName: S.prenom || '', email: S.email, optin: !!S.optin, consent: true },
       suivi: Object.assign({}, S.suivi, {
         temps_s: S.temps, corrections_adresse: S.corrections || 0, terrain_trouve: !!S.terrain, sans_photo: !S.photo,

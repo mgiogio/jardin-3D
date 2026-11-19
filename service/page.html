@@ -49,6 +49,10 @@
 .cgp .cmp .tag{position:absolute;top:12px;font:700 13px/1 var(--f);background:#fff;color:var(--txt);padding:7px 10px;border-radius:8px}
 .cgp .cmp .tag.l{left:12px}.cgp .cmp .tag.r{right:12px;background:var(--vert);color:#fff}
 .cgp .cmp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+/* poignée : toujours visible, même quand la barre est tout à gauche ou tout à droite */
+.cgp .cmp .poignee{position:absolute;top:50%;left:clamp(26px,var(--p,50%),calc(100% - 26px));width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:#fff;border:1px solid rgba(30,33,31,.14);box-shadow:0 1px 6px rgba(30,33,31,.28);display:flex;align-items:center;justify-content:center;gap:2px;color:var(--txt);pointer-events:none}
+.cgp .cmp .poignee svg{width:22px;height:22px}
+.cgp .cmp input:focus-visible~.poignee{outline:3px solid var(--vert);outline-offset:2px}
 .cgp .note{font-size:13px;color:var(--muted);margin:10px 0 0}
 .cgp .bloc{padding:20px;display:grid;gap:10px}
 .cgp .bloc+.bloc{margin-top:14px}
@@ -69,8 +73,19 @@
 
 .cgp .sunleg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}.cgp .sunleg i{width:60px;height:8px;border-radius:2px;background:linear-gradient(90deg,#96acc4,#ffde8c,#e8742a)}
 .cgp .hours{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.cgp .planrow{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:28px;margin-top:22px;align-items:start}
-.cgp .plan{padding:10px}.cgp .plan img{display:block;width:100%;border-radius:4px}
+.cgp .planrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:28px;margin-top:22px;align-items:start}
+.cgp .plan{position:relative;padding:10px;cursor:zoom-in}.cgp .plan img{display:block;width:100%;border-radius:4px}
+.cgp .plan:focus-visible{outline:3px solid var(--vert);outline-offset:2px}
+.cgp .plan .loupe{position:absolute;left:20px;top:20px;display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--txt);font:600 14px/1 var(--f);padding:9px 12px;border-radius:8px;border:1px solid var(--ligne)}
+.cgp .plan .loupe svg{width:16px;height:16px}.cgp .plan:hover .loupe{background:var(--gris)}
+/* plan agrandi, en plein écran */
+.cgp-zoom{position:fixed;inset:0;z-index:2147483000;background:#1E211F;display:flex;flex-direction:column;font-family:Roboto,Arial,sans-serif}
+.cgp-zoom .zh{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;color:#fff;font-size:14px}
+.cgp-zoom .zf{appearance:none;height:40px;min-width:0;padding:0 16px;border-radius:8px;border:1px solid #fff;background:#fff;color:#1E211F;font:600 14px/1 Roboto,Arial,sans-serif;cursor:pointer;text-transform:none;letter-spacing:0}
+.cgp-zoom .zf:hover{background:#F4F6F7}.cgp-zoom .zf:focus-visible{outline:3px solid #049E00;outline-offset:2px}
+.cgp-zoom .zc{flex:1;min-height:0;overflow:auto;display:flex;padding:0 12px 12px;-webkit-overflow-scrolling:touch}
+.cgp-zoom .zc img{margin:auto;max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;border-radius:4px;background:#fff}
+.cgp-zoom.grand .zc img{max-width:none;max-height:none;cursor:zoom-out}
 .cgp .legend{display:grid;gap:8px;font-size:15px;margin:12px 0 0;padding:0;list-style:none}
 .cgp .legend li{display:flex;gap:10px;align-items:center}
 .cgp .sw{width:16px;height:16px;border-radius:3px;flex:none}
@@ -264,6 +279,17 @@ cgp.querySelectorAll("[data-partage]").forEach(b=>b.addEventListener("click",asy
   if(c==="whatsapp")window.open("https://wa.me/?text="+encodeURIComponent(txt+url),"_blank","noopener");
   else if(c==="email")location.href="mailto:?subject="+encodeURIComponent("Notre projet de jardin")+"&body="+encodeURIComponent(txt+url);
   else{try{await navigator.clipboard.writeText(url);b.textContent="Lien copié"}catch(x){const i=document.createElement("input");i.value=url;i.readOnly=true;i.className="lien-copie";b.after(i);i.select()}}}));
+// plan : un clic l'ouvre en plein écran, un clic sur l'image zoome à l'endroit touché
+const pl=document.querySelector(".cgp .plan");
+if(pl){const ouvrir=()=>{const im=pl.querySelector("img"),z=document.createElement("div");z.className="cgp-zoom";z.setAttribute("role","dialog");z.setAttribute("aria-modal","true");z.setAttribute("aria-label","Plan de votre parcelle");
+  z.innerHTML='<div class="zh"><span>Touchez le plan pour zoomer</span><button type="button" class="zf">Fermer</button></div><div class="zc"><img alt="Votre parcelle vue du ciel"></div>';
+  const g=z.querySelector("img"),c=z.querySelector(".zc");g.src=im.currentSrc||im.src;
+  const kd=e=>{if(e.key==="Escape")fermer()},fermer=()=>{z.remove();document.documentElement.style.overflow="";removeEventListener("keydown",kd);try{pl.focus({preventScroll:true})}catch(x){}};
+  z.querySelector(".zf").addEventListener("click",fermer);
+  c.addEventListener("click",e=>{if(e.target!==g){fermer();return}const r=g.getBoundingClientRect(),fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;
+    z.classList.toggle("grand");if(z.classList.contains("grand")){c.scrollLeft=fx*g.offsetWidth-c.clientWidth/2;c.scrollTop=fy*g.offsetHeight-c.clientHeight/2}});
+  addEventListener("keydown",kd);document.documentElement.style.overflow="hidden";document.body.appendChild(z);z.querySelector(".zf").focus();ev("cgp_plan_zoom")};
+  pl.addEventListener("click",ouvrir);pl.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();ouvrir()}})}
 // avis : pouce en l'air ou pouce en bas, puis ce qui a plu ou non
 const Z=document.getElementById("cgp-note");let note=null;
 Z.querySelectorAll(".pouce").forEach(b=>b.addEventListener("click",()=>{note=b.dataset.note;Z.querySelectorAll(".pouce").forEach(x=>x.classList.toggle("on",x===b));

@@ -18,7 +18,7 @@
  },
  "pergola": {
   "nom": "Pergola bois brise-soleil",
-  "lien": "https://www.cover.green/pergola-autoportante-3x3/",
+  "lien": "https://www.cover.green/pergola-bois-autoportante/",
   "prix": [
    1100,
    1400
@@ -50,6 +50,9 @@
   "sol": [
    "terrasse",
    "pergola"
+  ],
+  "plantes": [
+   "cloture"
   ],
   "_defaut": [
    "cloture",

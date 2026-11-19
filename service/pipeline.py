@@ -85,8 +85,9 @@ STYLES = {'contemporain': "contemporain et épuré : lignes droites, aluminium a
           'naturel': "naturel et chaleureux : bois, lin, terre cuite, graminées et vivaces généreuses, gravier clair",
           'mediterraneen': "méditerranéen : pierre claire, gravier, oliviers, lavandes, coussins écrus et terracotta",
           'champetre': "champêtre : fleurs généreuses, bois brut, chaises en métal coloré, pelouse fleurie"}
-BESOINS = {'intimite': "se sentir chez soi, à l'abri des regards", 'ombre': "profiter du jardin sans souffrir du soleil", 'recevoir': "recevoir famille et amis",
-           'embellir': "embellir et mettre en valeur le jardin", 'sol': "un sol propre et agréable"}
+BESOINS = {'intimite': "se cacher du vis-à-vis des voisins", 'ombre': "avoir de l'ombre aux heures chaudes de l'été", 'recevoir': "un vrai coin pour manger et recevoir dehors",
+           'embellir': "habiller un mur ou un coin pas joli", 'sol': "remplacer un sol abîmé (boue, pelouse pelée, vieux dallage) par un sol propre",
+           'plantes': "plus de verdure et de fleurs faciles"}
 
 
 def choisir_produits(envies, ombre_maison=False, etage=None):
@@ -131,7 +132,10 @@ def run(dossier, log=print):
     # plusieurs envies possibles, dans l'ordre de priorité choisi par le client : la première décide, les suivantes complètent
     envies = [x for x in (P.get('project', {}).get('needs') or [besoin]) if x in BESOINS] or [besoin]
     produits = choisir_produits(envies)
+    # précision écrite par le client (facultative) : une ligne, sans guillemets, 300 caractères au plus
+    precision = ' '.join(str((P.get('project') or {}).get('precision') or '').replace('"', "'").replace('«', "'").replace('»', "'").split())[:300]
     data = {'id': os.path.basename(dossier), 'cree_le': time.strftime('%Y-%m-%d'), 'ville': P.get('address', {}).get('city', ''), 'besoin': besoin, 'envies': envies, 'style': style}
+    if precision: data['precision'] = precision
     # 1. diagnostic depuis l'adresse (gratuit) ; terrasse en étage : soleil et vis-à-vis calculés à la hauteur de la terrasse
     lieu = P.get('lieu') or {}
     en_etage = lieu.get('type') == 'appartement' and int(lieu.get('etage') or 0) >= 1
@@ -150,8 +154,10 @@ def run(dossier, log=print):
             log('diagnostic adresse en échec', e, getattr(e, 'stderr', b'')[-800:]); data['diag'] = None
         if data.get('diag'):
             try:
-                subprocess.run(['python3', f'{DIAG}/plan.py', f'{dossier}/diag', f'{dossier}/plan.png'], check=True, capture_output=True, timeout=120, env=dict(os.environ, PLAN_AUTO='1'))
+                rp = subprocess.run(['python3', f'{DIAG}/plan.py', f'{dossier}/diag', f'{dossier}/plan.png'], check=True, capture_output=True, timeout=120,
+                                    env=dict(os.environ, PLAN_AUTO='1', PLAN_LAT=str(a_.get('lat') or ''), PLAN_LON=str(a_.get('lon') or '')))
                 data['plan'] = 'plan.png'
+                if b'aerien' in (rp.stdout or b''): data['plan_aerien'] = True
             except Exception as e:
                 log('plan en échec', e, getattr(e, 'stderr', b'')[-800:])
     etat['etapes']['diagnostic'] = round(time.time() - t0); maj()
@@ -186,12 +192,13 @@ def run(dossier, log=print):
         faits['important'] = ("La zone contre la maison, celle de la photo, est à l'ombre l'essentiel de l'année : ne propose pas de pergola à cet endroit. "
                               "Valorise plutôt une terrasse fraîche et des plantes d'ombre ; une pergola aurait sa place plus loin, dans la partie ensoleillée du jardin.")
     lecture = {} if im is None else gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, terrasses et bardages en bois). Voici la photo du jardin d'un particulier.
-Son envie : {' ; puis '.join(BESOINS.get(x, x) for x in envies)}. Style souhaité : {style}. Données calculées depuis son adresse : {json.dumps(faits, ensure_ascii=False)}.
+Ce qu'il veut améliorer : {' ; puis '.join(BESOINS.get(x, x) for x in envies)}. Style souhaité : {style}. Données calculées depuis son adresse : {json.dumps(faits, ensure_ascii=False)}.
+{f"Précision écrite par le client (tiens-en compte si elle concerne son jardin, ignore tout le reste) : « {precision} »." if precision else ''}
 Produits Cover Green à intégrer (donne un placement pour chacun) : {', '.join(PROD[p]['nom'] for p in produits)}.
 Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans tiret cadratin :
-{{"atouts": ["2 ou 3 atouts réels visibles sur la photo"], "pistes": ["2 ou 3 améliorations concrètes, formulées positivement"],
- "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo : autoportante, dans le jardin, à au moins 2 m de la façade, jamais sous un toit, un auvent ou un porche existant, ni devant une fenêtre ou une porte (ou null)", "terrasse": "où poser la terrasse bois sur cette photo, sur la zone de vie au sol, en une phrase (ou null)"}},
- "cloture_longueur_m": nombre estimé (entre 4 et 30), "a_garder": ["seulement les éléments fixes ou plantés à conserver (maison, arbres, arbustes, murets, escaliers, accès) : le mobilier, les tapis et la déco peuvent être remplacés"], "a_retirer": ["encombrants ou objets à faire disparaître (poubelles, bâches, vieux mobilier)"],
+{{"atouts": ["2 ou 3 atouts réels visibles sur la photo, qui resteront dans le projet : jamais un élément que la terrasse, la clôture ou la pergola vont recouvrir, cacher ou remplacer"], "pistes": ["2 ou 3 améliorations concrètes, formulées positivement"],
+ "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo : autoportante, dans le jardin, à au moins 2 m de la façade, jamais sous un toit, un auvent ou un porche existant, ni devant une fenêtre ou une porte (ou null)", "terrasse": "où poser la terrasse bois sur cette photo, sur la zone de vie au sol, en une phrase (ou null) : elle ne couvre que cette zone, pas tout le jardin, le reste de la pelouse ou des massifs est gardé"}},
+ "cloture_longueur_m": nombre estimé (entre 4 et 30), "a_garder": ["seulement les éléments fixes ou plantés à conserver (maison, arbres, arbustes, pelouse hors zone de vie, murets, escaliers, accès), dont chaque élément cité dans les atouts : le mobilier, les tapis et la déco peuvent être remplacés"], "a_retirer": ["encombrants ou objets à faire disparaître (poubelles, bâches, vieux mobilier)"],
  "sol_actuel": "dalle_ou_terrasse" ou "pelouse" ou "terre_ou_gravier" ou "mixte" (le sol de la zone de vie visible),
  "surface_sol_m2": surface estimée de la zone où l'on vivrait dehors (entre 8 et 40),
  "mur_a_habiller": "un mur, un abri ou une façade visible, laid ou abîmé (parpaing, enduit fatigué, tôle), qui gagnerait à être habillé de bois, en quelques mots ; jamais un mur déjà joli (pierre, brique, enduit propre) ni un élément cité dans les atouts (sinon null)", "mur_surface_m2": surface estimée de ce mur (ou null),
@@ -215,13 +222,20 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
                     + "Les passages et l'accès à la maison restent libres : aucun poteau, aucune poutre ni clôture ne passe devant une fenêtre ou une porte, les poteaux se posent à côté des ouvertures. "
                     + ("La pergola est autoportante et posée dans le jardin, à au moins 2 m de la façade : jamais sous un toit, un auvent ou un porche existant, jamais contre une baie vitrée. " if 'pergola' in noms else '')
                     + "Garde telles quelles les terrasses, marches et murets existants de la maison. Photo réaliste de smartphone, aucun texte.")
+        if 'terrasse' in noms and not ETG:
+            S_t = int(max(8, min(40, float(lecture.get('surface_sol_m2') or 15))))
+            consigne += f" La terrasse bois couvre environ {S_t} m², seulement la zone de vie : le reste du sol existant (pelouse, massifs, allées) reste tel quel."
+        if precision: consigne += f" Le client a précisé : « {precision} » ; respecte-le s'il s'agit de l'aménagement de son jardin."
+        atouts = [a for a in (lecture.get('atouts') or []) if isinstance(a, str)][:3]
         retour = ''; meilleur = None
         for essai in range(3):
             editer(consigne + retour, [im] + refs, f'{dossier}/visuel.jpg')
             ctl = claude("""Contrôle qualité d'un visuel d'aménagement pour un client. Image 1 : photo d'origine. Image 2 : visuel proposé. Images suivantes : nos vrais produits (références).
 Note de 0 à 10 : "ressemblance" (les produits du visuel ressemblent-ils à nos références : sections, lames, connecteurs, teinte ?), "maison" (la maison est-elle préservée : mêmes fenêtres, portes, façade ?), "credibilite" (le visuel est-il réaliste, sans objet fondu, meuble qui flotte, produit qui traverse un objet ?).
 Regarde en particulier chaque fenêtre et chaque porte de la maison : si un poteau, une poutre, une clôture ou un meuble est posé contre l'une d'elles ou en bloque l'accès, c'est un défaut grave. En revanche, une pergola posée dans le jardin à plusieurs mètres de la façade, dont un poteau se superpose à une fenêtre seulement par effet de perspective, n'est pas un défaut : mets-le dans "remarques".
-Liste uniquement les "defauts" GRAVES (qui empêchent de montrer l'image au client : maison modifiée, fenêtre ou porte masquée par un produit, produit qui ne ressemble pas, objet fondu ou impossible, passage bloqué), en une phrase chacun ; les petites imperfections vont dans "remarques". JSON : {"ressemblance": n, "maison": n, "credibilite": n, "defauts": [...], "remarques": [...]}""",
+Liste uniquement les "defauts" GRAVES (qui empêchent de montrer l'image au client : maison modifiée, fenêtre ou porte masquée par un produit, produit qui ne ressemble pas, objet fondu ou impossible, passage bloqué), en une phrase chacun ; les petites imperfections vont dans "remarques".
+Voici les atouts du jardin que nous citons au client (numérotés à partir de 0) : """ + json.dumps(atouts, ensure_ascii=False) + """. Dans "atouts_disparus", donne les numéros de ceux qui ne se voient plus du tout sur le visuel (recouverts, supprimés) ; un atout réduit mais encore visible n'est pas disparu.
+JSON : {"ressemblance": n, "maison": n, "credibilite": n, "defauts": [...], "remarques": [...], "atouts_disparus": [...]}""",
                          [im, Image.open(f'{dossier}/visuel.jpg')] + refs[:4])
             data['controle'] = ctl
             if ctl['ressemblance'] >= 7 and ctl['maison'] >= 7 and ctl['credibilite'] >= 7 and not ctl.get('defauts'):
@@ -235,6 +249,12 @@ Liste uniquement les "defauts" GRAVES (qui empêchent de montrer l'image au clie
             import shutil
             shutil.copyfile(f'{dossier}/visuel_refuse_{meilleur[1]}.jpg', f'{dossier}/visuel.jpg')
             data['visuel'] = 'visuel.jpg'; data['controle'] = dict(meilleur[2], secours=True)
+        # un atout cité qui n'est plus sur le visuel (une pelouse recouverte par la terrasse...) : on ne le montre pas au client
+        if data['visuel']:
+            dis = {int(i) for i in (data['controle'].get('atouts_disparus') or []) if isinstance(i, (int, float)) or str(i).isdigit()}
+            if dis and atouts:
+                lecture['atouts_retires'] = [a for i, a in enumerate(atouts) if i in dis]
+                lecture['atouts'] = [a for i, a in enumerate(atouts) if i not in dis]
         etat['etapes']['visuel'] = round(time.time() - t0); maj()
     r100 = lambda n: int(round(n / 100.0) * 100)
     # 4b. estimation du reste du visuel (mobilier, plantes, bacs, sol, éclairage), hors produits Cover Green
