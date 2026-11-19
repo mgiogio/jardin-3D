@@ -86,8 +86,8 @@ STYLES = {'contemporain': "contemporain et épuré : lignes droites, aluminium a
           'mediterraneen': "méditerranéen : pierre claire, gravier, oliviers, lavandes, coussins écrus et terracotta",
           'champetre': "champêtre : fleurs généreuses, bois brut, chaises en métal coloré, pelouse fleurie"}
 BESOINS = {'intimite': "se cacher du vis-à-vis des voisins", 'ombre': "avoir de l'ombre aux heures chaudes de l'été", 'recevoir': "un vrai coin pour manger et recevoir dehors",
-           'embellir': "habiller un mur ou un coin pas joli", 'sol': "remplacer un sol abîmé (boue, pelouse pelée, vieux dallage) par un sol propre",
-           'plantes': "plus de verdure et de fleurs faciles"}
+           'embellir': "habiller un mur, un grillage ou un coin pas joli", 'sol': "un sol propre toute l'année à la place de la boue, d'une pelouse pelée ou d'un vieux dallage",
+           'plantes': "des massifs qui fleurissent, faciles à vivre"}
 
 
 def choisir_produits(envies, ombre_maison=False, etage=None):

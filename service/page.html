@@ -48,11 +48,14 @@
 .cgp .cmp .bar{position:absolute;top:0;bottom:0;left:var(--p,50%);width:3px;background:#fff;transform:translateX(-50%)}
 .cgp .cmp .tag{position:absolute;top:12px;font:700 13px/1 var(--f);background:#fff;color:var(--txt);padding:7px 10px;border-radius:8px}
 .cgp .cmp .tag.l{left:12px}.cgp .cmp .tag.r{right:12px;background:var(--vert);color:#fff}
-.cgp .cmp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.cgp .cmp{cursor:ew-resize}.cgp .cmp img{-webkit-user-drag:none;pointer-events:none}
+/* le curseur se déplace en JS (glisser la poignée, ou un clic) ; le champ reste pour le clavier et les lecteurs d'écran */
+.cgp .cmp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;pointer-events:none}
 /* poignée : toujours visible, même quand la barre est tout à gauche ou tout à droite */
 .cgp .cmp .poignee{position:absolute;top:50%;left:clamp(26px,var(--p,50%),calc(100% - 26px));width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:#fff;border:1px solid rgba(30,33,31,.14);box-shadow:0 1px 6px rgba(30,33,31,.28);display:flex;align-items:center;justify-content:center;gap:2px;color:var(--txt);pointer-events:none}
 .cgp .cmp .poignee svg{width:22px;height:22px}
 .cgp .cmp input:focus-visible~.poignee{outline:3px solid var(--vert);outline-offset:2px}
+.cgp .cmp .tag{transition:opacity .2s}.cgp .cmp.fin-g .tag.l,.cgp .cmp.fin-d .tag.r{opacity:0}
 .cgp .note{font-size:13px;color:var(--muted);margin:10px 0 0}
 .cgp .bloc{padding:20px;display:grid;gap:10px}
 .cgp .bloc+.bloc{margin-top:14px}
@@ -256,7 +259,16 @@
   <p class="fin">Cette page est personnelle : gardez ce lien pour retrouver votre projet.</p>
 </div>
 </div>
-<script>(()=>{const c=document.getElementById("cmp"),r=document.getElementById("cmp-range");if(c&&r)r.addEventListener("input",()=>c.style.setProperty("--p",r.value+"%"));
+<script>(()=>{const c=document.getElementById("cmp"),r=document.getElementById("cmp-range");
+// avant / après : à la souris, clic ou glisser n'importe où ; au doigt, on glisse depuis la poignée (ou on touche l'image sans bouger),
+// pour qu'un doigt qui fait défiler la page ne déplace jamais le curseur
+if(c&&r){const fixer=v=>{v=Math.round(Math.max(0,Math.min(100,v)));r.value=v;c.style.setProperty("--p",v+"%");c.classList.toggle("fin-g",v<14);c.classList.toggle("fin-d",v>86)},pos=e=>{const b=c.getBoundingClientRect();return(e.clientX-b.left)/b.width*100};
+  r.addEventListener("input",()=>fixer(+r.value));let glisse=false,dep=null;
+  c.addEventListener("pointerdown",e=>{const b=c.getBoundingClientRect(),prochePoignee=Math.abs(e.clientX-(b.left+Math.min(Math.max(b.width*r.value/100,26),b.width-26)))<40;
+    if(e.pointerType==="mouse"||prochePoignee){glisse=true;try{c.setPointerCapture(e.pointerId)}catch(x){}if(e.pointerType==="mouse"){fixer(pos(e));e.preventDefault()}}else dep={x:e.clientX,y:e.clientY,t:Date.now()}});
+  c.addEventListener("pointermove",e=>{if(glisse)fixer(pos(e))});
+  const fin=e=>{if(glisse){glisse=false;try{c.releasePointerCapture(e.pointerId)}catch(x){}}else if(dep&&e.type==="pointerup"&&Math.hypot(e.clientX-dep.x,e.clientY-dep.y)<8&&Date.now()-dep.t<500)fixer(pos(e));dep=null};
+  c.addEventListener("pointerup",fin);c.addEventListener("pointercancel",fin)}
 const cgp=document.querySelector(".cgp"),nav=document.querySelector(".cgp .onglets"),L=[...nav.querySelectorAll("a")],S=L.map(a=>document.querySelector(a.hash)).filter(Boolean);
 const barre=()=>document.querySelector("#cgh .cgh-fixed, .cgh-fixed");
 const admin=()=>parseInt(getComputedStyle(document.documentElement).getPropertyValue("--wp-admin--admin-bar--height"))||0;
