@@ -85,15 +85,24 @@ STYLES = {'contemporain': "contemporain et épuré : lignes droites, aluminium a
           'naturel': "naturel et chaleureux : bois, lin, terre cuite, graminées et vivaces généreuses, gravier clair",
           'mediterraneen': "méditerranéen : pierre claire, gravier, oliviers, lavandes, coussins écrus et terracotta",
           'champetre': "champêtre : fleurs généreuses, bois brut, chaises en métal coloré, pelouse fleurie"}
-BESOINS = {'intimite': "se cacher du vis-à-vis des voisins", 'ombre': "avoir de l'ombre aux heures chaudes de l'été", 'recevoir': "un vrai coin pour manger et recevoir dehors",
-           'embellir': "habiller un mur, un grillage ou un coin pas joli", 'sol': "un sol propre toute l'année à la place de la boue, d'une pelouse pelée ou d'un vieux dallage",
-           'plantes': "des massifs qui fleurissent, faciles à vivre"}
+BESOINS = {'intimite': "fermer le jardin et se cacher du vis-à-vis (voisins, chien, enfants)", 'ombre': "avoir de l'ombre aux heures chaudes de l'été",
+           'recevoir': "une terrasse pour vivre dehors : repas, barbecue, détente", 'piscine': "profiter d'une piscine (existante ou en projet) avec une plage en bois autour",
+           'potager': "un potager en grands bacs de bois, arrosé à l'eau de pluie", 'embellir': "habiller un mur, un grillage ou un coin pas joli",
+           'plantes': "des massifs qui fleurissent, faciles à vivre", 'studio': "une pièce en plus au fond du jardin (bureau, chambre d'amis) : un studio de jardin",
+           'sol': "un sol propre toute l'année à la place de la boue, d'une pelouse pelée ou d'un vieux dallage"}
+# taille du studio GEKA proposé selon la surface du jardin (20 m² au plus : une simple déclaration préalable suffit)
+def taille_studio(jardin_m2):
+    return '20' if jardin_m2 >= 400 else '15' if jardin_m2 >= 150 else '11'
+# piscine dessinée quand le client n'en a pas encore : taille selon la surface du jardin (None : jardin trop petit)
+def taille_piscine(jardin_m2):
+    return '8 x 4 m' if jardin_m2 >= 300 else '7 x 3,5 m' if jardin_m2 >= 150 else '5 x 2,5 m' if jardin_m2 >= 80 else None
 
 
 def choisir_produits(envies, ombre_maison=False, etage=None):
     # terrasse ou balcon en étage : la terrasse bois sur plots (sans percer l'étanchéité) d'abord, jamais de clôture ;
     # une pergola seulement sur un toit-terrasse, pour de l'ombre ou pour recevoir
     if etage:
+        envies = [x for x in envies if x not in ('piscine', 'studio')]      # ni piscine ni studio sur une terrasse en étage
         produits = ['terrasse']
         if etage.get('toit') and ({'ombre', 'recevoir'} & set(envies)) and not (ombre_maison and 'ombre' not in envies): produits.append('pergola')
         return produits
@@ -105,7 +114,8 @@ def choisir_produits(envies, ombre_maison=False, etage=None):
             if p not in produits: produits.append(p)
     # sauf si le client veut justement de l'ombre : la pergola ira alors dans la partie ensoleillée du jardin
     if ombre_maison and 'pergola' in produits and 'ombre' not in envies: produits.remove('pergola')
-    if not produits: produits = ['cloture']
+    # un potager seul : pas de produit de structure, le récupérateur d'eau est proposé en complément
+    if not produits and not (set(envies) <= {'potager'}): produits = ['cloture']
     return produits[:3]
 
 
@@ -191,16 +201,25 @@ def run(dossier, log=print):
     if data.get('pergola_retiree'):
         faits['important'] = ("La zone contre la maison, celle de la photo, est à l'ombre l'essentiel de l'année : ne propose pas de pergola à cet endroit. "
                               "Valorise plutôt une terrasse fraîche et des plantes d'ombre ; une pergola aurait sa place plus loin, dans la partie ensoleillée du jardin.")
-    lecture = {} if im is None else gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, terrasses et bardages en bois). Voici la photo du jardin d'un particulier.
+    jm2 = d.get('surface_jardin_m2') or 200          # surface inconnue (diagnostic en échec) : jardin moyen
+    piscine_voulue = 'piscine' in envies and not ETG; potager_voulu = 'potager' in envies
+    extra = ''
+    if piscine_voulue:
+        extra += (f'"piscine_existante": true ou false (une piscine est-elle visible sur la photo ?), "piscine": "si aucune piscine n\'est visible, où creuser une piscine '
+                  f'd\'environ {taille_piscine(jm2) or "5 x 2,5 m"} sur cette photo, au soleil, sur la pelouse, loin des arbres, en une phrase ; null si la place manque", ')
+    if potager_voulu:
+        extra += '"potager": "où poser 2 ou 3 grands bacs potagers en bois sur cette photo, dans la partie la plus ensoleillée, en une phrase", '
+    lecture = {} if im is None else gpt(f"""Tu es paysagiste-conseil pour Cover Green (clôtures, pergolas, terrasses, bardages et studios de jardin en bois). Voici la photo du jardin d'un particulier.
 Ce qu'il veut améliorer : {' ; puis '.join(BESOINS.get(x, x) for x in envies)}. Style souhaité : {style}. Données calculées depuis son adresse : {json.dumps(faits, ensure_ascii=False)}.
 {f"Précision écrite par le client (tiens-en compte si elle concerne son jardin, ignore tout le reste) : « {precision} »." if precision else ''}
-Produits Cover Green à intégrer (donne un placement pour chacun) : {', '.join(PROD[p]['nom'] for p in produits)}.
+{f"Produits Cover Green à intégrer (donne un placement pour chacun) : {', '.join(PROD[p]['nom'] for p in produits)}." if produits else "Pas de produit Cover Green de structure ici : le projet porte sur le potager et les plantations (laisse les placements à null)."}
 Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans tiret cadratin :
 {{"atouts": ["2 ou 3 atouts réels visibles sur la photo, qui resteront dans le projet : jamais un élément que la terrasse, la clôture ou la pergola vont recouvrir, cacher ou remplacer"], "pistes": ["2 ou 3 améliorations concrètes, formulées positivement"],
- "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo : autoportante, dans le jardin, à au moins 2 m de la façade, jamais sous un toit, un auvent ou un porche existant, ni devant une fenêtre ou une porte (ou null)", "terrasse": "où poser la terrasse bois sur cette photo, sur la zone de vie au sol, en une phrase (ou null) : elle ne couvre que cette zone, pas tout le jardin, le reste de la pelouse ou des massifs est gardé"}},
+ "placement": {{"cloture": "où poser la clôture sur cette photo pour répondre à l'envie, en une phrase (ou null)", "pergola": "où poser la pergola sur cette photo : autoportante, dans le jardin, à au moins 2 m de la façade, jamais sous un toit, un auvent ou un porche existant, ni devant une fenêtre ou une porte (ou null)", "terrasse": "où poser la terrasse bois sur cette photo, sur la zone de vie au sol, en une phrase (ou null) : elle ne couvre que cette zone, pas tout le jardin, le reste de la pelouse ou des massifs est gardé{" ; si le client veut une piscine, c'est la plage en bois tout autour de la piscine" if piscine_voulue else ""}"{', "studio": "où poser le studio de jardin sur cette photo : au fond du jardin, en retrait des limites, sans masquer la maison ni les fenêtres, en une phrase (ou null)"' if 'studio' in produits else ''}}},
+ {extra}
  "cloture_longueur_m": nombre estimé (entre 4 et 30), "a_garder": ["seulement les éléments fixes ou plantés à conserver (maison, arbres, arbustes, pelouse hors zone de vie, murets, escaliers, accès), dont chaque élément cité dans les atouts : le mobilier, les tapis et la déco peuvent être remplacés"], "a_retirer": ["encombrants ou objets à faire disparaître (poubelles, bâches, vieux mobilier)"],
  "sol_actuel": "dalle_ou_terrasse" ou "pelouse" ou "terre_ou_gravier" ou "mixte" (le sol de la zone de vie visible),
- "surface_sol_m2": surface estimée de la zone où l'on vivrait dehors (entre 8 et 40),
+ "surface_sol_m2": surface estimée de la zone où l'on vivrait dehors, ou de la plage en bois autour de la piscine (entre 8 et 40),
  "mur_a_habiller": "un mur, un abri ou une façade visible, laid ou abîmé (parpaing, enduit fatigué, tôle), qui gagnerait à être habillé de bois, en quelques mots ; jamais un mur déjà joli (pierre, brique, enduit propre) ni un élément cité dans les atouts (sinon null)", "mur_surface_m2": surface estimée de ce mur (ou null),
  "photo_exploitable": true ou false (false si la photo ne montre pas un extérieur)}}""", [im])
     data['lecture'] = lecture; etat['etapes']['lecture'] = round(time.time() - t0); maj()
@@ -212,7 +231,7 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
         if ETG: consigne_lieu = "C'est une terrasse d'appartement en étage : garde le garde-corps et la façade, la terrasse bois est posée sur plots par-dessus le sol existant, les plantes sont en grands bacs. "
         else: consigne_lieu = ''
         consigne = consigne_lieu + (f"La première image est la photo du jardin d'un client : garde exactement la même maison, le même cadrage, la même perspective et la même lumière. "
-                    f"Les images suivantes sont des photos de vrais produits Cover Green posés chez des clients. Reproduis CES produits à l'identique (proportions, sections, espacement des lames, connecteurs, teinte), jamais un modèle générique :\n"
+                    + (f"Les images suivantes sont des photos de vrais produits Cover Green posés chez des clients. Reproduis CES produits à l'identique (proportions, sections, espacement des lames, connecteurs, teinte), jamais un modèle générique :\n" if noms else '')
                     + ''.join(f"- {PROD[p]['description_visuel']} : {lecture['placement'][p]}\n" for p in noms)
                     + f"Aménage autour dans un style {STYLES.get(style, style)}, très peu d'entretien, crédible pour un particulier : remplace le mobilier, les tapis et la déco existants par un aménagement neuf dans ce style, ajoute des plantations généreuses. "
                     + (f"Pour les plantations, utilise uniquement ces plantes, choisies pour l'exposition de cette zone ({(data.get('plantes') or {}).get('expo', '')}) : "
@@ -225,6 +244,18 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
         if 'terrasse' in noms and not ETG:
             S_t = int(max(8, min(40, float(lecture.get('surface_sol_m2') or 15))))
             consigne += f" La terrasse bois couvre environ {S_t} m², seulement la zone de vie : le reste du sol existant (pelouse, massifs, allées) reste tel quel."
+        if piscine_voulue:
+            if lecture.get('piscine_existante'):
+                consigne += " Garde la piscine existante telle quelle : la terrasse bois forme une plage tout autour."
+            elif lecture.get('piscine') and taille_piscine(jm2):
+                consigne += (f" Ajoute une piscine enterrée rectangulaire d'environ {taille_piscine(jm2)} : {lecture['piscine']}. Eau claire, margelles fines en pierre claire, "
+                             "entourée d'une plage en lames de bois Cover Green ; elle reste à l'écart de la maison et des arbres.")
+                data['piscine_dessinee'] = taille_piscine(jm2)
+        if potager_voulu:
+            consigne += (" Ajoute un potager : 2 ou 3 grands bacs potagers rectangulaires en bois brut, hauts d'environ 70 cm, garnis de légumes et d'aromatiques, "
+                         + (lecture.get('potager') or "dans la partie la plus ensoleillée du jardin") + ".")
+        if 'studio' in noms:
+            consigne += " Le studio de jardin est posé au sol, au fond du jardin, à l'échelle : environ 2,6 m de haut, la maison reste nettement plus grande."
         if precision: consigne += f" Le client a précisé : « {precision} » ; respecte-le s'il s'agit de l'aménagement de son jardin."
         atouts = [a for a in (lecture.get('atouts') or []) if isinstance(a, str)][:3]
         retour = ''; meilleur = None
@@ -232,10 +263,10 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
             editer(consigne + retour, [im] + refs, f'{dossier}/visuel.jpg')
             ctl = claude("""Contrôle qualité d'un visuel d'aménagement pour un client. Image 1 : photo d'origine. Image 2 : visuel proposé. Images suivantes : nos vrais produits (références).
 Note de 0 à 10 : "ressemblance" (les produits du visuel ressemblent-ils à nos références : sections, lames, connecteurs, teinte ?), "maison" (la maison est-elle préservée : mêmes fenêtres, portes, façade ?), "credibilite" (le visuel est-il réaliste, sans objet fondu, meuble qui flotte, produit qui traverse un objet ?).
-Regarde en particulier chaque fenêtre et chaque porte de la maison : si un poteau, une poutre, une clôture ou un meuble est posé contre l'une d'elles ou en bloque l'accès, c'est un défaut grave. En revanche, une pergola posée dans le jardin à plusieurs mètres de la façade, dont un poteau se superpose à une fenêtre seulement par effet de perspective, n'est pas un défaut : mets-le dans "remarques".
+La piscine et les bacs potagers ne sont pas nos produits : juge-les seulement sur la crédibilité. Regarde en particulier chaque fenêtre et chaque porte de la maison : si un poteau, une poutre, une clôture ou un meuble est posé contre l'une d'elles ou en bloque l'accès, c'est un défaut grave. En revanche, une pergola posée dans le jardin à plusieurs mètres de la façade, dont un poteau se superpose à une fenêtre seulement par effet de perspective, n'est pas un défaut : mets-le dans "remarques".
 Liste uniquement les "defauts" GRAVES (qui empêchent de montrer l'image au client : maison modifiée, fenêtre ou porte masquée par un produit, produit qui ne ressemble pas, objet fondu ou impossible, passage bloqué), en une phrase chacun ; les petites imperfections vont dans "remarques".
 Voici les atouts du jardin que nous citons au client (numérotés à partir de 0) : """ + json.dumps(atouts, ensure_ascii=False) + """. Dans "atouts_disparus", donne les numéros de ceux qui ne se voient plus du tout sur le visuel (recouverts, supprimés) ; un atout réduit mais encore visible n'est pas disparu.
-JSON : {"ressemblance": n, "maison": n, "credibilite": n, "defauts": [...], "remarques": [...], "atouts_disparus": [...]}""",
+JSON : {"ressemblance": n, "maison": n, "credibilite": n, "defauts": [...], "remarques": [...], "atouts_disparus": [...]}""" + ("" if refs else "\nIl n'y a aucun produit Cover Green dans ce visuel : mets 10 en ressemblance."),
                          [im, Image.open(f'{dossier}/visuel.jpg')] + refs[:4])
             data['controle'] = ctl
             if ctl['ressemblance'] >= 7 and ctl['maison'] >= 7 and ctl['credibilite'] >= 7 and not ctl.get('defauts'):
@@ -261,7 +292,7 @@ JSON : {"ressemblance": n, "maison": n, "credibilite": n, "defauts": [...], "rem
     data['reste'] = None
     if data['visuel']:
         try:
-            inv = gpt("""Voici une idée d'aménagement de jardin. Fais l'inventaire de ce qui a été AJOUTÉ par rapport à un jardin vide, SAUF la clôture et la pergola en bois (déjà chiffrées) et sauf la maison.
+            inv = gpt("""Voici une idée d'aménagement de jardin. Fais l'inventaire de ce qui a été AJOUTÉ par rapport à un jardin vide, SAUF la clôture, la pergola, la terrasse bois et le studio de jardin (déjà chiffrés), sauf la piscine et sauf la maison.
 Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape", "fauteuil", "table_basse", "table_repas", "chaise", "bain_de_soleil", "parasol", "banc", "quantite": n}],
  "plantes": {"grands_sujets": n (arbres ou gros arbustes en sujet), "arbustes": n, "vivaces_graminees": n (touffes)}, "contenants": {"grands_bacs": n, "pots": n},
  "sol": {"refait": true ou false (sol neuf différent de la photo d'origine), "type": "dalles", "gravier", "pelouse" ou null, "m2": surface estimée}, "eclairage": n (points lumineux)}""",
@@ -300,8 +331,15 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
         c = PROD[p]
         if p == 'terrasse':
             S = int(max(8, min(40, float(lecture.get('surface_sol_m2') or 15))))
-            props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Surface': f'environ {S} m²', 'Pose': 'sur plots réglables, sans percer' if ETG else c['format']},
+            det = {'Surface': f'environ {S} m²', 'Pose': 'sur plots réglables, sans percer' if ETG else c['format']}
+            if piscine_voulue: det['Usage'] = 'plage autour de la piscine'
+            if data.get('piscine_dessinee'): det['Piscine'] = 'non comprise, à voir avec un pisciniste'
+            props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': det,
                           'placement': (lecture.get('placement') or {}).get(p), 'prix': [r100(S * c['prix_m2'][0]), r100(S * c['prix_m2'][1])], 'm2': S})
+        elif p == 'studio':
+            t = taille_studio(jm2); m = c['modeles'][t]
+            props.append({'cle': p, 'nom': c['nom'], 'lien': m['lien'], 'photo': c['photo'], 'detail': {'Surface': f'{t} m²', 'Démarches': 'déclaration préalable en mairie'},
+                          'placement': (lecture.get('placement') or {}).get(p), 'prix': [r100(m['prix'])] * 2, 'a_partir_de': True, 'taille': t})
         elif p == 'cloture':
             L = max(4, min(30, round(float(lecture.get('cloture_longueur_m') or min(d.get('lineaire_limites_libres_m') or 10, 20)) / 2) * 2))
             props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Hauteur': c['hauteur'], 'Longueur': f'environ {L} m'},
@@ -309,7 +347,8 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
         else:
             props.append({'cle': p, 'nom': c['nom'], 'lien': c['lien'], 'photo': c['photo'], 'detail': {'Format': c['format'], 'Toiture': 'brise-soleil'},
                           'placement': (lecture.get('placement') or {}).get(p), 'prix': c['prix']})
-    data['produits'] = props; data['budget'] = [sum(p['prix'][0] for p in props), sum(p['prix'][1] for p in props)]
+    # le studio GEKA a son propre prix (vendu par l'équipe GEKA, livraison à part) : hors du budget des produits du site
+    data['produits'] = props; data['budget'] = [sum(p['prix'][0] for p in props if p['cle'] != 'studio'), sum(p['prix'][1] for p in props if p['cle'] != 'studio')]
     # 6. compléments Cover Green selon l'envie, la photo et le terrain (2 au plus)
     C = PROD.get('complements', {}); comp = []
     sol = lecture.get('sol_actuel') or ''
@@ -326,8 +365,8 @@ Compte précisément ce que tu vois. JSON : {"mobilier": [{"type": un de "canape
         pluie = {'mediterraneen': 0.6, 'continental': 0.7, 'montagnard': 1.0}.get((data.get('plantes') or {}).get('climat'), 0.75)
         m3 = int(round(toit * pluie * 0.8))
         comp.append({'cle': 'recuperateur', 'prix': C['recuperateur']['prix'],
-                     'pourquoi': f"Votre toit d'environ {toit} m² récolte près de {m3} m³ d'eau de pluie par an : de quoi arroser vos nouvelles plantations."})
-    ordre = [{'sol': 'terrasse', 'embellir': 'bardage'}[x] for x in envies if x in ('sol', 'embellir')]
+                     'pourquoi': f"Votre toit d'environ {toit} m² récolte près de {m3} m³ d'eau de pluie par an : de quoi arroser votre {'potager' if 'potager' in envies else 'jardin et vos nouvelles plantations'}."})
+    ordre = [{'sol': 'terrasse', 'embellir': 'bardage', 'potager': 'recuperateur'}[x] for x in envies if x in ('sol', 'embellir', 'potager')]
     comp.sort(key=lambda c: 0 if c['cle'] in ordre else 1)
     for c in comp[:2]: c.update(nom=C[c['cle']]['nom'], lien=C[c['cle']]['lien'], photo=C[c['cle']]['photo'], bouton=C[c['cle']]['bouton'])
     data['complements'] = comp[:2]

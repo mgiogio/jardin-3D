@@ -150,7 +150,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     '.cgq .nav .ret{visibility:visible;padding:6px 0;font-size:15px;color:var(--muted)}.cgq .nav .ret[hidden]{display:block;visibility:hidden}.cgq .nav .ret:before{content:"‹ "}',
     '.cgq .reste,.cgq .bas{display:none}',
     '.cgq .ecran{max-width:880px;margin:0 auto;padding-top:clamp(8px,4vh,48px)}',
-    '@media (min-width:641px){.cgq .ecran .cartes.tuiles{grid-template-columns:repeat(3,minmax(0,1fr));max-width:720px}}',
+    '@media (min-width:641px){.cgq .ecran .cartes.tuiles{grid-template-columns:repeat(3,minmax(0,1fr));max-width:720px}.cgq .ecran .cartes.tuiles.n8{grid-template-columns:repeat(4,minmax(0,1fr));max-width:880px}}',
     // précision écrite facultative, sous les tuiles
     '.cgq .tuiles .c.off{opacity:.45}.cgq .tuiles .c.off:hover{border-color:#fff}.cgq .c .ic .rang svg{width:18px!important;height:18px!important}.cgq .sous.rappel{color:var(--txt);font-weight:600}',
     '.cgq .prec{max-width:720px;margin:12px auto 0}.cgq .prec .lien{margin:0 auto;padding:8px 0}',
@@ -215,19 +215,25 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     recevoir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h16M6 12v8M18 12v8M8 8h8l1 4H7z"/><circle cx="12" cy="4" r="1.5"/></svg>',
     embellir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v14H3zM3 9.7h18M3 14.3h18M8 5v4.7M15 5v4.7M11.5 9.7v4.6M6 14.3V19M17 14.3V19"/></svg>',
     plantes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21v-8M12 13c-4 0-6-3-6-7 4 0 6 3 6 7zM12 13c4 0 6-3 6-7-4 0-6 3-6 7zM7 21h10"/></svg>',
+    piscine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15V5a2 2 0 0 1 4 0M16 15V5a2 2 0 0 0-4 0M8 8.5h8M8 12h8M2 17.5c1.7 1.3 3.3 1.3 5 0s3.3-1.3 5 0 3.3 1.3 5 0 3.3-1.3 5 0M2 21c1.7 1.3 3.3 1.3 5 0s3.3-1.3 5 0 3.3 1.3 5 0 3.3-1.3 5 0"/></svg>',
+    potager: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h18v7H3zM3 16.5h18M8 13V9.5M12 13V7.5M16 13V9.5M8 9.5c-2 0-3.2-1.4-3.2-3.2 2 0 3.2 1.4 3.2 3.2zM12 7.5c0-2 1.4-3.5 3.4-3.5 0 2-1.4 3.5-3.4 3.5zM16 9.5c2 0 3.2-1.4 3.2-3.2-2 0-3.2 1.4-3.2 3.2z"/></svg>',
+    studio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h20M3.5 8v12h17V8M7 20v-8h5v8M14.5 12h3.5v4h-3.5zM6 8v12M9.5 8v4"/></svg>',
     sol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 16l9-5 9 5-9 5zM7.5 13.5l9 5M16.5 13.5l-9 5"/></svg>',
     photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'
   };
   // priorités du client : des résultats concrets, 2 au plus (ça oblige à choisir, sans rien à classer)
   // [clé lue par le service, titre, titre en appartement, exemple]
   var ENVIES = [
-    ['intimite', 'Cacher la vue des voisins', 'Cacher la vue des voisins', 'Un vis-à-vis à couper'],
+    ['intimite', 'Fermer et cacher le jardin', 'Cacher la vue des voisins', 'Vis-à-vis, chien, enfants'],
     ['ombre', 'De l\'ombre aux heures chaudes', 'De l\'ombre aux heures chaudes', 'Pour profiter dehors en été'],
-    ['recevoir', 'Un coin repas dehors', 'Un coin repas dehors', 'Pour manger dehors à plusieurs'],
-    ['sol', 'Un sol propre toute l\'année', 'Un sol bois à la place du carrelage', 'Fini la boue et la pelouse pelée'],
-    ['embellir', 'Habiller un mur ou un grillage', 'Habiller un mur ou un garde-corps', 'Parpaings, grillage, cabanon'],
-    ['plantes', 'Des massifs qui fleurissent', 'Des bacs fleuris', 'Des plantes faciles à vivre']
+    ['recevoir', 'Une terrasse pour vivre dehors', 'Une terrasse pour vivre dehors', 'Repas, barbecue, détente'],
+    ['piscine', 'Profiter d\'une piscine', '', 'Existante ou en projet'],
+    ['potager', 'Un potager', 'Des bacs potagers', 'Bacs en bois, eau de pluie'],
+    ['embellir', 'Habiller un mur ou un grillage', 'Habiller un mur ou un garde-corps', 'Parpaings, vieux grillage, cabanon'],
+    ['plantes', 'Des massifs qui fleurissent', 'Des bacs fleuris', 'Des plantes faciles à vivre'],
+    ['studio', 'Une pièce en plus au fond du jardin', '', 'Bureau, chambre d\'amis']
   ];
+  var EN_APPART = ['piscine', 'studio'];       // pas proposés en appartement
   var MAX_ENVIES = 2;
   var COCHE = '<span class="rang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
   var STYLES = [
@@ -350,8 +356,10 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var haut = S.lieu && S.lieu.type === 'appartement' && S.lieu.etage > 0;
     var ap = (S.terrain && S.terrain.apercu) || {}, ville = S.adresse && S.adresse.city;
     var info = !haut && ap.jardin_m2 ? '<p class="info"><i>☀</i><span>' + (ville ? h(ville) + ' : ' : '') + '<b>' + ap.jardin_m2 + ' m² de jardin' + (ap.jardin_cote ? ', côté ' + h(ap.jardin_cote) : '') + '</b></span></p>' : '';
+    var appart = S.lieu && S.lieu.type === 'appartement';
+    var LISTE = ENVIES.filter(function (o) { return !(appart && EN_APPART.indexOf(o[0]) >= 0); });
     return info + '<h2>' + (haut ? 'Sur ma terrasse' : 'Dans mon jardin') + ', je veux d\'abord…</h2><p class="sous" id="cgq-esous">Choisissez 1 ou 2 priorités.</p>'
-      + '<div class="cartes tuiles multi prio">' + ENVIES.map(function (o) {
+      + '<div class="cartes tuiles multi prio n' + LISTE.length + '">' + LISTE.map(function (o) {
         var on = L.indexOf(o[0]) >= 0, off = plein && !on;
         return '<button type="button" class="c' + (on ? ' on' : '') + (off ? ' off' : '') + '" data-envie="' + o[0] + '" aria-pressed="' + on + '"' + (off ? ' aria-disabled="true"' : '') + '>'
           + '<span class="ic" aria-hidden="true">' + (on ? COCHE : ICO[o[0]]) + '</span>'
@@ -895,6 +903,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
   /* ---------- départ ---------- */
   if (S.envoi && !S.id && !S.erreur) S.erreur = 'L\'envoi a été interrompu. Vos réponses sont gardées, réessayez.';
   if (!S.envies && S.envie) S.envies = [S.envie];
+  // une ancienne session peut garder un choix qui n'existe plus (« sol ») : on ne garde que les choix proposés, 2 au plus
+  if (S.envies) S.envies = S.envies.filter(function (k) { return ENVIES.some(function (o) { return o[0] === k; }); }).slice(0, MAX_ENVIES);
   if (!S.id && !S.envoi) {
     if (ETAPES.indexOf(S.etape) < 0) S.etape = 'adresse';
     if (S.etape === 'terrain' && !S.adresse) S.etape = 'adresse';

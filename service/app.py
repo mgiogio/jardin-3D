@@ -326,29 +326,35 @@ def rendre(pid, d):
     cartes = ''.join(f'''<article class="pcard"><img src="/assets/plantes/{e(p["photo"])}" alt="{e(p["nom"])}" loading="lazy"><div class="pc"><span class="role">{ROLE.get(p["role"], p["role"])}</span><h4>{e(p["nom"])}</h4><i>{e(p["latin"])}</i>
         <div class="badges">{''.join(f'<span class="badge">{LAB[s]}</span>' for s in ("printemps", "ete", "automne", "hiver") if s in p["saisons"])}</div>
         <dl><div><dt>Fleurs</dt><dd>{e(p["floraison"] or "feuillage décoratif")}</dd></div><div><dt>Plantation</dt><dd>{periodes(p.get("mois_plantation") or [])}</dd></div><div><dt>Hiver</dt><dd>{e(p["hiver"])}</dd></div><div><dt>Entretien</dt><dd>{e(p["entretien"])}</dd></div>{f'<div><dt>Sol</dt><dd>{e(p["sol"])}</dd></div>' if p.get("sol") else ''}{f'<div><dt>Attention</dt><dd>{e(p["attention"])}</dd></div>' if p.get("attention") else ''}</dl></div></article>''' for p in pl)
-    VERBE = {'cloture': 'Configurer ma clôture', 'pergola': 'Configurer ma pergola', 'terrasse': 'Configurer ma terrasse'}
+    VERBE = {'cloture': 'Configurer ma clôture', 'pergola': 'Configurer ma pergola', 'terrasse': 'Configurer ma terrasse', 'studio': 'Découvrir ce studio'}
+    prix_txt = lambda p: f'à partir de {eur(p["prix"][0])}' if p.get('a_partir_de') else f'{eur(p["prix"][0])} à {eur(p["prix"][1])}'
     # liens lus dans produits.json au moment de l'affichage : un lien corrigé l'est aussi sur les diagnostics déjà faits
-    lien_p = lambda p: e((pipeline.PROD.get(p.get('cle')) or {}).get('lien') or p['lien'])
+    lien_p = lambda p: e(p['lien'] if p.get('cle') == 'studio' else (pipeline.PROD.get(p.get('cle')) or {}).get('lien') or p['lien'])   # studio : le lien du modèle proposé
     lien_c = lambda c: e(((pipeline.PROD.get('complements') or {}).get(c.get('cle')) or {}).get('lien') or c['lien'])
     prods = ''.join(f'''<div class="prod"><img src="/assets/refs/{p["photo"]}" alt=""><div><h3>{e(p["nom"])}</h3><p class="why">{e(p.get("placement"))}</p>
         <dl class="spec">{''.join(f'<div><dt>{e(k)}</dt><dd>{e(x)}</dd></div>' for k, x in p["detail"].items())}</dl></div>
-        <div class="est"><small>Estimation</small><b>{eur(p["prix"][0])} à {eur(p["prix"][1])}</b><a class="cta reduit{"" if i == 0 else " sec"}" data-ev="cgp_configurer" data-produit="{p.get("cle", "")}" href="{lien_p(p)}" target="_blank" rel="noopener">{VERBE.get(p.get("cle"), "Configurer")}</a></div></div>''' for i, p in enumerate(D['produits']))
+        <div class="est"><small>Estimation</small><b>{prix_txt(p)}</b><a class="cta reduit{"" if i == 0 else " sec"}" data-ev="cgp_configurer" data-produit="{p.get("cle", "")}" href="{lien_p(p)}" target="_blank" rel="noopener">{VERBE.get(p.get("cle"), "Configurer")}</a></div></div>''' for i, p in enumerate(D['produits']))
     comp = D.get('complements') or []
     compl = ('<h3 class="h-compl">Pour compléter votre projet</h3><div class="compl">' + ''.join(f'''<div class="carte cpl"><img src="/assets/refs/{c["photo"]}" alt="" loading="lazy"><div class="cplt"><h4>{e(c["nom"])}</h4><p>{e(c["pourquoi"])}</p>
         <div class="cplp"><b>{eur(c["prix"][0])} à {eur(c["prix"][1])}</b><a class="cta gris reduit" data-ev="cgp_complement" data-produit="{c["cle"]}" href="{lien_c(c)}" target="_blank" rel="noopener">{e(c["bouton"])}</a></div></div></div>''' for c in comp) + '</div>') if comp else ''
     b0, b1 = D['budget']
-    budget = f'''<div class="r big"><span>Vos produits Cover Green</span><span>{eur(b0)} à {eur(b1)}</span></div>'''
+    st = next((p for p in D['produits'] if p.get('cle') == 'studio'), None)       # studio GEKA : prix à part, hors livraison du site
+    budget = f'''<div class="r big"><span>Vos produits Cover Green</span><span>{eur(b0)} à {eur(b1)}</span></div>''' if b1 else ''
+    c0, c1 = b0, b1
     if comp:
         c0, c1 = b0 + sum(c['prix'][0] for c in comp), b1 + sum(c['prix'][1] for c in comp)
-        budget += f'''<div class="r"><span>Avec les compléments</span><span><b>{eur(c0)} à {eur(c1)}</b></span></div>'''
-    budget += '''<div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div>
+        budget += f'''<div class="r{"" if b1 else " big"}"><span>{"Avec les compléments" if b1 else "Les compléments"}</span><span><b>{eur(c0)} à {eur(c1)}</b></span></div>'''
+    if c1:
+        budget += '''<div class="r"><span>Livraison</span><span>offerte dès 2 000 €</span></div>
       <p class="note" style="margin:4px 0 0">Prix exact dans chaque configurateur, selon vos choix.</p>'''
+    if st:
+        budget += f'''<div class="r{"" if c1 else " big"}"><span>Studio de jardin GEKA {e(st.get("taille", ""))} m²</span><span>à partir de {eur(st["prix"][0])}</span></div>'''
     R = D.get('reste')
     if R:
-        t0, t1 = R['total']; p0, p1 = (c0, c1) if comp else (b0, b1)
+        t0, t1 = R['total']; s0 = st['prix'][0] if st else 0
         budget += ('<div class="reste"><div class="r big2"><span>Le reste du visuel</span><span>' + f'{eur(t0)} à {eur(t1)}</span></div>'
                    + ''.join(f'<div class="r"><span>{e(k)}</span><span>{eur(v[0])} à {eur(v[1])}</span></div>' for k, v in R['lignes'].items())
-                   + f'<div class="r big2 tout"><span>Votre jardin comme sur le visuel</span><span>{eur(p0 + t0)} à {eur(p1 + t1)}</span></div>'
+                   + f'<div class="r big2 tout"><span>Votre jardin comme sur le visuel{" (hors piscine)" if D.get("piscine_dessinee") else ""}</span><span>{eur(c0 + s0 + t0)} à {eur(c1 + s0 + t1)}</span></div>'
                    + '<p class="note" style="margin:4px 0 0">Mobilier, plantes et finitions : estimation indicative aux prix moyens des jardineries et enseignes de mobilier, à choisir où vous voulez.</p></div>')
     else:
         budget += '<p class="note" style="margin:0">Le mobilier, les plantes et le sol du visuel sont là pour l\'ambiance : ils ne sont pas compris.</p>'

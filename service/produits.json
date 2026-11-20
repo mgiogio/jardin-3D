@@ -41,18 +41,26 @@
    "pergola"
   ],
   "recevoir": [
-   "pergola",
+   "terrasse",
+   "pergola"
+  ],
+  "piscine": [
+   "terrasse",
    "cloture"
   ],
+  "potager": [],
   "embellir": [
    "cloture"
+  ],
+  "plantes": [
+   "cloture"
+  ],
+  "studio": [
+   "studio"
   ],
   "sol": [
    "terrasse",
    "pergola"
-  ],
-  "plantes": [
-   "cloture"
   ],
   "_defaut": [
    "cloture",
@@ -68,7 +76,10 @@
   "cloture_lames.jpg": "https://cover.green/wp-content/uploads/2026/08/dardonville-1-1024x768.jpg",
   "terrasse.webp": "https://cover.green/wp-content/uploads/2026/04/terrace_bois_piscine_3.webp",
   "bardage.jpg": "https://cover.green/wp-content/uploads/2025/05/Plan-de-travail-13.jpg",
-  "recuperateur.jpg": "https://cover.green/wp-content/uploads/2025/10/recuperateur-eau-de-pluie-resistant.jpg"
+  "recuperateur.jpg": "https://cover.green/wp-content/uploads/2025/10/recuperateur-eau-de-pluie-resistant.jpg",
+  "studio_ensemble.jpg": "https://cover.green/wp-content/uploads/2023/11/GEKA-15-FINAL.jpg",
+  "studio_reel.jpg": "https://cover.green/wp-content/uploads/2023/12/greenkub-gk20-studio-20-metres-carres-600x370-1.jpg",
+  "studio_reel2.jpg": "https://cover.green/wp-content/uploads/2023/12/gk15-landsc-plus-aufort-600x370-1.jpg"
  },
  "complements": {
   "terrasse": {
@@ -120,5 +131,30 @@
   ],
   "format": "lames bois sur lambourdes",
   "description_visuel": "une terrasse en lames de bois Cover Green (pin traité, lames droites et parallèles, joints fins et réguliers, teinte bois clair brun doré comme sur la photo de référence) posée de plain-pied sur la zone de vie, bords nets ; de la photo de référence, reprends seulement les lames de la terrasse, jamais la piscine ni le décor"
+ },
+ "studio": {
+  "nom": "Studio de jardin GEKA",
+  "lien": "https://www.cover.green/studio-de-jardin-en-kit/",
+  "modeles": {
+   "11": {
+    "lien": "https://www.cover.green/studio-de-jardin-en-kit-11m2/",
+    "prix": 14173.54
+   },
+   "15": {
+    "lien": "https://www.cover.green/studio-de-jardin-en-kit-15m2/",
+    "prix": 17167.54
+   },
+   "20": {
+    "lien": "https://www.cover.green/studio-de-jardin-en-kit-20m2/",
+    "prix": 19630.8
+   }
+  },
+  "refs": [
+   "studio_ensemble.jpg",
+   "studio_reel.jpg",
+   "studio_reel2.jpg"
+  ],
+  "description_visuel": "le studio de jardin GEKA de Cover Green : un volume simple à toit plat, habillé de tasseaux de bois verticaux à claire-voie, une entrée en retrait sous un encadrement en bois formant un petit auvent, de grandes portes-fenêtres vitrées et une petite terrasse bois devant, comme sur les photos de référence",
+  "photo": "studio_ensemble.jpg"
  }
 }
