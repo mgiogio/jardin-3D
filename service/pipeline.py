@@ -226,13 +226,17 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
     # 4. visuel avec nos produits, contrôlé
     data['visuel'] = None
     if im is not None and lecture.get('photo_exploitable', True):
-        refs = [Image.open(f'{ASSETS}/refs/{r}').convert('RGB') for p in produits for r in PROD[p]['refs']]
         noms = [p for p in produits if (lecture.get('placement') or {}).get(p)]
+        # photos de référence regroupées et numérotées par produit : l'IA sait quelle photo montre quel produit
+        refs_p = {p: [Image.open(f'{ASSETS}/refs/{r}').convert('RGB') for r in PROD[p]['refs']] for p in noms}
+        refs = [x for p in noms for x in refs_p[p]]
+        num, k = {}, 2
+        for p in noms: num[p] = (k, k + len(refs_p[p]) - 1); k += len(refs_p[p])
         if ETG: consigne_lieu = "C'est une terrasse d'appartement en étage : garde le garde-corps et la façade, la terrasse bois est posée sur plots par-dessus le sol existant, les plantes sont en grands bacs. "
         else: consigne_lieu = ''
         consigne = consigne_lieu + (f"La première image est la photo du jardin d'un client : garde exactement la même maison, le même cadrage, la même perspective et la même lumière. "
-                    + (f"Les images suivantes sont des photos de vrais produits Cover Green posés chez des clients. Reproduis CES produits à l'identique (proportions, sections, espacement des lames, connecteurs, teinte), jamais un modèle générique :\n" if noms else '')
-                    + ''.join(f"- {PROD[p]['description_visuel']} : {lecture['placement'][p]}\n" for p in noms)
+                    + (f"Les images suivantes sont des photos de vrais produits Cover Green posés chez des clients, regroupées par produit. Reproduis CHAQUE produit à l'identique de SES photos (forme, largeur et espacement des lames, poteaux, connecteurs, teinte), jamais un modèle générique :\n" if noms else '')
+                    + ''.join(f"- {PROD[p]['nom']}, images {num[p][0]} à {num[p][1]} : {PROD[p]['description_visuel']}. Emplacement : {lecture['placement'][p]}\n" for p in noms)
                     + f"Aménage autour dans un style {STYLES.get(style, style)}, très peu d'entretien, crédible pour un particulier : remplace le mobilier, les tapis et la déco existants par un aménagement neuf dans ce style, ajoute des plantations généreuses. "
                     + (f"Pour les plantations, utilise uniquement ces plantes, choisies pour l'exposition de cette zone ({(data.get('plantes') or {}).get('expo', '')}) : "
                        + ', '.join(f"{x['nom']} ({x['latin']})" for x in (data.get('plantes') or {}).get('plantes', [])) + " ; aucune autre espèce. " if (data.get('plantes') or {}).get('plantes') else '')
@@ -258,16 +262,21 @@ Réponds en JSON, en français, ton chaleureux et positif, phrases courtes, sans
             consigne += " Le studio de jardin est posé au sol, au fond du jardin, à l'échelle : environ 2,6 m de haut, la maison reste nettement plus grande."
         if precision: consigne += f" Le client a précisé : « {precision} » ; respecte-le s'il s'agit de l'aménagement de son jardin."
         atouts = [a for a in (lecture.get('atouts') or []) if isinstance(a, str)][:3]
+        # pour le contrôle : 2 photos par produit au plus, numérotées à partir de l'image 3
+        refs_c, lab = [], []
+        for p in noms:
+            sel = refs_p[p][:2]; a = 3 + len(refs_c); refs_c += sel; lab.append(f"images {a} à {a + len(sel) - 1} : {PROD[p]['nom']}")
         retour = ''; meilleur = None
         for essai in range(3):
             editer(consigne + retour, [im] + refs, f'{dossier}/visuel.jpg')
-            ctl = claude("""Contrôle qualité d'un visuel d'aménagement pour un client. Image 1 : photo d'origine. Image 2 : visuel proposé. Images suivantes : nos vrais produits (références).
+            ctl = claude("""Contrôle qualité d'un visuel d'aménagement pour un client. Image 1 : photo d'origine. Image 2 : visuel proposé. Images suivantes : nos vrais produits (références), """ + ('; '.join(lab) or 'aucune') + """.
+Chaque produit du visuel doit ressembler à SES références. La clôture en particulier : lames horizontales fines et espacées en claire-voie, sans poteaux apparents ; des planches larges jointives, des lames verticales ou des poteaux apparents sont un défaut grave.
 Note de 0 à 10 : "ressemblance" (les produits du visuel ressemblent-ils à nos références : sections, lames, connecteurs, teinte ?), "maison" (la maison est-elle préservée : mêmes fenêtres, portes, façade ?), "credibilite" (le visuel est-il réaliste, sans objet fondu, meuble qui flotte, produit qui traverse un objet ?).
 La piscine et les bacs potagers ne sont pas nos produits : juge-les seulement sur la crédibilité. Regarde en particulier chaque fenêtre et chaque porte de la maison : si un poteau, une poutre, une clôture ou un meuble est posé contre l'une d'elles ou en bloque l'accès, c'est un défaut grave. En revanche, une pergola posée dans le jardin à plusieurs mètres de la façade, dont un poteau se superpose à une fenêtre seulement par effet de perspective, n'est pas un défaut : mets-le dans "remarques".
 Liste uniquement les "defauts" GRAVES (qui empêchent de montrer l'image au client : maison modifiée, fenêtre ou porte masquée par un produit, produit qui ne ressemble pas, objet fondu ou impossible, passage bloqué), en une phrase chacun ; les petites imperfections vont dans "remarques".
 Voici les atouts du jardin que nous citons au client (numérotés à partir de 0) : """ + json.dumps(atouts, ensure_ascii=False) + """. Dans "atouts_disparus", donne les numéros de ceux qui ne se voient plus du tout sur le visuel (recouverts, supprimés) ; un atout réduit mais encore visible n'est pas disparu.
 JSON : {"ressemblance": n, "maison": n, "credibilite": n, "defauts": [...], "remarques": [...], "atouts_disparus": [...]}""" + ("" if refs else "\nIl n'y a aucun produit Cover Green dans ce visuel : mets 10 en ressemblance."),
-                         [im, Image.open(f'{dossier}/visuel.jpg')] + refs[:4])
+                         [im, Image.open(f'{dossier}/visuel.jpg')] + refs_c)
             data['controle'] = ctl
             if ctl['ressemblance'] >= 7 and ctl['maison'] >= 7 and ctl['credibilite'] >= 7 and not ctl.get('defauts'):
                 data['visuel'] = 'visuel.jpg'; break
