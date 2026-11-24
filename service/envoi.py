@@ -4,7 +4,7 @@
 #   ENVOI_EMAIL = off  : aucun envoi (l'écran de fin garde le bouton « Voir mon projet jardin »)
 #                 test : envoi seulement aux adresses de EMAILS_TEST (recette)
 #                 on   : envoi à tous les clients
-import os, json, time, html, re, urllib.request
+import os, json, time, html, re, urllib.request, urllib.error
 
 MODE = os.environ.get('ENVOI_EMAIL', 'test')
 TESTS = {x.strip().lower() for x in os.environ.get('EMAILS_TEST', 'manuel@cover.green').split(',') if x.strip()}
@@ -111,10 +111,18 @@ def inscrire_nl(d):
     req = urllib.request.Request('https://api.brevo.com/v3/contacts', data=json.dumps(charge).encode(), method='POST',
                                  headers={'api-key': CLE, 'content-type': 'application/json', 'accept': 'application/json'})
     R = {'le': time.strftime('%Y-%m-%d %H:%M'), 'liste': LISTE_NL}
-    try:
-        with urllib.request.urlopen(req, timeout=20) as r: R['ok'] = r.status in (200, 201, 204)
-    except Exception as x:
-        R['ok'] = False; R['erreur'] = str(x)[:200]
+    for essai in range(2):                                   # un second essai si Brevo ne répond pas ou sature
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r: R['ok'] = r.status in (200, 201, 204); R.pop('erreur', None)
+            break
+        except urllib.error.HTTPError as x:
+            corps = x.read().decode('utf-8', 'replace') if hasattr(x, 'read') else ''
+            R['ok'] = False; R['erreur'] = f'{x.code} {corps}'[:300]
+            if x.code < 500 and x.code != 429: break
+        except Exception as x:
+            R['ok'] = False; R['erreur'] = str(x)[:300]
+        time.sleep(20)
+    if not R['ok']: print('newsletter Brevo en échec', os.path.basename(d), R.get('erreur'), flush=True)
     json.dump(R, open(f'{d}/newsletter.json', 'w'), ensure_ascii=False)
     return R['ok']
 

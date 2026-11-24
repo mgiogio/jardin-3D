@@ -421,6 +421,16 @@ QLAB = {'etat': 'Jardin', 'delai': 'Délai', 'bricolage': 'Bricolage', 'budget':
 MOTIF_LAB = {'visuel': 'Le visuel', 'produits': 'Les produits proposés', 'budget': 'Le budget', 'plantes': 'Les plantes', 'soleil': 'Le soleil et le terrain', 'autre': 'Autre chose'}
 
 
+@app.get('/admin/nl/{pid}')
+def admin_nl(pid: str, cle: str = ''):
+    # relance l'inscription Mamie Jardin d'un diagnostic (case cochée mais Brevo en échec)
+    if not CLE_ADMIN or not secrets.compare_digest(cle, CLE_ADMIN): raise HTTPException(404)
+    d = os.path.join(DATA, os.path.basename(pid))
+    if not os.path.isfile(f'{d}/projet.json'): raise HTTPException(404)
+    envoi.inscrire_nl(d)
+    return envoi.nl(d)
+
+
 @app.get('/admin/avis', response_class=HTMLResponse)
 def admin_avis(cle: str = ''):
     # récapitulatif des diagnostics et des avis clients (accès par clé privée)
@@ -451,7 +461,7 @@ def admin_avis(cle: str = ''):
           <td class="n">{'👍' if dernier and dernier['note'] == 'haut' else ('👎' if dernier else '')}</td>
           <td>{', '.join(MOTIF_LAB.get(m, m) for x in A for m in (x.get('motifs') or []))}</td><td>{textes}</td>
           <td>{e(INFO_LAB.get(I.get('etat'), ''))} {e(INFO_LAB.get(I.get('delai'), ''))}</td><td>{e(INFO_LAB.get(I.get('budget'), ''))}</td><td>{e(INFO_LAB.get(I.get('bricolage') or I.get('pose'), ''))}</td><td>{e(INFO_LAB.get(I.get('frein'), ''))}</td>
-          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td><td>{('cliqué' if envoi.etat(d)['clic'] else ('envoyé' if envoi.etat(d)['envoye'] else ''))}</td><td>{({True: 'inscrit', False: 'échec'}.get(envoi.nl(d).get('ok'), ''))}</td><td>{(str(round(D['cout']['usd'], 2)).replace('.', ',') + ' $') if D.get('cout') else ''}</td></tr>''')
+          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td><td>{('cliqué' if envoi.etat(d)['clic'] else ('envoyé' if envoi.etat(d)['envoye'] else ''))}</td><td>{('inscrit' if envoi.nl(d).get('ok') else ('échec : ' + e(envoi.nl(d).get('erreur', '')) + f' <a href="/admin/nl/{pid}?cle={cle}">réessayer</a>' if envoi.nl(d) else ''))}</td><td>{(str(round(D['cout']['usd'], 2)).replace('.', ',') + ' $') if D.get('cout') else ''}</td></tr>''')
         if D.get('cout'): couts.append(D['cout']['usd'])
     pc = lambda a, b: f'{round(100 * a / b)} %' if b else '-'
     mot = lambda C: ''.join(f'<li>{MOTIF_LAB.get(k, k)} : <b>{v}</b></li>' for k, v in C.most_common()) or '<li>aucun</li>'
