@@ -88,12 +88,9 @@ if AERIEN:
 else: d.polygon([T(*p) for p in mai], fill=C['house'])
 VAV = [v for v in dg['vis_a_vis'] if v.get('oeil_m', 0) >= (3 if 'denivele_m' in v else 4.5)][:2]     # voisins qui ont vue, marqués en rouge plus bas
 _pv = [T(*v['centre']) for v in VAV]
-for xy, t in _etiq:
-    if any(math.hypot(xy[0] - q[0], xy[1] - q[1]) < 40 * U for q in _pv): continue     # le repère rouge dit déjà tout sur ce voisin
-    f_ = font(int(10 * U), AERIEN); tw = d.textlength(t, font=f_)
-    if xy[0] - tw / 2 < 4 * U or xy[0] + tw / 2 > W - 4 * U or xy[1] < 10 * U: continue      # étiquette coupée par le bord : on ne l'écrit pas
-    d.text(xy, t, font=f_, fill=C['ink'] if AERIEN else C['muted'], anchor='mm')
+OCC = []        # zones déjà occupées (repères rouges, étiquettes, flèche du nord) : les hauteurs des voisins n'y seront pas écrites
 mc = T(np.mean(mai[:-1, 0]), np.mean(mai[:-1, 1])); d.text(mc, 'Votre\nmaison', font=font(int(10 * U), True), fill='white', anchor='mm', align='center')
+OCC.append(d.textbbox(mc, 'Votre\nmaison', font=font(int(10 * U), True), anchor='mm', align='center'))
 if AERIEN:   # limite du terrain : liseré blanc puis vert Cover Green, lisible sur la photo
     d.line([T(*p) for p in par], fill=(255, 255, 255), width=6 * SS, joint='curve'); d.line([T(*p) for p in par], fill=(4, 158, 0), width=3 * SS, joint='curve')
 else: d.line([T(*p) for p in par], fill=C['parcel'], width=3 * SS, joint='curve')
@@ -101,6 +98,14 @@ else: d.line([T(*p) for p in par], fill=C['parcel'], width=3 * SS, joint='curve'
 d.rectangle([0, int((y1 - y0) * S), W, H], fill=C['bg'])
 # vis-à-vis : 2 voisins les plus proches et hauts
 BAS = int((y1 - y0) * S); NORD = (W - 50 * U, 0, W, 30 * U + 34 * U)      # bande de légende, zone de la flèche du nord
+_inter = lambda b, o, m=3 * U: b[0] - m < o[2] and b[2] + m > o[0] and b[1] - m < o[3] and b[3] + m > o[1]
+def _haut(xy, t):     # cadre de l'étiquette de hauteur d'un voisin, ou None si elle ne sera pas écrite de toute façon
+    if any(math.hypot(xy[0] - q[0], xy[1] - q[1]) < 40 * U for q in _pv): return None     # le repère rouge dit déjà tout sur ce voisin
+    f_ = font(int(10 * U), AERIEN); tw = d.textlength(t, font=f_)
+    if xy[0] - tw / 2 < 4 * U or xy[0] + tw / 2 > W - 4 * U or xy[1] < 10 * U: return None      # coupée par le bord
+    bb = d.textbbox(xy, t, font=f_, anchor='mm', stroke_width=int(3 * U))
+    return None if bb[3] > BAS - 2 * U else bb
+HAUT = [b for b in (_haut(xy, t) for xy, t in _etiq) if b]
 for v in VAV:
     cx, cy = v['centre']
     tx = par[:, 0].min() + 1.5 if cx < par[:, 0].mean() else par[:, 0].max() - 1.5
@@ -111,17 +116,22 @@ for v in VAV:
         p0 = (a[0] + (b_[0] - a[0]) * k / n, a[1]); p1 = (a[0] + (b_[0] - a[0]) * (k + 1) / n, a[1])
         d.line([p0, p1], fill=C['red'], width=int(2 * U))
     d.ellipse([a[0] - 5 * U, a[1] - 5 * U, a[0] + 5 * U, a[1] + 5 * U], fill=C['red'])
+    OCC += [(a[0] - 5 * U, a[1] - 5 * U, a[0] + 5 * U, a[1] + 5 * U), (min(a[0], b_[0]), a[1] - 2 * U, max(a[0], b_[0]), a[1] + 2 * U)]
     # étiquette sous le repère, sinon au-dessus ; glissée à gauche ou à droite pour rester dans l'image et hors de la flèche du nord
     # (le pointillé horizontal reste dégagé) ; si elle ne peut pas rester accrochée au repère, on ne l'écrit pas
-    f_ = font(int(10 * U), True); t_ = "vue depuis l'étage"; tw = d.textlength(t_, font=f_); xy_ = None
+    # parmi les places possibles, on préfère celle qui ne cache aucun chiffre de hauteur
+    f_ = font(int(10 * U), True); t_ = "vue depuis l'étage"; tw = d.textlength(t_, font=f_); places = []
     for yh, an_ in [(a[1] + 9 * U, 'mt'), (a[1] - 9 * U, 'mb')]:
         bb = d.textbbox((a[0], yh), t_, font=f_, anchor=an_, stroke_width=int(3 * U))
         if bb[1] < 4 * U or bb[3] > BAS - 4 * U: continue
         xmax = (NORD[0] if bb[1] < NORD[3] else W - 4 * U) - tw / 2 - 3 * U
         lx = min(max(a[0], 4 * U + tw / 2 + 3 * U), xmax)
-        if lx - tw / 2 - 12 * U <= a[0] <= lx + tw / 2 + 12 * U: xy_ = (lx, yh); break
-    if xy_ is None: continue
-    d.text(xy_, t_, font=f_, fill=C['red'], anchor=an_)
+        if lx - tw / 2 - 12 * U <= a[0] <= lx + tw / 2 + 12 * U:
+            bb = d.textbbox((lx, yh), t_, font=f_, anchor=an_, stroke_width=int(3 * U))
+            places.append((any(_inter(bb, h_) for h_ in HAUT), (lx, yh), an_))
+    if not places: continue
+    _, xy_, an_ = min(places, key=lambda q: q[0])
+    d.text(xy_, t_, font=f_, fill=C['red'], anchor=an_); OCC.append(d.textbbox(xy_, t_, font=f_, anchor=an_))
 if not AUTO:
     # produits proposés (cour avant)
     xs = par[:, 0].min(); yh = mai[:, 1].min()
@@ -138,7 +148,9 @@ if AUTO:   # étiquette au point du jardin le plus loin de la maison
     from shapely.geometry import Polygon as _P, Point as _Pt
     mp = _P(mai); pp = _P(par); ok = [q for q in pts if pp.exterior.distance(_Pt(q)) > 2.5] or list(pts)
     far = max(ok, key=lambda q: min(mp.distance(_Pt(q)), 12) - 0.3 * abs(mp.distance(_Pt(q)) - 12)); h = float(np.mean(ete))
-    d.text(T(*far), f'Votre jardin\n{h:.0f} h de soleil en juin'.replace('.', ','), font=font(int(12 * U), True), fill=C['ink'], anchor='mm', align='center')
+    tj = f'Votre jardin\n{h:.0f} h de soleil en juin'.replace('.', ',')
+    d.text(T(*far), tj, font=font(int(12 * U), True), fill=C['ink'], anchor='mm', align='center')
+    OCC.append(d.textbbox(T(*far), tj, font=font(int(12 * U), True), anchor='mm', align='center'))
 else:
     jy = (mai[:, 1].max() + par[:, 1].max()) / 2
     d.text(T(par[:, 0].mean(), jy), 'Jardin arrière\nplein soleil', font=font(12 * SS, True), fill=C['ink'], anchor='mm', align='center')
@@ -147,6 +159,12 @@ nx, ny = W - 26 * U, 30 * U
 if AERIEN: d.ellipse([nx - 20 * U, ny - 22 * U, nx + 20 * U, ny + 30 * U], fill=(255, 255, 255))
 d.polygon([(nx, ny - 16 * U), (nx - 8 * U, ny + 8 * U), (nx, ny + 3 * U), (nx + 8 * U, ny + 8 * U)], fill=C['ink'])
 d.text((nx, ny + 12 * U), 'N', font=font(int(11 * U), True), fill=C['ink'], anchor='mt')
+OCC.append(NORD)
+# hauteurs des voisins, écrites en dernier : jamais sur un repère rouge, une étiquette ou la flèche du nord, ni l'une sur l'autre
+for xy, t in _etiq:
+    bb = _haut(xy, t)
+    if bb is None or any(_inter(bb, o) for o in OCC): continue
+    d.text(xy, t, font=font(int(10 * U), AERIEN), fill=C['ink'] if AERIEN else C['muted'], anchor='mm'); OCC.append(bb)
 by = H - 52 * U; bx = 16 * U
 d.rectangle([bx, by, bx + 5 * S, by + 4 * U], fill=C['ink']); d.text((bx + 5 * S + 6 * U, by + 2 * U), '5 m', font=font(int(10 * U)), fill=C['ink'], anchor='lm')
 # légende soleil
