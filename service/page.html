@@ -94,11 +94,13 @@
 .cgp .sw{width:16px;height:16px;border-radius:3px;flex:none}
 /* plantes */
 .cgp .cal{overflow-x:auto;padding:16px}
-.cgp .cal table{border-collapse:separate;border-spacing:3px;width:100%;font-size:14px}
+.cgp .cal table{border-collapse:separate;border-spacing:3px;width:100%;font-size:14px;table-layout:fixed}
+/* colonnes des mois toutes de la même largeur : la largeur est fixée par la 1re ligne, pas par le contenu */
+.cgp .cal thead th:first-child{width:230px}
 .cgp .cal table,.cgp .cal tr,.cgp .cal th,.cgp .cal td{border:0;padding:0;margin:0;background-color:transparent;line-height:1.4}
 .cgp .cal thead th{padding-bottom:4px}
 .cgp .cal th{font-weight:500;color:var(--muted);text-align:center}
-.cgp .cal tbody th{text-align:left;color:var(--txt);white-space:nowrap;padding:0 10px 0 0;font-weight:500}
+.cgp .cal tbody th{text-align:left;color:var(--txt);white-space:normal;padding:0 10px 0 0;font-weight:500;line-height:1.25}
 .cgp .cal td{height:22px;min-width:18px;border-radius:3px;background:var(--gris)!important}
 .cgp .cal td.fo{background:var(--brume)!important}
 .cgp .cal td.fl{background:var(--vert)!important}
@@ -189,7 +191,8 @@
   /* calendrier : les 12 mois tiennent dans l'écran */
   .cgp .cal{padding:12px 10px}
   .cgp .cal table{border-spacing:2px;font-size:13px}
-  .cgp .cal tbody th{white-space:normal;max-width:96px;padding-right:6px;line-height:1.2}
+  .cgp .cal thead th:first-child{width:96px}
+  .cgp .cal tbody th{white-space:normal;padding-right:6px;line-height:1.2}
   .cgp .cal td{min-width:0;height:20px}
   .cgp .cal td .pl{font-size:11px}
   /* plantes : fiches compactes, photo à gauche */

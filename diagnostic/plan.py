@@ -13,7 +13,10 @@ F = '/usr/share/fonts/truetype/dejavu/'
 font = lambda s, b=False: ImageFont.truetype(F + ('DejaVuSans-Bold.ttf' if b else 'DejaVuSans.ttf'), s)
 SS = 3; S = 14 * SS                                     # px par mètre (sur-échantillonné)
 x0, y0, x1, y1 = par[:, 0].min() - 13, par[:, 1].min() - 7, par[:, 0].max() + 13, par[:, 1].max() + 3
-W, H = int((x1 - x0) * S), int((y1 - y0) * S) + 70 * SS
+# taille des textes et repères proportionnelle à la largeur du plan : il s'affiche sur environ 700 px de large dans la page,
+# quelle que soit la taille du terrain ; sans ça, un grand terrain donne des textes minuscules
+K = max(1.0, (x1 - x0) * S * 2 / SS / 900); U = SS * K        # U : unité de taille des textes et repères
+W, H = int((x1 - x0) * S), int((y1 - y0) * S) + int(70 * U)
 T = lambda x, y: ((x - x0) * S, (y1 - y) * S)
 C = dict(bg=(238, 240, 233), road=(222, 224, 218), nb=(214, 218, 210), nbl=(176, 182, 172), house=(52, 66, 57), parcel=(31, 90, 61),
          ink=(29, 42, 34), muted=(93, 107, 98), fence=(150, 96, 52), perg=(232, 116, 42), red=(196, 52, 40))
@@ -39,14 +42,14 @@ if os.environ.get('PLAN_LAT') and os.environ.get('PLAN_LON'):
 d = ImageDraw.Draw(im)
 _txt = ImageDraw.ImageDraw.text
 def halo(self, xy, t, *a, **k):
-    if not a and k.get('fill') not in ('white',) and 'stroke_width' not in k: k.update(stroke_width=3 * SS, stroke_fill=(255, 255, 255))
+    if not a and k.get('fill') not in ('white',) and 'stroke_width' not in k: k.update(stroke_width=int(3 * U), stroke_fill=(255, 255, 255))
     return _txt(self, xy, t, *a, **k)
 ImageDraw.ImageDraw.text = halo
 # rue au sud de la parcelle
 ys = par[:, 1].min()
 if not AUTO:
     d.rectangle([0, T(0, ys - 1.2)[1], W, T(0, ys - 6.5)[1]], fill=C['road'])
-    d.text((W / 2, T(0, ys - 3.9)[1]), 'RUE', font=font(11 * SS, True), fill=C['muted'], anchor='mm')
+    d.text((W / 2, T(0, ys - 3.9)[1]), 'RUE', font=font(int(11 * U), True), fill=C['muted'], anchor='mm')
 # soleil : raster lissé, limité au jardin
 grid = np.full((H, W), np.nan, np.float32)
 acc = np.zeros((H, W), np.float32); cnt = np.zeros((H, W), np.float32)
@@ -77,20 +80,27 @@ for b, h, c in zip(bats, hb, cli):
     if AERIEN: _ov.polygon(P, fill=(255, 255, 255, 70), outline=(255, 255, 255, 235), width=2 * SS)
     else: d.polygon(P, fill=C['nb'], outline=C['nbl'], width=SS)
     cx, cy = np.mean(b[:-1, 0]), np.mean(b[:-1, 1]); X, Y = T(cx, cy)
-    if 0 < X < W and 0 < Y < H - 80 * SS: _etiq.append(((X, Y), f'{h:.0f} m'))
+    # hauteur écrite seulement si elle tient dans le bâtiment (sinon les étiquettes se chevauchent)
+    if 0 < X < W and 0 < Y < H - 80 * U and (max(p[0] for p in P) - min(p[0] for p in P)) > 2.2 * 10 * U: _etiq.append(((X, Y), f'{h:.0f} m'))
 if AERIEN:
     _ov.polygon([T(*p) for p in mai], fill=C['house'] + (215,))
     im = Image.alpha_composite(im.convert('RGBA'), _ovi).convert('RGB'); d = ImageDraw.Draw(im)
 else: d.polygon([T(*p) for p in mai], fill=C['house'])
-for xy, t in _etiq: d.text(xy, t, font=font(10 * SS, AERIEN), fill=C['ink'] if AERIEN else C['muted'], anchor='mm')
-mc = T(np.mean(mai[:-1, 0]), np.mean(mai[:-1, 1])); d.text(mc, 'Votre\nmaison', font=font(10 * SS, True), fill='white', anchor='mm', align='center')
+VAV = [v for v in dg['vis_a_vis'] if v.get('oeil_m', 0) >= (3 if 'denivele_m' in v else 4.5)][:2]     # voisins qui ont vue, marqués en rouge plus bas
+_pv = [T(*v['centre']) for v in VAV]
+for xy, t in _etiq:
+    if any(math.hypot(xy[0] - q[0], xy[1] - q[1]) < 40 * U for q in _pv): continue     # le repère rouge dit déjà tout sur ce voisin
+    f_ = font(int(10 * U), AERIEN); tw = d.textlength(t, font=f_)
+    if xy[0] - tw / 2 < 4 * U or xy[0] + tw / 2 > W - 4 * U or xy[1] < 10 * U: continue      # étiquette coupée par le bord : on ne l'écrit pas
+    d.text(xy, t, font=f_, fill=C['ink'] if AERIEN else C['muted'], anchor='mm')
+mc = T(np.mean(mai[:-1, 0]), np.mean(mai[:-1, 1])); d.text(mc, 'Votre\nmaison', font=font(int(10 * U), True), fill='white', anchor='mm', align='center')
 if AERIEN:   # limite du terrain : liseré blanc puis vert Cover Green, lisible sur la photo
     d.line([T(*p) for p in par], fill=(255, 255, 255), width=6 * SS, joint='curve'); d.line([T(*p) for p in par], fill=(4, 158, 0), width=3 * SS, joint='curve')
 else: d.line([T(*p) for p in par], fill=C['parcel'], width=3 * SS, joint='curve')
 # bande de légende du bas : fond uni, sans bout de toit ni de photo qui dépasse
 d.rectangle([0, int((y1 - y0) * S), W, H], fill=C['bg'])
 # vis-à-vis : 2 voisins les plus proches et hauts
-for v in [v for v in dg['vis_a_vis'] if v.get('oeil_m', 0) >= (3 if 'denivele_m' in v else 4.5)][:2]:
+for v in VAV:
     cx, cy = v['centre']
     tx = par[:, 0].min() + 1.5 if cx < par[:, 0].mean() else par[:, 0].max() - 1.5
     a, b_ = T(cx, cy), T(tx, cy)
@@ -98,9 +108,9 @@ for v in [v for v in dg['vis_a_vis'] if v.get('oeil_m', 0) >= (3 if 'denivele_m'
     for k in range(n):
         if k % 2: continue
         p0 = (a[0] + (b_[0] - a[0]) * k / n, a[1]); p1 = (a[0] + (b_[0] - a[0]) * (k + 1) / n, a[1])
-        d.line([p0, p1], fill=C['red'], width=2 * SS)
-    d.ellipse([a[0] - 5 * SS, a[1] - 5 * SS, a[0] + 5 * SS, a[1] + 5 * SS], fill=C['red'])
-    d.text((a[0], a[1] + 9 * SS), "vue depuis l'étage", font=font(9 * SS, True), fill=C['red'], anchor='mt')
+        d.line([p0, p1], fill=C['red'], width=int(2 * U))
+    d.ellipse([a[0] - 5 * U, a[1] - 5 * U, a[0] + 5 * U, a[1] + 5 * U], fill=C['red'])
+    d.text((a[0], a[1] + 9 * U), "vue depuis l'étage", font=font(int(10 * U), True), fill=C['red'], anchor='mt')
 if not AUTO:
     # produits proposés (cour avant)
     xs = par[:, 0].min(); yh = mai[:, 1].min()
@@ -117,22 +127,22 @@ if AUTO:   # étiquette au point du jardin le plus loin de la maison
     from shapely.geometry import Polygon as _P, Point as _Pt
     mp = _P(mai); pp = _P(par); ok = [q for q in pts if pp.exterior.distance(_Pt(q)) > 2.5] or list(pts)
     far = max(ok, key=lambda q: min(mp.distance(_Pt(q)), 12) - 0.3 * abs(mp.distance(_Pt(q)) - 12)); h = float(np.mean(ete))
-    d.text(T(*far), f'Votre jardin\n{h:.0f} h de soleil en juin'.replace('.', ','), font=font(11 * SS, True), fill=C['ink'], anchor='mm', align='center')
+    d.text(T(*far), f'Votre jardin\n{h:.0f} h de soleil en juin'.replace('.', ','), font=font(int(12 * U), True), fill=C['ink'], anchor='mm', align='center')
 else:
     jy = (mai[:, 1].max() + par[:, 1].max()) / 2
     d.text(T(par[:, 0].mean(), jy), 'Jardin arrière\nplein soleil', font=font(12 * SS, True), fill=C['ink'], anchor='mm', align='center')
 # nord + échelle
-nx, ny = W - 26 * SS, 30 * SS
-if AERIEN: d.ellipse([nx - 20 * SS, ny - 22 * SS, nx + 20 * SS, ny + 30 * SS], fill=(255, 255, 255))
-d.polygon([(nx, ny - 16 * SS), (nx - 8 * SS, ny + 8 * SS), (nx, ny + 3 * SS), (nx + 8 * SS, ny + 8 * SS)], fill=C['ink'])
-d.text((nx, ny + 12 * SS), 'N', font=font(11 * SS, True), fill=C['ink'], anchor='mt')
-by = H - 52 * SS; bx = 16 * SS
-d.rectangle([bx, by, bx + 5 * S, by + 4 * SS], fill=C['ink']); d.text((bx + 5 * S + 6 * SS, by + 2 * SS), '5 m', font=font(10 * SS), fill=C['ink'], anchor='lm')
+nx, ny = W - 26 * U, 30 * U
+if AERIEN: d.ellipse([nx - 20 * U, ny - 22 * U, nx + 20 * U, ny + 30 * U], fill=(255, 255, 255))
+d.polygon([(nx, ny - 16 * U), (nx - 8 * U, ny + 8 * U), (nx, ny + 3 * U), (nx + 8 * U, ny + 8 * U)], fill=C['ink'])
+d.text((nx, ny + 12 * U), 'N', font=font(int(11 * U), True), fill=C['ink'], anchor='mt')
+by = H - 52 * U; bx = 16 * U
+d.rectangle([bx, by, bx + 5 * S, by + 4 * U], fill=C['ink']); d.text((bx + 5 * S + 6 * U, by + 2 * U), '5 m', font=font(int(10 * U)), fill=C['ink'], anchor='lm')
 # légende soleil
-ly = H - 26 * SS; lw = W - 32 * SS
+ly = H - 26 * U; lw = int(W - 32 * U)
 for k in range(lw):
-    v = 4 + 9 * k / lw; d.line([(bx + k, ly), (bx + k, ly + 8 * SS)], fill=tuple(int(c) for c in cm(np.array([v]))[0]))
-d.text((bx, ly + 11 * SS), '4 h', font=font(9 * SS), fill=C['muted'], anchor='lt')
-d.text((bx + lw, ly + 11 * SS), '13 h de soleil le 21 juin', font=font(9 * SS), fill=C['muted'], anchor='rt')
+    v = 4 + 9 * k / lw; d.line([(bx + k, ly), (bx + k, ly + 8 * U)], fill=tuple(int(c) for c in cm(np.array([v]))[0]))
+d.text((bx, ly + 11 * U), '4 h', font=font(int(10 * U)), fill=C['muted'], anchor='lt')
+d.text((bx + lw, ly + 11 * U), '13 h de soleil le 21 juin', font=font(int(10 * U)), fill=C['muted'], anchor='rt')
 im = im.resize((W * 2 // SS, H * 2 // SS), Image.LANCZOS); im.save(out, optimize=True)   # 2x pour les écrans haute définition
 print('aerien' if AERIEN else 'plat')              # lu par le service : la légende de la page en dépend
