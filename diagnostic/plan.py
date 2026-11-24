@@ -81,7 +81,7 @@ for b, h, c in zip(bats, hb, cli):
     else: d.polygon(P, fill=C['nb'], outline=C['nbl'], width=SS)
     cx, cy = np.mean(b[:-1, 0]), np.mean(b[:-1, 1]); X, Y = T(cx, cy)
     # hauteur écrite seulement si elle tient dans le bâtiment (sinon les étiquettes se chevauchent)
-    if 0 < X < W and 0 < Y < H - 80 * U and (max(p[0] for p in P) - min(p[0] for p in P)) > 2.2 * 10 * U: _etiq.append(((X, Y), f'{h:.0f} m'))
+    if 0 < X < W and 0 < Y < H - 80 * U and (max(p[0] for p in P) - min(p[0] for p in P)) > 2.2 * 10 * U: _etiq.append(((X, Y), f'{h:.0f} m', P))
 if AERIEN:
     _ov.polygon([T(*p) for p in mai], fill=C['house'] + (215,))
     im = Image.alpha_composite(im.convert('RGBA'), _ovi).convert('RGB'); d = ImageDraw.Draw(im)
@@ -105,7 +105,12 @@ def _haut(xy, t):     # cadre de l'étiquette de hauteur d'un voisin, ou None si
     if xy[0] - tw / 2 < 4 * U or xy[0] + tw / 2 > W - 4 * U or xy[1] < 10 * U: return None      # coupée par le bord
     bb = d.textbbox(xy, t, font=f_, anchor='mm', stroke_width=int(3 * U))
     return None if bb[3] > BAS - 2 * U else bb
-HAUT = [b for b in (_haut(xy, t) for xy, t in _etiq) if b]
+HAUT = [b for b in (_haut(xy, t) for xy, t, _ in _etiq) if b]
+def _dans(q, P):      # point dans le polygone du bâtiment (lancer de rayon)
+    x, y, ok = q[0], q[1], False
+    for (xa, ya), (xb, yb) in zip(P, P[1:] + P[:1]):
+        if (ya > y) != (yb > y) and x < xa + (y - ya) * (xb - xa) / (yb - ya): ok = not ok
+    return ok
 for v in VAV:
     cx, cy = v['centre']
     tx = par[:, 0].min() + 1.5 if cx < par[:, 0].mean() else par[:, 0].max() - 1.5
@@ -117,21 +122,26 @@ for v in VAV:
         d.line([p0, p1], fill=C['red'], width=int(2 * U))
     d.ellipse([a[0] - 5 * U, a[1] - 5 * U, a[0] + 5 * U, a[1] + 5 * U], fill=C['red'])
     OCC += [(a[0] - 5 * U, a[1] - 5 * U, a[0] + 5 * U, a[1] + 5 * U), (min(a[0], b_[0]), a[1] - 2 * U, max(a[0], b_[0]), a[1] + 2 * U)]
-    # étiquette sous le repère, sinon au-dessus ; glissée à gauche ou à droite pour rester dans l'image et hors de la flèche du nord
-    # (le pointillé horizontal reste dégagé) ; si elle ne peut pas rester accrochée au repère, on ne l'écrit pas
-    # parmi les places possibles, on préfère celle qui ne cache aucun chiffre de hauteur
-    f_ = font(int(10 * U), True); t_ = "vue depuis l'étage"; tw = d.textlength(t_, font=f_); places = []
-    for yh, an_ in [(a[1] + 9 * U, 'mt'), (a[1] - 9 * U, 'mb')]:
-        bb = d.textbbox((a[0], yh), t_, font=f_, anchor=an_, stroke_width=int(3 * U))
-        if bb[1] < 4 * U or bb[3] > BAS - 4 * U: continue
-        xmax = (NORD[0] if bb[1] < NORD[3] else W - 4 * U) - tw / 2 - 3 * U
-        lx = min(max(a[0], 4 * U + tw / 2 + 3 * U), xmax)
-        if lx - tw / 2 - 12 * U <= a[0] <= lx + tw / 2 + 12 * U:
-            bb = d.textbbox((lx, yh), t_, font=f_, anchor=an_, stroke_width=int(3 * U))
-            places.append((any(_inter(bb, h_) for h_ in HAUT), (lx, yh), an_))
+    # étiquette sous le repère, sinon au-dessus : « vue depuis l'étage » et, juste en dessous, la hauteur de ce voisin.
+    # Glissée à gauche ou à droite pour rester dans l'image et hors de la flèche du nord (le pointillé horizontal reste dégagé) ;
+    # parmi les places possibles, on préfère celle qui ne cache aucun autre chiffre de hauteur
+    f_ = font(int(10 * U), True); t_ = "vue depuis l'étage"; fh = font(int(10 * U), AERIEN)
+    th = f"{v['hauteur_m']:.0f} m" if v.get('hauteur_m') else ''
+    hautl = lambda t, f: (lambda b: b[3] - b[1])(d.textbbox((0, 0), t, font=f, anchor='mt'))
+    h1 = hautl(t_, f_); h2 = hautl(th, fh) if th else 0; ec = 3 * U if th else 0; hb_ = h1 + ec + h2
+    bw = max(d.textlength(t_, font=f_), d.textlength(th, font=fh) if th else 0); m3 = 3 * U; places = []
+    for yt in [a[1] + 9 * U, a[1] - 9 * U - hb_]:
+        if yt - m3 < 4 * U or yt + hb_ + m3 > BAS - 4 * U: continue
+        xmax = (NORD[0] if yt - m3 < NORD[3] else W - 4 * U) - bw / 2 - m3
+        lx = min(max(a[0], 4 * U + bw / 2 + m3), xmax)
+        if lx - bw / 2 - 12 * U <= a[0] <= lx + bw / 2 + 12 * U:
+            bb = (lx - bw / 2 - m3, yt - m3, lx + bw / 2 + m3, yt + hb_ + m3)
+            places.append((any(_inter(bb, h_) for h_ in HAUT), lx, yt, bb))
     if not places: continue
-    _, xy_, an_ = min(places, key=lambda q: q[0])
-    d.text(xy_, t_, font=f_, fill=C['red'], anchor=an_); OCC.append(d.textbbox(xy_, t_, font=f_, anchor=an_))
+    _, lx, yt, bb = min(places, key=lambda q: q[0])
+    d.text((lx, yt), t_, font=f_, fill=C['red'], anchor='mt')
+    if th: d.text((lx, yt + h1 + ec), th, font=fh, fill=C['ink'] if AERIEN else C['muted'], anchor='mt')
+    OCC.append(bb)
 if not AUTO:
     # produits proposés (cour avant)
     xs = par[:, 0].min(); yh = mai[:, 1].min()
@@ -161,10 +171,17 @@ d.polygon([(nx, ny - 16 * U), (nx - 8 * U, ny + 8 * U), (nx, ny + 3 * U), (nx + 
 d.text((nx, ny + 12 * U), 'N', font=font(int(11 * U), True), fill=C['ink'], anchor='mt')
 OCC.append(NORD)
 # hauteurs des voisins, écrites en dernier : jamais sur un repère rouge, une étiquette ou la flèche du nord, ni l'une sur l'autre
-for xy, t in _etiq:
-    bb = _haut(xy, t)
-    if bb is None or any(_inter(bb, o) for o in OCC): continue
-    d.text(xy, t, font=font(int(10 * U), AERIEN), fill=C['ink'] if AERIEN else C['muted'], anchor='mm'); OCC.append(bb)
+# si la place est prise, le chiffre glisse ailleurs dans son bâtiment plutôt que de disparaître
+for xy, t, P in _etiq:
+    if _haut(xy, t) is None: continue
+    s_ = 13 * U
+    for dx, dy in [(0, 0), (0, s_), (0, -s_), (0, 2 * s_), (0, -2 * s_), (2 * s_, 0), (-2 * s_, 0), (2 * s_, s_), (-2 * s_, s_),
+                   (2 * s_, -s_), (-2 * s_, -s_), (0, 3 * s_), (0, -3 * s_), (3 * s_, 0), (-3 * s_, 0)]:
+        q = (xy[0] + dx, xy[1] + dy)
+        if not _dans(q, P): continue
+        bb = _haut(q, t) if (dx, dy) != (0, 0) else _haut(xy, t)
+        if bb is None or any(_inter(bb, o) for o in OCC): continue
+        d.text(q, t, font=font(int(10 * U), AERIEN), fill=C['ink'] if AERIEN else C['muted'], anchor='mm'); OCC.append(bb); break
 by = H - 52 * U; bx = 16 * U
 d.rectangle([bx, by, bx + 5 * S, by + 4 * U], fill=C['ink']); d.text((bx + 5 * S + 6 * U, by + 2 * U), '5 m', font=font(int(10 * U)), fill=C['ink'], anchor='lm')
 # légende soleil
