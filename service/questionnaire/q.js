@@ -376,7 +376,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     return '<h2>Mon jardin se trouve</h2>'
       + '<label class="ch" for="cgq-adr">Adresse de votre jardin</label><input id="cgq-adr" class="t" type="text" autocomplete="street-address" placeholder="12 rue des Lilas, Nantes" value="' + h(S.adresse ? S.adresse.label : '') + '" aria-autocomplete="list" aria-controls="cgq-sug">'
       + '<ul class="sug" id="cgq-sug" role="listbox" hidden></ul><p class="msg" id="cgq-amsg" role="status"></p>'
-      + '<p class="aide">Pour calculer le soleil de chaque coin du jardin et les vues des voisins. Rien d\'autre.</p>'
+      + '<p class="aide">Pour calculer le soleil de chaque coin du jardin et les vues des voisins. Rien d\'autre. Le diagnostic couvre les jardins en France métropolitaine.</p>'
       + ('geolocation' in navigator ? '<button type="button" class="geo" data-a="geo">Je suis dans le jardin : utiliser ma position</button>' : '')
       + (S.adresse ? '<div class="pile"><button type="button" class="cta" data-a="adresse-ok">Continuer</button></div>' : '');
   };
@@ -403,7 +403,7 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     return '<h2>J\'envoie le diagnostic de ' + quoi + ' à…</h2>'
       + '<form id="cgq-form" novalidate><label class="ch" for="cgq-mail">Votre email</label><input id="cgq-mail" class="t" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="votre adresse email" value="' + h(S.email) + '" required><p class="msg" id="cgq-mmsg" role="status"></p>'
       + '<p class="aide">' + (S.photo || S.photoUrl ? 'Plan, plantes, budget et votre ' + (haut ? 'terrasse' : 'jardin') + ' imaginé' + (haut ? 'e' : '') + ' : tout arrive par email dans 2 à 3 minutes.' : 'Plan, plantes et budget : tout arrive par email dans 2 minutes. Vous pourrez y ajouter une photo.') + '</p>'
-      + '<label class="case"><input type="checkbox" id="cgq-opt"' + (S.optin ? ' checked' : '') + '><span>Recevoir aussi nos idées et offres jardin, 2 emails par mois au plus</span></label>'
+      + '<label class="case"><input type="checkbox" id="cgq-opt"' + (S.optin ? ' checked' : '') + '><span>Recevoir aussi les conseils de Mamie Jardin, une fois par mois. Désinscription en un clic.</span></label>'
       + '<div class="pile"><button type="submit" class="cta">Recevoir mon diagnostic</button></div></form>'
       + '<p class="mention">Vos réponses servent uniquement à préparer votre diagnostic et à vous l\'envoyer. Elles ne sont jamais revendues. Voir notre <a href="https://www.cover.green/politique-de-confidentialite/" target="_blank" rel="noopener">politique de confidentialité</a>.</p>';
   };
@@ -507,7 +507,8 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     if (!S.adresse) setTimeout(function () { try { I.focus({ preventScroll: true }); } catch (e) { } }, 250);
     function afficher(liste) {
       res = liste;
-      if (!liste.length) { L.hidden = true; return; }
+      if (!liste.length) { L.hidden = true; msg.textContent = 'Nous ne trouvons pas cette adresse. Vérifiez-la, ou tapez seulement la rue et la ville.'; return; }
+      msg.textContent = '';
       L.innerHTML = liste.map(function (a, i) { return '<li role="option"><button type="button" data-i="' + i + '">' + h(a.name) + ' <small>' + h(a.postcode + ' ' + a.city) + '</small></button></li>'; }).join('');
       L.hidden = false;
     }
@@ -534,13 +535,14 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
     var p = f.properties || {}, c = f.geometry.coordinates;
     return { label: p.label, name: p.name || p.label, city: p.city, postcode: p.postcode || '', citycode: p.citycode, lat: c[1], lon: c[0], score: p.score, type: p.type };
   }
+  function metropole(a) { return !/^9[78]/.test(a.postcode || ''); }   // DOM-TOM : pas de cadastre ni de soleil calculés
   function geocoder(t, signal) {
     var q = encodeURIComponent(t);
     var urls = ['https://data.geopf.fr/geocodage/search?q=' + q + '&limit=5&index=address&autocomplete=1', 'https://api-adresse.data.gouv.fr/search/?q=' + q + '&limit=5&autocomplete=1'];
     function essai(i) {
       if (i >= urls.length) return Promise.reject(new Error('indisponible'));
       return fetch(urls[i], { signal: signal }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); })
-        .then(function (d) { return (d.features || []).map(versAdresse); })
+        .then(function (d) { return (d.features || []).map(versAdresse).filter(metropole); })
         .catch(function (e) { if (e.name === 'AbortError') throw e; return essai(i + 1); });
     }
     return essai(0);
@@ -559,8 +561,9 @@ cursor:pointer;padding:20px;text-align:center;font:inherit;color:var(--txt)}\
       fetch('https://data.geopf.fr/geocodage/reverse?lat=' + la + '&lon=' + lo + '&limit=1&index=address').then(function (r) { return r.json(); })
         .then(function (d) {
           var f = (d.features || [])[0]; if (!f) throw new Error('aucune');
-          var a = versAdresse(f); a.lat = la; a.lon = lo; ev('cgp_q_geoloc', {}); choisir(a);
-        }).catch(function () { msg.textContent = 'Nous n\'avons pas trouvé votre adresse, tapez-la simplement.'; b.textContent = 'Je suis dans le jardin : utiliser ma position'; });
+          var a = versAdresse(f); if (!metropole(a)) throw new Error('hors metropole');
+          a.lat = la; a.lon = lo; ev('cgp_q_geoloc', {}); choisir(a);
+        }).catch(function (e) { msg.textContent = e && e.message === 'hors metropole' ? 'Le diagnostic couvre pour l\'instant les jardins en France métropolitaine.' : 'Nous n\'avons pas trouvé votre adresse, tapez-la simplement.'; b.textContent = 'Je suis dans le jardin : utiliser ma position'; });
     }, function () { msg.textContent = 'Position indisponible, tapez simplement votre adresse.'; b.textContent = 'Je suis dans le jardin : utiliser ma position'; }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
   }
 

@@ -14,6 +14,7 @@ REPONSE = {'email': 'contact@cover.green', 'name': 'Cover Green'}
 PAGE_DEFAUT = 'https://www.cover.green/mon-projet-jardin/?projet='
 LOGO = os.environ.get('LOGO_EMAIL', 'https://diagnostic-jardin-349938922301.europe-west1.run.app/q/logo-email.png')
 MAX_ENVOIS = 4
+LISTE_NL = int(os.environ.get('LISTE_NL', '42'))      # liste Brevo « Inscrits à la NL » (Mamie Jardin)
 e = lambda s: html.escape(str(s or ''))
 maj = lambda s: s[:1].upper() + s[1:]
 EMAIL_OK = re.compile(r'^[^@\s]+@[^@\s]+\.[a-z]{2,}$', re.I)
@@ -99,6 +100,28 @@ def envoyer(d, pid, force=False):
         M.setdefault('erreurs', []).append({'le': time.strftime('%Y-%m-%d %H:%M'), 'erreur': str(x)[:200]}); ecrire(d, M); return False
     M['envois'].append({'le': time.strftime('%Y-%m-%d %H:%M'), 'a': email, 'id': rep.get('messageId', '')}); ecrire(d, M)
     return True
+
+
+def inscrire_nl(d):
+    """Le client a coché « les conseils de Mamie Jardin » : contact Brevo en liste 42 avec OPT_IN, comme le formulaire du pied de page.
+    L'entrée en liste 42 déclenche l'email de bienvenue (automatisation Brevo #32) ; Bouncer vérifie l'adresse ensuite (scénario Make 9789288)."""
+    P = json.load(open(f'{d}/projet.json')); C = P.get('contact') or {}; email = (C.get('email') or '').strip()
+    if not C.get('optin') or not EMAIL_OK.match(email) or not CLE: return False
+    charge = {'email': email, 'listIds': [LISTE_NL], 'attributes': {'OPT_IN': True, **({'PRENOM': C['firstName']} if C.get('firstName') else {})}, 'updateEnabled': True}
+    req = urllib.request.Request('https://api.brevo.com/v3/contacts', data=json.dumps(charge).encode(), method='POST',
+                                 headers={'api-key': CLE, 'content-type': 'application/json', 'accept': 'application/json'})
+    R = {'le': time.strftime('%Y-%m-%d %H:%M'), 'liste': LISTE_NL}
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r: R['ok'] = r.status in (200, 201, 204)
+    except Exception as x:
+        R['ok'] = False; R['erreur'] = str(x)[:200]
+    json.dump(R, open(f'{d}/newsletter.json', 'w'), ensure_ascii=False)
+    return R['ok']
+
+
+def nl(d):
+    f = f'{d}/newsletter.json'
+    return json.load(open(f)) if os.path.exists(f) else {}
 
 
 def etat(d):

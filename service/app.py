@@ -72,6 +72,7 @@ async def creer(request: Request, projet: str = Form(...), photo: UploadFile | N
     json.dump(P, open(f'{d}/projet.json', 'w'), ensure_ascii=False)
     if contenu: open(f'{d}/photo_brute', 'wb').write(contenu)
     threading.Thread(target=lancer, args=(d,), daemon=True).start()
+    if (P.get('contact') or {}).get('optin'): threading.Thread(target=envoi.inscrire_nl, args=(d,), daemon=True).start()   # Mamie Jardin, case cochée
     return {'id': pid, 'page': f'/projet/{pid}'}
 
 
@@ -450,7 +451,7 @@ def admin_avis(cle: str = ''):
           <td class="n">{'👍' if dernier and dernier['note'] == 'haut' else ('👎' if dernier else '')}</td>
           <td>{', '.join(MOTIF_LAB.get(m, m) for x in A for m in (x.get('motifs') or []))}</td><td>{textes}</td>
           <td>{e(INFO_LAB.get(I.get('etat'), ''))} {e(INFO_LAB.get(I.get('delai'), ''))}</td><td>{e(INFO_LAB.get(I.get('budget'), ''))}</td><td>{e(INFO_LAB.get(I.get('bricolage') or I.get('pose'), ''))}</td><td>{e(INFO_LAB.get(I.get('frein'), ''))}</td>
-          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td><td>{('cliqué' if envoi.etat(d)['clic'] else ('envoyé' if envoi.etat(d)['envoye'] else ''))}</td><td>{(str(round(D['cout']['usd'], 2)).replace('.', ',') + ' $') if D.get('cout') else ''}</td></tr>''')
+          <td>{e(INFO_LAB.get(I.get('statut'), ''))}</td><td>{e(src)}</td><td>{'oui' if Pj.get('photos') or os.path.exists(f'{d}/photo.jpg') else 'non'}</td><td>{e(I.get('telephone', ''))} {e(I.get('rappel', ''))}</td><td>{('cliqué' if envoi.etat(d)['clic'] else ('envoyé' if envoi.etat(d)['envoye'] else ''))}</td><td>{({True: 'inscrit', False: 'échec'}.get(envoi.nl(d).get('ok'), ''))}</td><td>{(str(round(D['cout']['usd'], 2)).replace('.', ',') + ' $') if D.get('cout') else ''}</td></tr>''')
         if D.get('cout'): couts.append(D['cout']['usd'])
     pc = lambda a, b: f'{round(100 * a / b)} %' if b else '-'
     mot = lambda C: ''.join(f'<li>{MOTIF_LAB.get(k, k)} : <b>{v}</b></li>' for k, v in C.most_common()) or '<li>aucun</li>'
@@ -463,7 +464,7 @@ table{{border-collapse:collapse;width:100%;font-size:14px}}th,td{{text-align:lef
 <div><b>{haut} 👍 / {bas} 👎</b>avis donnés ({pc(haut + bas, prets)} des diagnostics)</div><div><b>{pc(haut, haut + bas)}</b>de satisfaits</div></div>
 <div class="m"><div><h3>Ce qui a plu</h3><ul>{mot(motifs_h)}</ul></div><div><h3>Ce qui n'a pas plu</h3><ul>{mot(motifs_b)}</ul></div></div>
 <div class="m">{''.join(f'<div><h3>{QLAB[k]}</h3><ul>' + ''.join(f'<li>{e(INFO_LAB.get(a, a))} : <b>{v}</b></li>' for a, v in reponses[k].most_common()) + '</ul></div>' for k in QLAB if reponses[k])}</div>
-<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Précision du client</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Jardin, délai</th><th>Enveloppe</th><th>Bricolage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th><th>Email</th><th>Coût IA</th></tr>{''.join(lignes)}</table></div>''')
+<div class="w"><table><tr><th>Date</th><th>Projet</th><th>Ville</th><th>Visuel</th><th>Budget Cover Green</th><th>Précision du client</th><th>Avis</th><th>Motifs</th><th>Commentaire</th><th>Jardin, délai</th><th>Enveloppe</th><th>Bricolage</th><th>Frein</th><th>Statut</th><th>Canal</th><th>Photo</th><th>Rappel</th><th>Email</th><th>Mamie Jardin</th><th>Coût IA</th></tr>{''.join(lignes)}</table></div>''')
 
 
 @app.get('/')
