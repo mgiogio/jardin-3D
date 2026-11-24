@@ -100,6 +100,7 @@ else: d.line([T(*p) for p in par], fill=C['parcel'], width=3 * SS, joint='curve'
 # bande de légende du bas : fond uni, sans bout de toit ni de photo qui dépasse
 d.rectangle([0, int((y1 - y0) * S), W, H], fill=C['bg'])
 # vis-à-vis : 2 voisins les plus proches et hauts
+BAS = int((y1 - y0) * S); NORD = (W - 50 * U, 0, W, 30 * U + 34 * U)      # bande de légende, zone de la flèche du nord
 for v in VAV:
     cx, cy = v['centre']
     tx = par[:, 0].min() + 1.5 if cx < par[:, 0].mean() else par[:, 0].max() - 1.5
@@ -110,7 +111,17 @@ for v in VAV:
         p0 = (a[0] + (b_[0] - a[0]) * k / n, a[1]); p1 = (a[0] + (b_[0] - a[0]) * (k + 1) / n, a[1])
         d.line([p0, p1], fill=C['red'], width=int(2 * U))
     d.ellipse([a[0] - 5 * U, a[1] - 5 * U, a[0] + 5 * U, a[1] + 5 * U], fill=C['red'])
-    d.text((a[0], a[1] + 9 * U), "vue depuis l'étage", font=font(int(10 * U), True), fill=C['red'], anchor='mt')
+    # étiquette sous le repère, sinon au-dessus ; glissée à gauche ou à droite pour rester dans l'image et hors de la flèche du nord
+    # (le pointillé horizontal reste dégagé) ; si elle ne peut pas rester accrochée au repère, on ne l'écrit pas
+    f_ = font(int(10 * U), True); t_ = "vue depuis l'étage"; tw = d.textlength(t_, font=f_); xy_ = None
+    for yh, an_ in [(a[1] + 9 * U, 'mt'), (a[1] - 9 * U, 'mb')]:
+        bb = d.textbbox((a[0], yh), t_, font=f_, anchor=an_, stroke_width=int(3 * U))
+        if bb[1] < 4 * U or bb[3] > BAS - 4 * U: continue
+        xmax = (NORD[0] if bb[1] < NORD[3] else W - 4 * U) - tw / 2 - 3 * U
+        lx = min(max(a[0], 4 * U + tw / 2 + 3 * U), xmax)
+        if lx - tw / 2 - 12 * U <= a[0] <= lx + tw / 2 + 12 * U: xy_ = (lx, yh); break
+    if xy_ is None: continue
+    d.text(xy_, t_, font=f_, fill=C['red'], anchor=an_)
 if not AUTO:
     # produits proposés (cour avant)
     xs = par[:, 0].min(); yh = mai[:, 1].min()
